@@ -1,0 +1,168 @@
+// Microsoft Visual C++ generated resource script.
+//
+#include "resource.h"
+
+#define APSTUDIO_READONLY_SYMBOLS
+/////////////////////////////////////////////////////////////////////////////
+//
+// Generated from the TEXTINCLUDE 2 resource.
+//
+#include "atlres.h"
+
+/////////////////////////////////////////////////////////////////////////////
+#undef APSTUDIO_READONLY_SYMBOLS
+
+/////////////////////////////////////////////////////////////////////////////
+// English (U.S.) resources
+
+#if !defined(AFX_RESOURCE_DLL) || defined(AFX_TARG_ENU)
+#ifdef _WIN32
+LANGUAGE LANG_ENGLISH, SUBLANG_ENGLISH_US
+#pragma code_page(1252)
+#endif //_WIN32
+
+#ifdef APSTUDIO_INVOKED
+/////////////////////////////////////////////////////////////////////////////
+//
+// TEXTINCLUDE
+//
+
+1 TEXTINCLUDE 
+BEGIN
+    "resource.h\0"
+END
+
+2 TEXTINCLUDE 
+BEGIN
+    "#include ""atlres.h""\r\n"
+    "\0"
+END
+
+3 TEXTINCLUDE 
+BEGIN
+    "\0"
+END
+
+#endif    // APSTUDIO_INVOKED
+
+
+/////////////////////////////////////////////////////////////////////////////
+//
+// Menu
+//
+
+IDR_MAINFRAME MENU 
+BEGIN
+    POPUP "&File"
+    BEGIN
+        MENUITEM "E&xit",                       ID_APP_EXIT
+    END
+    POPUP "&View"
+    BEGIN
+        MENUITEM "&Properties\tF10",            ID_VIEW_PROPERTIES
+        MENUITEM "&Refresh\tF5",                ID_VIEW_REFRESH
+    END
+END
+
+IDR_POPUP_MENU1 MENU 
+BEGIN
+    POPUP "Generic object"
+    BEGIN
+        MENUITEM "Copy &name",                  ID_POPUPMENU_COPYNAME
+        MENUITEM "Copy full &path",             ID_POPUPMENU_COPYFULLPATH
+        MENUITEM "Copy full path as C/C++ &string", ID_POPUPMENU_COPYASCSTRING
+        MENUITEM SEPARATOR
+        MENUITEM "Pr&operties\tF10",            ID_POPUPMENU_PROPERTIES
+    END
+    POPUP "SymbolicLink object"
+    BEGIN
+        MENUITEM "Copy &name",                  ID_POPUPMENU_COPYNAME
+        MENUITEM "Copy full &path",             ID_POPUPMENU_COPYFULLPATH
+        MENUITEM "Copy full path as C/C++ &string", ID_POPUPMENU_COPYASCSTRING
+        MENUITEM "Copy symlink &target",        ID_POPUPMENU_COPYSYMLINKTARGET
+        MENUITEM SEPARATOR
+        MENUITEM "Pr&operties\tF10",            ID_POPUPMENU_PROPERTIES
+    END
+END
+
+
+/////////////////////////////////////////////////////////////////////////////
+//
+// Icon
+//
+
+// Icon with lowest ID value placed first to ensure application icon
+// remains consistent on all systems.
+IDR_MAINFRAME           ICON                    "res\\ntobjx.ico"
+
+/////////////////////////////////////////////////////////////////////////////
+//
+// Accelerator
+//
+
+IDR_MAINFRAME ACCELERATORS 
+BEGIN
+    VK_F5,          ID_VIEW_REFRESH,        VIRTKEY 
+    VK_F10,         ID_VIEW_PROPERTIES,     VIRTKEY 
+END
+
+
+/////////////////////////////////////////////////////////////////////////////
+//
+// String Table
+//
+
+STRINGTABLE 
+BEGIN
+    IDR_MAINFRAME           "ntobjx: NT Objects"
+END
+
+STRINGTABLE 
+BEGIN
+    ID_APP_ABOUT            "Display program information, version number and copyright\nAbout"
+    ID_APP_EXIT             "Quit the application\nExit"
+END
+
+STRINGTABLE 
+BEGIN
+    ID_VIEW_PROPERTIES      "Show the properties of the selected object\nProperties"
+    ID_POPUPMENU_COPYNAME   "Copy name of object to clipboard"
+    ID_POPUPMENU_COPYFULLPATH "Copy full path of object to clipboard"
+    ID_POPUPMENU_COPYSYMLINKTARGET "Copy target of symlink to clipboard"
+    ID_POPUPMENU_PROPERTIES "Show the properties of the selected object"
+    ID_COLNAME_OBJNAME      "Name"
+    ID_COLNAME_OBJTYPE      "Type"
+    ID_COLNAME_OBJLNKTGT    "Target"
+END
+
+STRINGTABLE 
+BEGIN
+    ID_VIEW_REFRESH         "Refresh the list of objects\nRefresh"
+END
+
+STRINGTABLE 
+BEGIN
+    ATL_IDS_SCSIZE          "Change the window size"
+    ATL_IDS_SCMOVE          "Change the window position"
+    ATL_IDS_SCMINIMIZE      "Reduce the window to an icon in the task bar"
+    ATL_IDS_SCMAXIMIZE      "Enlarge the window to full size"
+    ATL_IDS_SCNEXTWINDOW    "Switch to the next document window"
+    ATL_IDS_SCPREVWINDOW    "Switch to the previous document window"
+    ATL_IDS_SCCLOSE         "Close the active window and prompts to save the documents"
+END
+
+STRINGTABLE 
+BEGIN
+    ATL_IDS_SCRESTORE       "Restore the window to normal size"
+    ATL_IDS_SCTASKLIST      "Activate Task List"
+END
+
+STRINGTABLE 
+BEGIN
+    ATL_IDS_IDLEMESSAGE     "Ready"
+END
+
+#endif    // English (U.S.) resources
+/////////////////////////////////////////////////////////////////////////////
+
+

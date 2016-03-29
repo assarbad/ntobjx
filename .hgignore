@@ -1,0 +1,18 @@
+syntax: glob
+build/**
+intermediate/**
+Visual Lint/PC-lint/**
+*.suo
+*.lnt
+*.ncb
+hgid.h
+*.opendb
+*.sdf
+docs/**
+res/candidates/**
+ddkbuild/build*.err
+ddkbuild/obj**
+ddkbuild/build*.wrn
+ddkbuild/BuildLog.htm
+*.txt_
+Samples/*

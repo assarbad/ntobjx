@@ -1,0 +1,69 @@
+#include <winnt.h>
+
+#ifdef RC_INVOKED
+#include "objtypes.h"
+
+LANGUAGE LANG_NEUTRAL, SUBLANG_NEUTRAL
+#ifndef IDR_MAINFRAME
+#define IDR_MAINFRAME 1
+#endif
+IDR_MAINFRAME            ICON "res\\ntobjx.ico"
+
+LANGUAGE LANG_ENGLISH, SUBLANG_ENGLISH_US
+
+// Ordinary types (verbatim names)
+
+IDI_ADAPTER              ICON "res\\objects\\Adapter.ico"
+IDI_CALLBACK             ICON "res\\objects\\Callback.ico"
+IDI_COMPOSITIONSURFACE   ICON "res\\objects\\CompositionSurface.ico"
+IDI_CONTROLLER           ICON "res\\objects\\Controller.ico"
+IDI_DEBUGOBJECT          ICON "res\\objects\\DebugObject.ico"
+IDI_DESKTOP              ICON "res\\objects\\Desktop.ico"
+IDI_DEVICE               ICON "res\\objects\\Device.ico"
+IDI_DIRECTORY            ICON "res\\objects\\Directory.ico"
+IDI_DRIVER               ICON "res\\objects\\Driver.ico"
+IDI_EVENT                ICON "res\\objects\\Event.ico"
+IDI_EVENTPAIR            ICON "res\\objects\\EventPair.ico"
+IDI_FILE                 ICON "res\\objects\\File.ico"
+IDI_FILTERCONNECTIONPORT ICON "res\\objects\\FilterConnectionPort.ico"
+IDI_IOCOMPLETION         ICON "res\\objects\\IoCompletion.ico"
+IDI_JOB                  ICON "res\\objects\\Job.ico"
+IDI_KEY                  ICON "res\\objects\\Key.ico"
+IDI_KEYEDEVENT           ICON "res\\objects\\KeyedEvent.ico"
+IDI_MUTANT               ICON "res\\objects\\Mutant.ico"
+IDI_PCWOBJECT            ICON "res\\objects\\PcwObject.ico"
+IDI_PORT                 ICON "res\\objects\\Port.ico"
+IDI_POWERREQUEST         ICON "res\\objects\\PowerRequest.ico"
+IDI_PROCESS              ICON "res\\objects\\Process.ico"
+IDI_SECTION              ICON "res\\objects\\Section.ico"
+IDI_SEMAPHORE            ICON "res\\objects\\Semaphore.ico"
+IDI_SESSION              ICON "res\\objects\\Session.ico"
+IDI_SYMBOLICLINK         ICON "res\\objects\\SymbolicLink.ico"
+IDI_THREAD               ICON "res\\objects\\Thread.ico"
+IDI_TIMER                ICON "res\\objects\\Timer.ico"
+IDI_TMEN                 ICON "res\\objects\\TmEn.ico"
+IDI_TOKEN                ICON "res\\objects\\Token.ico"
+IDI_TYPE                 ICON "res\\objects\\Type.ico"
+IDI_USERAPCRESERVE       ICON "res\\objects\\UserApcReserve.ico"
+IDI_WAITABLEPORT         ICON "res\\objects\\WaitablePort.ico"
+IDI_WAITCOMPLETIONPKT    ICON "res\\objects\\WaitCompletionPacket.ico"
+IDI_WINDOWSTATION        ICON "res\\objects\\WindowStation.ico"
+IDI_WMIGUID              ICON "res\\objects\\WmiGuid.ico"
+
+// "Aliases" (i.e. we reuse the images) of the above types
+/*
+IDI_ALPCPORT                IDI_PORT
+IDI_FILTERCOMMUNICATIONPORT IDI_FILTERCONNECTIONPORT
+IDI_TMRM                    IDI_TMEN
+IDI_TMTM                    IDI_TMEN
+IDI_TMTX                    IDI_TMEN
+*/
+
+IDI_OBJMGR_ROOT          ICON "res\\objects\\ObjMgrRoot.ico"
+IDI_UNKNOWN_OBJTYPE      ICON "res\\objects\\UnknownType.ico"
+IDI_SYMLINK_TO_DIRECTORY ICON "res\\objects\\SymbolicLink-to-Directory.ico"
+
+IDI_MAILSLOT             ICON "res\\objects\\Mailslot.ico"
+IDI_PIPE                 ICON "res\\objects\\Pipe.ico"
+
+#endif // RC_INVOKED

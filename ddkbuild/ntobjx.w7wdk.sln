@@ -1,0 +1,98 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 9.00
+# Visual Studio 2005
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "ntobjx.W7", "ntobjx.W7.vcproj", "{7B9C7DB8-DE29-4EFE-B3EA-74AF8C1ED98C}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		W7 checked (PREfast)|Win32 = W7 checked (PREfast)|Win32
+		W7 checked|Win32 = W7 checked|Win32
+		W7 free|Win32 = W7 free|Win32
+		W7LH checked (PREfast)|Win32 = W7LH checked (PREfast)|Win32
+		W7LH checked|Win32 = W7LH checked|Win32
+		W7LH free|Win32 = W7LH free|Win32
+		W7LHX64 checked (PREfast)|Win32 = W7LHX64 checked (PREfast)|Win32
+		W7LHX64 checked|Win32 = W7LHX64 checked|Win32
+		W7LHX64 free|Win32 = W7LHX64 free|Win32
+		W7NET checked (PREfast)|Win32 = W7NET checked (PREfast)|Win32
+		W7NET checked|Win32 = W7NET checked|Win32
+		W7NET free|Win32 = W7NET free|Win32
+		W7NETX64 checked (PREfast)|Win32 = W7NETX64 checked (PREfast)|Win32
+		W7NETX64 checked|Win32 = W7NETX64 checked|Win32
+		W7NETX64 free|Win32 = W7NETX64 free|Win32
+		W7X64 checked (PREfast)|Win32 = W7X64 checked (PREfast)|Win32
+		W7X64 checked|Win32 = W7X64 checked|Win32
+		W7X64 free|Win32 = W7X64 free|Win32
+		W7XP checked (PREfast)|Win32 = W7XP checked (PREfast)|Win32
+		W7XP checked|Win32 = W7XP checked|Win32
+		W7XP free|Win32 = W7XP free|Win32
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{7B9C7DB8-DE29-4EFE-B3EA-74AF8C1ED98C}.W7 checked (PREfast)|Win32.ActiveCfg = W7 checked (PREfast)|Win32
+		{7B9C7DB8-DE29-4EFE-B3EA-74AF8C1ED98C}.W7 checked (PREfast)|Win32.Build.0 = W7 checked (PREfast)|Win32
+		{7B9C7DB8-DE29-4EFE-B3EA-74AF8C1ED98C}.W7 checked (PREfast)|Win32.Deploy.0 = W7 checked (PREfast)|Win32
+		{7B9C7DB8-DE29-4EFE-B3EA-74AF8C1ED98C}.W7 checked|Win32.ActiveCfg = W7 checked|Win32
+		{7B9C7DB8-DE29-4EFE-B3EA-74AF8C1ED98C}.W7 checked|Win32.Build.0 = W7 checked|Win32
+		{7B9C7DB8-DE29-4EFE-B3EA-74AF8C1ED98C}.W7 checked|Win32.Deploy.0 = W7 checked|Win32
+		{7B9C7DB8-DE29-4EFE-B3EA-74AF8C1ED98C}.W7 free|Win32.ActiveCfg = W7 free|Win32
+		{7B9C7DB8-DE29-4EFE-B3EA-74AF8C1ED98C}.W7 free|Win32.Build.0 = W7 free|Win32
+		{7B9C7DB8-DE29-4EFE-B3EA-74AF8C1ED98C}.W7 free|Win32.Deploy.0 = W7 free|Win32
+		{7B9C7DB8-DE29-4EFE-B3EA-74AF8C1ED98C}.W7LH checked (PREfast)|Win32.ActiveCfg = W7LH checked (PREfast)|Win32
+		{7B9C7DB8-DE29-4EFE-B3EA-74AF8C1ED98C}.W7LH checked (PREfast)|Win32.Build.0 = W7LH checked (PREfast)|Win32
+		{7B9C7DB8-DE29-4EFE-B3EA-74AF8C1ED98C}.W7LH checked (PREfast)|Win32.Deploy.0 = W7LH checked (PREfast)|Win32
+		{7B9C7DB8-DE29-4EFE-B3EA-74AF8C1ED98C}.W7LH checked|Win32.ActiveCfg = W7LH checked|Win32
+		{7B9C7DB8-DE29-4EFE-B3EA-74AF8C1ED98C}.W7LH checked|Win32.Build.0 = W7LH checked|Win32
+		{7B9C7DB8-DE29-4EFE-B3EA-74AF8C1ED98C}.W7LH checked|Win32.Deploy.0 = W7LH checked|Win32
+		{7B9C7DB8-DE29-4EFE-B3EA-74AF8C1ED98C}.W7LH free|Win32.ActiveCfg = W7LH free|Win32
+		{7B9C7DB8-DE29-4EFE-B3EA-74AF8C1ED98C}.W7LH free|Win32.Build.0 = W7LH free|Win32
+		{7B9C7DB8-DE29-4EFE-B3EA-74AF8C1ED98C}.W7LH free|Win32.Deploy.0 = W7LH free|Win32
+		{7B9C7DB8-DE29-4EFE-B3EA-74AF8C1ED98C}.W7LHX64 checked (PREfast)|Win32.ActiveCfg = W7LHX64 checked (PREfast)|Win32
+		{7B9C7DB8-DE29-4EFE-B3EA-74AF8C1ED98C}.W7LHX64 checked (PREfast)|Win32.Build.0 = W7LHX64 checked (PREfast)|Win32
+		{7B9C7DB8-DE29-4EFE-B3EA-74AF8C1ED98C}.W7LHX64 checked (PREfast)|Win32.Deploy.0 = W7LHX64 checked (PREfast)|Win32
+		{7B9C7DB8-DE29-4EFE-B3EA-74AF8C1ED98C}.W7LHX64 checked|Win32.ActiveCfg = W7LHX64 checked|Win32
+		{7B9C7DB8-DE29-4EFE-B3EA-74AF8C1ED98C}.W7LHX64 checked|Win32.Build.0 = W7LHX64 checked|Win32
+		{7B9C7DB8-DE29-4EFE-B3EA-74AF8C1ED98C}.W7LHX64 checked|Win32.Deploy.0 = W7LHX64 checked|Win32
+		{7B9C7DB8-DE29-4EFE-B3EA-74AF8C1ED98C}.W7LHX64 free|Win32.ActiveCfg = W7LHX64 free|Win32
+		{7B9C7DB8-DE29-4EFE-B3EA-74AF8C1ED98C}.W7LHX64 free|Win32.Build.0 = W7LHX64 free|Win32
+		{7B9C7DB8-DE29-4EFE-B3EA-74AF8C1ED98C}.W7LHX64 free|Win32.Deploy.0 = W7LHX64 free|Win32
+		{7B9C7DB8-DE29-4EFE-B3EA-74AF8C1ED98C}.W7NET checked (PREfast)|Win32.ActiveCfg = W7NET checked (PREfast)|Win32
+		{7B9C7DB8-DE29-4EFE-B3EA-74AF8C1ED98C}.W7NET checked (PREfast)|Win32.Build.0 = W7NET checked (PREfast)|Win32
+		{7B9C7DB8-DE29-4EFE-B3EA-74AF8C1ED98C}.W7NET checked (PREfast)|Win32.Deploy.0 = W7NET checked (PREfast)|Win32
+		{7B9C7DB8-DE29-4EFE-B3EA-74AF8C1ED98C}.W7NET checked|Win32.ActiveCfg = W7NET checked|Win32
+		{7B9C7DB8-DE29-4EFE-B3EA-74AF8C1ED98C}.W7NET checked|Win32.Build.0 = W7NET checked|Win32
+		{7B9C7DB8-DE29-4EFE-B3EA-74AF8C1ED98C}.W7NET checked|Win32.Deploy.0 = W7NET checked|Win32
+		{7B9C7DB8-DE29-4EFE-B3EA-74AF8C1ED98C}.W7NET free|Win32.ActiveCfg = W7NET free|Win32
+		{7B9C7DB8-DE29-4EFE-B3EA-74AF8C1ED98C}.W7NET free|Win32.Build.0 = W7NET free|Win32
+		{7B9C7DB8-DE29-4EFE-B3EA-74AF8C1ED98C}.W7NET free|Win32.Deploy.0 = W7NET free|Win32
+		{7B9C7DB8-DE29-4EFE-B3EA-74AF8C1ED98C}.W7NETX64 checked (PREfast)|Win32.ActiveCfg = W7NETX64 checked (PREfast)|Win32
+		{7B9C7DB8-DE29-4EFE-B3EA-74AF8C1ED98C}.W7NETX64 checked (PREfast)|Win32.Build.0 = W7NETX64 checked (PREfast)|Win32
+		{7B9C7DB8-DE29-4EFE-B3EA-74AF8C1ED98C}.W7NETX64 checked (PREfast)|Win32.Deploy.0 = W7NETX64 checked (PREfast)|Win32
+		{7B9C7DB8-DE29-4EFE-B3EA-74AF8C1ED98C}.W7NETX64 checked|Win32.ActiveCfg = W7NETX64 checked|Win32
+		{7B9C7DB8-DE29-4EFE-B3EA-74AF8C1ED98C}.W7NETX64 checked|Win32.Build.0 = W7NETX64 checked|Win32
+		{7B9C7DB8-DE29-4EFE-B3EA-74AF8C1ED98C}.W7NETX64 checked|Win32.Deploy.0 = W7NETX64 checked|Win32
+		{7B9C7DB8-DE29-4EFE-B3EA-74AF8C1ED98C}.W7NETX64 free|Win32.ActiveCfg = W7NETX64 free|Win32
+		{7B9C7DB8-DE29-4EFE-B3EA-74AF8C1ED98C}.W7NETX64 free|Win32.Build.0 = W7NETX64 free|Win32
+		{7B9C7DB8-DE29-4EFE-B3EA-74AF8C1ED98C}.W7NETX64 free|Win32.Deploy.0 = W7NETX64 free|Win32
+		{7B9C7DB8-DE29-4EFE-B3EA-74AF8C1ED98C}.W7X64 checked (PREfast)|Win32.ActiveCfg = W7X64 checked (PREfast)|Win32
+		{7B9C7DB8-DE29-4EFE-B3EA-74AF8C1ED98C}.W7X64 checked (PREfast)|Win32.Build.0 = W7X64 checked (PREfast)|Win32
+		{7B9C7DB8-DE29-4EFE-B3EA-74AF8C1ED98C}.W7X64 checked (PREfast)|Win32.Deploy.0 = W7X64 checked (PREfast)|Win32
+		{7B9C7DB8-DE29-4EFE-B3EA-74AF8C1ED98C}.W7X64 checked|Win32.ActiveCfg = W7X64 checked|Win32
+		{7B9C7DB8-DE29-4EFE-B3EA-74AF8C1ED98C}.W7X64 checked|Win32.Build.0 = W7X64 checked|Win32
+		{7B9C7DB8-DE29-4EFE-B3EA-74AF8C1ED98C}.W7X64 checked|Win32.Deploy.0 = W7X64 checked|Win32
+		{7B9C7DB8-DE29-4EFE-B3EA-74AF8C1ED98C}.W7X64 free|Win32.ActiveCfg = W7X64 free|Win32
+		{7B9C7DB8-DE29-4EFE-B3EA-74AF8C1ED98C}.W7X64 free|Win32.Build.0 = W7X64 free|Win32
+		{7B9C7DB8-DE29-4EFE-B3EA-74AF8C1ED98C}.W7X64 free|Win32.Deploy.0 = W7X64 free|Win32
+		{7B9C7DB8-DE29-4EFE-B3EA-74AF8C1ED98C}.W7XP checked (PREfast)|Win32.ActiveCfg = W7XP checked (PREfast)|Win32
+		{7B9C7DB8-DE29-4EFE-B3EA-74AF8C1ED98C}.W7XP checked (PREfast)|Win32.Build.0 = W7XP checked (PREfast)|Win32
+		{7B9C7DB8-DE29-4EFE-B3EA-74AF8C1ED98C}.W7XP checked (PREfast)|Win32.Deploy.0 = W7XP checked (PREfast)|Win32
+		{7B9C7DB8-DE29-4EFE-B3EA-74AF8C1ED98C}.W7XP checked|Win32.ActiveCfg = W7XP checked|Win32
+		{7B9C7DB8-DE29-4EFE-B3EA-74AF8C1ED98C}.W7XP checked|Win32.Build.0 = W7XP checked|Win32
+		{7B9C7DB8-DE29-4EFE-B3EA-74AF8C1ED98C}.W7XP checked|Win32.Deploy.0 = W7XP checked|Win32
+		{7B9C7DB8-DE29-4EFE-B3EA-74AF8C1ED98C}.W7XP free|Win32.ActiveCfg = W7XP free|Win32
+		{7B9C7DB8-DE29-4EFE-B3EA-74AF8C1ED98C}.W7XP free|Win32.Build.0 = W7XP free|Win32
+		{7B9C7DB8-DE29-4EFE-B3EA-74AF8C1ED98C}.W7XP free|Win32.Deploy.0 = W7XP free|Win32
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+EndGlobal
