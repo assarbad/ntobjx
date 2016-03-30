@@ -26,22 +26,24 @@ have not tested the ``premake4.lua`` against the stock version. However, you can
 find pointers to that end at the top of ``premake4.lua``.
 
 I noticed that newer versions of the Windows SDK contain a more complete
-``winternl.h`` file, such that some of the ``typedef`` declarations in ``ntnative.h``
-may be duplicates and the compiler may choke. If you find any such cases, please
-file a ticket to point them out to me.
+``winternl.h`` file, such that some of the ``typedef`` declarations in
+``ntnative.h`` may be duplicates and the compiler may choke. If you find any
+such cases, please file a ticket to point them out to me.
 
 License
 -------
-The GUI tool is released under Microsoft Public License (MsPL), the license
-under which the Windows Template Library (WTL) comes. It is *not* compatible
-with the GPL for all I know.
+The GUI tool itself is released under Microsoft Public License (MsPL), the
+license under which the Windows Template Library (WTL) comes. That is owed to
+the fact that I am not a lawyer and therefore cannot judge how compatible that
+license is with other licenses. For example the MsPL is *not* compatible with
+the GPL for all I know. Meaning that linking the WTL into a program under GPL is
+not possible.
 
-However, the command line tool and more importantly the ``objmgr.hpp`` file,
-which contains the relevant utility classes, as well as ``ntnative.h``, are
-released under the MIT license.
-See the license terms at the top of each file and feel free to get in touch
-(also by filing a ticket), if something is unclear or you need an exception or
-different license or similar.
+However, I am dual-licensing all of my source files under the MIT license *and*
+MsPL. The resulting binary is released under the terms of the MsPL, but the
+individual source files are released under both licenses. The WTL source files
+remain licensed the way they are offered on the official website (i.e. MsPL).
+
 
 .. _download: https://bitbucket.org/assarbad/ntobjx/downloads
 .. _WinObj: https://technet.microsoft.com/en-us/sysinternals/winobj.aspx
