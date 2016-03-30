@@ -16,3 +16,5 @@ ddkbuild/build*.wrn
 ddkbuild/BuildLog.htm
 *.txt_
 Samples/*
+ddkbuild/PREfast_*.xml
+ddkbuild/PREfast_*.txt

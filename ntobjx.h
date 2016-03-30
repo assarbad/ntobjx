@@ -154,11 +154,13 @@ public:
                 (void)Expand(GetRootItem());
                 (void)SelectItem(GetRootItem());
                 // Signal that the tree has been initialized
-                return (m_bInitialized=true); // assignment intentional
+                m_bInitialized=true;
+                return m_bInitialized;
             }
         }
         // Something failed
-        return (m_bInitialized=false); // assignment intentional
+        m_bInitialized=false;
+        return m_bInitialized;
     }
 
 private:
