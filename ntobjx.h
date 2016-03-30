@@ -280,7 +280,7 @@ public:
         {
             if(-1 != widths[i])
             {
-                ATLVERIFY(SetColumnWidth(i, min(widths[i] + 0x10, maxWidths[i])));
+                ATLVERIFY(SetColumnWidth(i, min(widths[i] + imgListElemWidth + 0x10, maxWidths[i])));
             }
         }
         // Sort according to name column
