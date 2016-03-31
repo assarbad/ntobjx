@@ -51,10 +51,121 @@ namespace
 {
     int const imgListElemWidth = 16;
     int const imgListElemHeight = 16;
+
+    void CopyItemToClipboard(HWND hWndSource, int idCmd, GenericObject* obj)
+    {
+        if(::OpenClipboard(hWndSource))
+        {
+            ATL::CString s;
+            switch(idCmd)
+            {
+            case ID_POPUPMENU_COPYNAME:
+                s = obj->name();
+                ATLTRACE2(_T("Copy name: %s\n"), s.GetString());
+                break;
+            case ID_POPUPMENU_COPYFULLPATH:
+                s = obj->fullname();
+                ATLTRACE2(_T("Copy full path: %s\n"), s.GetString());
+                break;
+            case ID_POPUPMENU_COPYASCSTRING:
+                {
+
+#   if defined(_UNICODE) || defined(UNICODE)
+                    ATL::CString fullName(obj->fullname());
+                    ATL::CString escapedName;
+                    LPTSTR str = fullName.LockBuffer();
+                    escapedName.Preallocate(fullName.GetAllocLength());
+                    for(int i = 0; i < fullName.GetLength(); i++)
+                    {
+                        USHORT w = static_cast<USHORT>(str[i]);
+                        if(w > 0xFF)
+                        {
+                            escapedName.AppendFormat(_T("\\u%04X"), w);
+                        }
+                        else
+                        {
+                            switch(str[i])
+                            {
+                            case _T('\a'):
+                                escapedName.Append(_T("\\a"));
+                                break;
+                            case _T('\b'):
+                                escapedName.Append(_T("\\b"));
+                                break;
+                            case _T('\f'):
+                                escapedName.Append(_T("\\f"));
+                                break;
+                            case _T('\n'):
+                                escapedName.Append(_T("\\n"));
+                                break;
+                            case _T('\r'):
+                                escapedName.Append(_T("\\r"));
+                                break;
+                            case _T('\t'):
+                                escapedName.Append(_T("\\t"));
+                                break;
+                            case _T('\v'):
+                                escapedName.Append(_T("\\v"));
+                                break;
+                            case _T('"'):
+                                escapedName.Append(_T("\\\""));
+                                break;
+                            case _T('\\'):
+                                escapedName.Append(_T("\\\\"));
+                                break;
+                            default:
+                                if(_istprint(str[i]))
+                                    escapedName.AppendChar(str[i]);
+                                else
+                                    escapedName.AppendFormat(_T("\\u%04X"), w);
+                                break;
+                            }
+                        }
+                    }
+                    escapedName.AppendChar(0);
+                    s.Format(_T("L\"%s\""), escapedName.GetString());
+#   else
+                    s.Format(_T("\"%s\""), obj->fullname());
+#   endif
+                    ATLTRACE2(_T("Copy full path as C string: %s\n"), s.GetString());
+                }
+                break;
+            case ID_POPUPMENU_COPYSYMLINKTARGET:
+                if(SymbolicLink* symlink = dynamic_cast<SymbolicLink*>(obj))
+                {
+                    s = symlink->target();
+                    ATLTRACE2(_T("Copy symlink target: %s\n"), s.GetString());
+                }
+                break;
+            }
+            SIZE_T allocLength = (s.GetLength() + 2) * sizeof(TCHAR);
+            ATLTRACE2(_T("Buffer size: %u\n"), allocLength);
+            HGLOBAL hMem = ::GlobalAlloc(GMEM_MOVEABLE | GMEM_ZEROINIT, allocLength);
+            if(hMem)
+            {
+                if(LPVOID lpMem = ::GlobalLock(hMem))
+                {
+                    LPTSTR lpStr = static_cast<LPTSTR>(lpMem);
+                    _tcscpy_s(lpStr, s.GetLength() + 1, s.GetString());
+                    ::GlobalUnlock(hMem);
+                }
+#   if defined(_UNICODE) || defined(UNICODE)
+                ::SetClipboardData(CF_UNICODETEXT, hMem);
+#   else
+#       error "Not implemented for ANSI/CF_TEXT"
+#   endif
+            }
+            else
+            {
+                ATLTRACE2(_T("Could not allocate memory using GlobalAlloc().\n"));
+            }
+            ATLVERIFY(::CloseClipboard());
+        }
+    }
 }
 
-typedef CWinTraitsOR<TVS_HASLINES | TVS_HASBUTTONS | TVS_SHOWSELALWAYS | TVS_INFOTIP, WS_EX_CLIENTEDGE, CControlWinTraits> CNtObjectsTreeViewTraits;
-typedef CWinTraitsOR<LVS_SHAREIMAGELISTS | LVS_SINGLESEL, 0, CSortListViewCtrlTraits> CNtObjectsListViewTraits;
+typedef CWinTraitsOR<WS_TABSTOP | TVS_HASLINES | TVS_HASBUTTONS | TVS_SHOWSELALWAYS | TVS_INFOTIP, WS_EX_CLIENTEDGE, CControlWinTraits> CNtObjectsTreeViewTraits;
+typedef CWinTraitsOR<WS_TABSTOP | LVS_SHAREIMAGELISTS | LVS_SINGLESEL, 0, CSortListViewCtrlTraits> CNtObjectsListViewTraits;
 
 class CNtObjectsTreeView : public CWindowImpl<CNtObjectsTreeView, CTreeViewCtrlEx, CNtObjectsTreeViewTraits>
 {
@@ -77,13 +188,61 @@ public:
         : m_bInitialized(false)
     {}
 
-    LRESULT OnRightButtonDown(UINT /*uMsg*/, WPARAM /*wParam*/, LPARAM /*lParam*/, BOOL& bHandled)
+    LRESULT OnRightButtonDown(UINT /*uMsg*/, WPARAM /*wParam*/, LPARAM /*lParam*/, BOOL& /*bHandled*/)
     {
-        CPoint pt;
+        CPoint pt, spt;
         ATLVERIFY(::GetCursorPos(&pt));
         ATLTRACE2(_T("Point of click: %d/%d\n"), pt.x, pt.y);
+        spt = pt;
 
-        bHandled = TRUE;
+        // Find where the user clicked, so we know the item
+        ATLVERIFY(ScreenToClient(&pt));
+        UINT flags = 0;
+        CTreeItem ti = HitTest(pt, &flags);
+        if(!ti.IsNull())
+        {
+            // NB: we do NOT want to change the selection on right-click for the treeview
+            // ATLVERIFY(SelectItem(ti));
+
+            Directory* dir = reinterpret_cast<Directory*>(ti.GetData());
+            if(dir)
+            {
+                // Load menu resource
+                CMenu menu;
+                ATLVERIFY(menu.LoadMenu(IDR_POPUP_MENU1));
+                // Get the popup menu at index 0 from the menu resource
+                CMenuHandle popup = menu.GetSubMenu(0);
+
+                // Let the user pick
+                int idCmd = popup.TrackPopupMenuEx(
+                    TPM_LEFTALIGN | TPM_RETURNCMD | TPM_RIGHTBUTTON
+                    , spt.x
+                    , spt.y
+                    , GetParent()
+                    , NULL
+                    );
+
+                if(idCmd)
+                {
+                    switch(idCmd)
+                    {
+                    case ID_POPUPMENU_COPYNAME:
+                    case ID_POPUPMENU_COPYFULLPATH:
+                    case ID_POPUPMENU_COPYASCSTRING:
+                    case ID_POPUPMENU_COPYSYMLINKTARGET:
+                        CopyItemToClipboard(m_hWnd, idCmd, dir);
+                        break;
+                    case ID_POPUPMENU_PROPERTIES:
+                        ::SendMessage(GetParent(), WM_COMMAND, MAKEWPARAM(ID_VIEW_PROPERTIES, 0), reinterpret_cast<LPARAM>(m_hWnd));
+                        break;
+                    default:
+                        ATLTRACE2(_T("Chosen command: %i\n"), idCmd);
+                        break;
+                    }
+                }
+            }
+        }
+
         return FALSE;
     }
 
@@ -289,7 +448,7 @@ public:
         SortItems(0);
     }
 
-    LRESULT OnRightButtonDown(UINT /*uMsg*/, WPARAM /*wParam*/, LPARAM /*lParam*/, BOOL& bHandled)
+    LRESULT OnRightButtonDown(UINT /*uMsg*/, WPARAM /*wParam*/, LPARAM /*lParam*/, BOOL& /*bHandled*/)
     {
         CPoint pt;
         ATLVERIFY(::GetCursorPos(&pt));
@@ -335,10 +494,10 @@ public:
                 case ID_POPUPMENU_COPYFULLPATH:
                 case ID_POPUPMENU_COPYASCSTRING:
                 case ID_POPUPMENU_COPYSYMLINKTARGET:
-                    CopyItemToClipboard_(idCmd, itemobj);
+                    CopyItemToClipboard(m_hWnd, idCmd, itemobj);
                     break;
                 case ID_POPUPMENU_PROPERTIES:
-                    ::SendMessage(GetParent(), WM_COMMAND, MAKEWPARAM(ID_VIEW_PROPERTIES, 0), NULL);
+                    ::SendMessage(GetParent(), WM_COMMAND, MAKEWPARAM(ID_VIEW_PROPERTIES, 0), reinterpret_cast<LPARAM>(m_hWnd));
                     break;
                 default:
                     ATLTRACE2(_T("Chosen command: %i\n"), idCmd);
@@ -349,11 +508,10 @@ public:
 
         }
 
-        bHandled = TRUE;
         return 0;
     }
 
-    LRESULT OnHeaderItemClick(int /*idCtrl*/, LPNMHDR pnmh, BOOL& bHandled)
+    LRESULT OnHeaderItemClick(int /*idCtrl*/, LPNMHDR pnmh, BOOL& /*bHandled*/)
     {
         LPNMHEADER p = reinterpret_cast<LPNMHEADER>(pnmh);
         if(p->iButton == 0)
@@ -365,8 +523,28 @@ public:
                 NotifyParentSortChanged(p->iItem, iOld);
             }
         }
-        bHandled = TRUE;
         return 0;
+    }
+
+    // If item1 > item2 return 1, if item1 < item2 return -1, else return 0.
+    int CompareItemsCustom(LVCompareParam* pItem1, LVCompareParam* pItem2, int iSortCol)
+    {
+        if(!iSortCol)
+        {
+            GenericObject* obj1 = reinterpret_cast<GenericObject*>(pItem1->dwItemData);
+            GenericObject* obj2 = reinterpret_cast<GenericObject*>(pItem2->dwItemData);
+            bool isDir1 = (0 == _tcsicmp(_T("Directory"), obj1->type()));
+            bool isDir2 = (0 == _tcsicmp(_T("Directory"), obj2->type()));
+            if(isDir1 && isDir2)
+                return _tcsicmp(pItem1->pszValue, pItem2->pszValue);
+            if(!isDir1 && !isDir2)
+                return _tcsicmp(pItem1->pszValue, pItem2->pszValue);
+            if(!isDir1 && isDir2)
+                return 1;
+            if(isDir1 && !isDir2)
+                return -1;
+        }
+        return _tcsicmp(pItem1->pszValue, pItem2->pszValue);
     }
 
 private:
@@ -430,6 +608,7 @@ private:
                 if(idx > (GetColumnCount() - 1))
                 {
                     InsertColumn(idx, columnName);
+                    SetColumnSortType(idx, LVCOLSORT_CUSTOM);
                     ATLTRACE2(_T("Inserted column %i with name \"%s\".\n"), idx, columnName.GetString());
                 }
                 else
@@ -439,125 +618,16 @@ private:
                     lvc.pszText = const_cast<LPTSTR>(columnName.GetString());
                     lvc.cchTextMax = columnName.GetLength() + 1;
                     SetColumn(idx, &lvc);
+                    SetColumnSortType(idx, LVCOLSORT_TEXTNOCASE);
                 }
             }
         }
     }
 
-    void CopyItemToClipboard_(int idCmd, GenericObject* obj)
-    {
-        if(OpenClipboard())
-        {
-            ATL::CString s;
-            switch(idCmd)
-            {
-            case ID_POPUPMENU_COPYNAME:
-                s = obj->name();
-                ATLTRACE2(_T("Copy name: %s\n"), s.GetString());
-                break;
-            case ID_POPUPMENU_COPYFULLPATH:
-                s = obj->fullname();
-                ATLTRACE2(_T("Copy full path: %s\n"), s.GetString());
-                break;
-            case ID_POPUPMENU_COPYASCSTRING:
-                {
-
-#   if defined(_UNICODE) || defined(UNICODE)
-                    ATL::CString fullName(obj->fullname());
-                    ATL::CString escapedName;
-                    LPTSTR str = fullName.LockBuffer();
-                    escapedName.Preallocate(fullName.GetAllocLength());
-                    for(int i = 0; i < fullName.GetLength(); i++)
-                    {
-                        USHORT w = static_cast<USHORT>(str[i]);
-                        if(w > 0xFF)
-                        {
-                            escapedName.AppendFormat(_T("\\u%04X"), w);
-                        }
-                        else
-                        {
-                            switch(str[i])
-                            {
-                            case _T('\a'):
-                                escapedName.Append(_T("\\a"));
-                                break;
-                            case _T('\b'):
-                                escapedName.Append(_T("\\b"));
-                                break;
-                            case _T('\f'):
-                                escapedName.Append(_T("\\f"));
-                                break;
-                            case _T('\n'):
-                                escapedName.Append(_T("\\n"));
-                                break;
-                            case _T('\r'):
-                                escapedName.Append(_T("\\r"));
-                                break;
-                            case _T('\t'):
-                                escapedName.Append(_T("\\t"));
-                                break;
-                            case _T('\v'):
-                                escapedName.Append(_T("\\v"));
-                                break;
-                            case _T('"'):
-                                escapedName.Append(_T("\\\""));
-                                break;
-                            case _T('\\'):
-                                escapedName.Append(_T("\\\\"));
-                                break;
-                            default:
-                                if(_istprint(str[i]))
-                                    escapedName.AppendChar(str[i]);
-                                else
-                                    escapedName.AppendFormat(_T("\\u%04X"), w);
-                                break;
-                            }
-                        }
-                    }
-                    escapedName.AppendChar(0);
-                    s.Format(_T("L\"%s\""), escapedName.GetString());
-#   else
-                    s.Format(_T("\"%s\""), obj->fullname());
-#   endif
-                    ATLTRACE2(_T("Copy full path as C string: %s\n"), s.GetString());
-                }
-                break;
-            case ID_POPUPMENU_COPYSYMLINKTARGET:
-                if(SymbolicLink* symlink = dynamic_cast<SymbolicLink*>(obj))
-                {
-                    s = symlink->target();
-                    ATLTRACE2(_T("Copy symlink target: %s\n"), s.GetString());
-                }
-                break;
-            }
-            SIZE_T allocLength = (s.GetLength() + 2) * sizeof(TCHAR);
-            ATLTRACE2(_T("Buffer size: %u\n"), allocLength);
-            HGLOBAL hMem = ::GlobalAlloc(GMEM_MOVEABLE | GMEM_ZEROINIT, allocLength);
-            if(hMem)
-            {
-                if(LPVOID lpMem = ::GlobalLock(hMem))
-                {
-                    LPTSTR lpStr = static_cast<LPTSTR>(lpMem);
-                    _tcscpy_s(lpStr, s.GetLength() + 1, s.GetString());
-                    ::GlobalUnlock(hMem);
-                }
-#   if defined(_UNICODE) || defined(UNICODE)
-                ::SetClipboardData(CF_UNICODETEXT, hMem);
-#   else
-#       error "Not implemented for ANSI/CF_TEXT"
-#   endif
-            }
-            else
-            {
-                ATLTRACE2(_T("Could not allocate memory using GlobalAlloc().\n"));
-            }
-            ATLVERIFY(::CloseClipboard());
-        }
-    }
 };
 
 class CNtObjectsMainFrame : 
-    public CFrameWindowImpl<CNtObjectsMainFrame>, 
+    public CFrameWindowImpl<CNtObjectsMainFrame>,
     public CUpdateUI<CNtObjectsMainFrame>,
     public CMessageFilter,
     public CIdleHandler
@@ -578,6 +648,9 @@ public:
 
     virtual BOOL PreTranslateMessage(MSG* pMsg)
     {
+        // We need this such that WS_TABSTOP takes effect
+        if(IsDialogMessage(pMsg))
+            return TRUE;
         return CFrameWindowImpl<CNtObjectsMainFrame>::PreTranslateMessage(pMsg);
     }
 
@@ -593,6 +666,7 @@ public:
         COMMAND_ID_HANDLER(ID_APP_EXIT, OnFileExit)
         COMMAND_ID_HANDLER(ID_VIEW_PROPERTIES, OnViewProperties)
         COMMAND_ID_HANDLER(ID_VIEW_REFRESH, OnViewRefresh)
+        NOTIFY_CODE_HANDLER(LVN_ITEMCHANGED, OnLVItemChanged)
         NOTIFY_CODE_HANDLER(TVN_SELCHANGED, OnTVSelChanged)
         CHAIN_MSG_MAP(CUpdateUI<CNtObjectsMainFrame>)
         CHAIN_MSG_MAP(CFrameWindowImpl<CNtObjectsMainFrame>)
@@ -604,10 +678,19 @@ public:
 
         CreateSimpleStatusBar();
         m_hWndClient = m_vsplit.Create(m_hWnd, rcDefault, NULL, WS_CHILD | WS_VISIBLE | WS_CLIPSIBLINGS | WS_CLIPCHILDREN);
+        // Add WS_EX_CONTROLPARENT such that tab stops work
+        LONG exStyle = ::GetWindowLong(m_hWndClient, GWL_EXSTYLE);
+        ::SetWindowLong(m_hWndClient, GWL_EXSTYLE, exStyle | WS_EX_CONTROLPARENT);
 
-        ATLVERIFY(NULL != m_treeview.Create(m_vsplit));
-        ATLVERIFY(NULL != m_listview.Create(m_vsplit));
+        ATLVERIFY(NULL != m_treeview.Create(m_hWndClient));
+        ATLVERIFY(NULL != m_listview.Create(m_hWndClient));
         m_listview.SetExtendedListViewStyle(LVS_EX_FULLROWSELECT);
+        ATLTRACE2(_T("Control ID for splitter: %i\n"), ::GetDlgCtrlID(m_vsplit));
+        ATLTRACE2(_T("Control ID for treeview: %i\n"), ::GetDlgCtrlID(m_treeview));
+        ATLTRACE2(_T("Control ID for listview: %i\n"), ::GetDlgCtrlID(m_listview));
+        ATLASSERT(m_vsplit.m_hWnd == ::GetDlgItem(m_hWnd, ::GetDlgCtrlID(m_vsplit)));
+        ATLASSERT(m_treeview.m_hWnd == ::GetDlgItem(m_hWndClient, ::GetDlgCtrlID(m_treeview)));
+        ATLASSERT(m_listview.m_hWnd == ::GetDlgItem(m_hWndClient, ::GetDlgCtrlID(m_listview)));
 
         m_vsplit.SetSplitterPanes(m_treeview, m_listview);
         UpdateLayout();
@@ -616,7 +699,7 @@ public:
 
         // register object for message filtering and idle updates
         CMessageLoop* pLoop = _Module.GetMessageLoop();
-        ATLASSERT(pLoop != NULL);
+        ATLASSERT(NULL != pLoop);
         pLoop->AddMessageFilter(this);
         pLoop->AddIdleHandler(this);
 
@@ -638,7 +721,7 @@ public:
     {
         // unregister message filtering and idle updates
         CMessageLoop* pLoop = _Module.GetMessageLoop();
-        ATLASSERT(pLoop != NULL);
+        ATLASSERT(NULL != pLoop);
         pLoop->RemoveMessageFilter(this);
         pLoop->RemoveIdleHandler(this);
 
@@ -664,25 +747,48 @@ public:
         return 0;
     }
 
-    LRESULT OnViewProperties(WORD /*wNotifyCode*/, WORD /*wID*/, HWND /*hWndCtl*/, BOOL& /*bHandled*/)
+    LRESULT OnViewProperties(WORD wNotifyCode, WORD wID, HWND hWndCtl, BOOL& /*bHandled*/)
     {
-        /* TODO */
-        AtlMessageBox(m_hWnd, _T("Properties"));
+        ATLTRACE2(_T("hWndCtl = %p; wNotifyCode = %u (%04X); wID = %u (%04X)\n"), hWndCtl, wNotifyCode, wNotifyCode, wID, wID);
+        if(hWndCtl == m_treeview.m_hWnd)
+        {
+            AtlMessageBox(m_hWnd, _T("Properties from TreeView"));
+        }
+        else if(hWndCtl == m_listview.m_hWnd)
+        {
+            AtlMessageBox(m_hWnd, _T("Properties from ListView"));
+        }
         return 0;
     }
 
-    LRESULT OnTVSelChanged(int /*idCtrl*/, LPNMHDR pnmh, BOOL& /*bHandled*/)
+    LRESULT OnLVItemChanged(int /*idCtrl*/, LPNMHDR pnmh, BOOL& bHandled)
     {
-        if(m_tree_initialized)
+        LPNMLISTVIEW pnmlv = reinterpret_cast<LPNMLISTVIEW>(pnmh);
+        ATLASSERT(NULL != pnmlv);
+        bHandled = FALSE;
+        if(pnmlv && (pnmlv->uChanged & LVIF_STATE) && (pnmlv->uNewState & LVIS_SELECTED))
         {
-            LPNMTREEVIEW pnmtv = reinterpret_cast<LPNMTREEVIEW>(pnmh);
-            Directory* dir = reinterpret_cast<Directory*>(pnmtv->itemNew.lParam);
-            if(dir != NULL)
+            if(GenericObject* obj = reinterpret_cast<GenericObject*>(pnmlv->lParam))
             {
-                m_listview.FillFromDirectory(*dir);
+                ::SetWindowText(m_hWndStatusBar, obj->fullname());
+                bHandled = TRUE;
             }
         }
+        return 0;
+    }
 
+    LRESULT OnTVSelChanged(int /*idCtrl*/, LPNMHDR pnmh, BOOL& bHandled)
+    {
+        LPNMTREEVIEW pnmtv = reinterpret_cast<LPNMTREEVIEW>(pnmh);
+        ATLASSERT(NULL != pnmtv);
+        bHandled = FALSE;
+        Directory* dir = reinterpret_cast<Directory*>(pnmtv->itemNew.lParam);
+        if(m_tree_initialized && dir)
+        {
+            m_listview.FillFromDirectory(*dir);
+            ::SetWindowText(m_hWndStatusBar, dir->fullname());
+            bHandled = TRUE;
+        }
         return 0;
     }
 
@@ -699,9 +805,3 @@ public:
     }
 
 };
-
-/*
-
-EnumWindowStations
-EnumDesktops
-*/
