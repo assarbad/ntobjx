@@ -1,4 +1,4 @@
-#include <winnt.h>
+#include <winnt.rh>
 
 #ifdef RC_INVOKED
 #include "objtypes.h"

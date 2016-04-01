@@ -21,8 +21,8 @@
 /// DEALINGS IN THE SOFTWARE.
 ///
 ///////////////////////////////////////////////////////////////////////////////
+#include <winnt.rh>
 #include <winver.h>
-#include <winnt.h>
 
 #ifdef RC_INVOKED
 LANGUAGE LANG_NEUTRAL, SUBLANG_NEUTRAL

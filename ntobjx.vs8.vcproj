@@ -220,7 +220,7 @@
 			/>
 			<Tool
 				Name="VCCLCompilerTool"
-				AdditionalOptions="/Oi /Os /Oy /Gy"
+				AdditionalOptions="/Oi /Os /Gy /Oy"
 				Optimization="3"
 				AdditionalIncludeDirectories="wtl\Include"
 				PreprocessorDefinitions="WIN32;_WINDOWS;STRICT;NDEBUG;WINVER=0x0500"
@@ -248,7 +248,7 @@
 			/>
 			<Tool
 				Name="VCLinkerTool"
-				AdditionalOptions="&quot;/libpath:$(IntDir)&quot; /pdbaltpath:%_PDB% /delay:nobind /delayload:ntdll-delayed.dll /delayload:version.dll /release /opt:nowin98 /subsystem:windows,5.00"
+				AdditionalOptions="&quot;/libpath:$(IntDir)&quot; /pdbaltpath:%_PDB% /delay:nobind /delayload:ntdll-delayed.dll /delayload:version.dll /release /subsystem:windows,5.00 /opt:nowin98"
 				AdditionalDependencies="ntdll-delayed.lib version.lib"
 				OutputFile="$(OutDir)\ntobjx32.exe"
 				LinkIncremental="1"
@@ -312,7 +312,7 @@
 			/>
 			<Tool
 				Name="VCCLCompilerTool"
-				AdditionalOptions="/Oi /Os /Oy /Gy"
+				AdditionalOptions="/Oi /Os /Gy /Oy"
 				Optimization="3"
 				AdditionalIncludeDirectories="wtl\Include"
 				PreprocessorDefinitions="WIN32;_WINDOWS;STRICT;NDEBUG;WINVER=0x0501"
@@ -340,7 +340,7 @@
 			/>
 			<Tool
 				Name="VCLinkerTool"
-				AdditionalOptions="&quot;/libpath:$(IntDir)&quot; /pdbaltpath:%_PDB% /delay:nobind /delayload:ntdll-delayed.dll /delayload:version.dll /release /opt:nowin98 /subsystem:windows,5.02"
+				AdditionalOptions="&quot;/libpath:$(IntDir)&quot; /pdbaltpath:%_PDB% /delay:nobind /delayload:ntdll-delayed.dll /delayload:version.dll /release /subsystem:windows,5.02 /opt:nowin98"
 				AdditionalDependencies="ntdll-delayed.lib version.lib"
 				OutputFile="$(OutDir)\ntobjx64.exe"
 				LinkIncremental="1"
@@ -513,6 +513,10 @@
 			</File>
 		</Filter>
 		<File
+			RelativePath="LICENSE.txt"
+			>
+		</File>
+		<File
 			RelativePath="README.rst"
 			>
 		</File>
@@ -554,10 +558,6 @@
 			Name="Special Files"
 			Filter=""
 			>
-			<File
-				RelativePath="LICENSE.txt"
-				>
-			</File>
 			<Filter
 				Name="Module Definition Files"
 				Filter=""
@@ -569,6 +569,10 @@
 			</Filter>
 			<File
 				RelativePath="hgid.cmd"
+				>
+			</File>
+			<File
+				RelativePath="ntobjx.manifest"
 				>
 			</File>
 			<File
@@ -584,10 +588,6 @@
 				>
 			</File>
 		</Filter>
-		<File
-			RelativePath="ntobjx.manifest"
-			>
-		</File>
 	</Files>
 	<Globals>
 	</Globals>

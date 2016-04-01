@@ -22,3 +22,6 @@ buildlog.html
 ntobjx_release.vs8.vcproj
 ntobjx_release.vs8.sln
 ntobjx_release/**
+ntobjx.vs*.sln
+ntobjx.vs*.vcxproj
+ntobjx.vs*.vcxproj.filters

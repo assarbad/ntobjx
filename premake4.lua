@@ -155,7 +155,7 @@ solution (iif(release, slnname, "ntobjx"))
             ["Resource Files/*"] = { "**.rc" },
             ["Resource Files/res/*"] = { "res/*.*" },
             ["Source Files/*"] = { "*.cpp" },
-            ["Special Files/*"] = { "**.cmd", "**.txt", "**.md", "premake4.lua", },
+            ["Special Files/*"] = { "**.cmd", "premake4.lua", "**.manifest", },
             ["Special Files/Module Definition Files/*"] = { "ntdll-stubs/*.txt", },
         }
 
@@ -183,11 +183,17 @@ solution (iif(release, slnname, "ntobjx"))
         configuration {"Release"}
             defines         ("NDEBUG")
             flags           {"Optimize", "Symbols"}
-            linkoptions     {"/release", "/opt:nowin98"}
-            buildoptions    {"/Oi", "/Os", "/Oy", "/Gy"}
+            linkoptions     {"/release"}
+            buildoptions    {"/Oi", "/Os", "/Gy"}
 
-        configuration {"Release", "x32"}
+        configuration {"vs2002 or vs2003 or vs2005 or vs2008", "Release"}
+            buildoptions    {"/Oy"}
+
+        configuration {"vs2002 or vs2003 or vs2005 or vs2008 or vs2010", "Release", "x32"}
             linkoptions     {"/subsystem:windows,5.00"}
+
+        configuration {"vs2012 or vs2013 or vs2015", "Release", "x32"}
+            linkoptions     {"/subsystem:windows,5.01"}
 
         configuration {"Release", "x64"}
             linkoptions     {"/subsystem:windows,5.02"}
@@ -200,6 +206,9 @@ solution (iif(release, slnname, "ntobjx"))
 
         configuration {"vs2005 or vs2008 or vs2010 or vs2012", "x64"}
             defines         {"WINVER=0x0501"}
+
+        configuration {"vs2005 or vs2008", "Release"}
+            linkoptions     {"/opt:nowin98"}
 
     if cmdline then
         -- ntobjx_c project
@@ -239,7 +248,7 @@ solution (iif(release, slnname, "ntobjx"))
             {
                 ["Header Files/*"] = { "*.h" },
                 ["Source Files/*"] = { "*.cpp" },
-                ["Special Files/*"] = { "**.cmd", "**.txt", "**.md", "premake4.lua", },
+                ["Special Files/*"] = { "**.cmd", "premake4.lua", "**.manifest", },
                 ["Special Files/Module Definition Files/*"] = { "ntdll-stubs/*.txt", },
             }
 
@@ -267,11 +276,17 @@ solution (iif(release, slnname, "ntobjx"))
             configuration {"Release"}
                 defines         ("NDEBUG")
                 flags           {"Optimize", "Symbols"}
-                linkoptions     {"/release", "/opt:nowin98"}
-                buildoptions    {"/Oi", "/Os", "/Oy", "/Gy"}
+                linkoptions     {"/release"}
+                buildoptions    {"/Oi", "/Os", "/Gy"}
 
-            configuration {"Release", "x32"}
-                linkoptions     {"/subsystem:console,5.00"}
+            configuration {"vs2002 or vs2003 or vs2005 or vs2008", "Release"}
+                buildoptions    {"/Oy"}
+
+            configuration {"vs2002 or vs2003 or vs2005 or vs2008 or vs2010", "Release", "x32"}
+                linkoptions     {"/subsystem:windows,5.00"}
+
+            configuration {"vs2012 or vs2013 or vs2015", "Release", "x32"}
+                linkoptions     {"/subsystem:windows,5.01"}
 
             configuration {"Release", "x64"}
                 linkoptions     {"/subsystem:console,5.02"}
@@ -284,4 +299,7 @@ solution (iif(release, slnname, "ntobjx"))
 
             configuration {"vs2005 or vs2008 or vs2010 or vs2012", "x64"}
                 defines         {"WINVER=0x0501"}
+
+            configuration {"vs2005 or vs2008", "Release"}
+                linkoptions     {"/opt:nowin98"}
     end
