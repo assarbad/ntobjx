@@ -164,6 +164,150 @@ namespace
     }
 }
 
+class CVersionInfo
+{
+    LPVOID m_lpVerInfo;
+    VS_FIXEDFILEINFO* m_pFixedFileInfo;
+    DWORD m_useTranslation;
+public:
+    CVersionInfo(HINSTANCE hInstance)
+        : m_lpVerInfo(NULL)
+        , m_pFixedFileInfo(NULL)
+        , m_useTranslation(0)
+    {
+        HRSRC hVersionResource = ::FindResource(hInstance, MAKEINTRESOURCE(VS_VERSION_INFO), RT_VERSION);
+        if(NULL != hVersionResource)
+        {
+            if(DWORD dwSize = ::SizeofResource(hInstance, hVersionResource))
+            {
+                if(HGLOBAL hVersionResourceData = ::LoadResource(hInstance, hVersionResource))
+                {
+                    if(LPVOID pVerInfoRO = ::LockResource(hVersionResourceData))
+                    {
+                        if(NULL != (m_lpVerInfo = ::LocalAlloc(LMEM_FIXED, dwSize)))
+                        {
+                            ::CopyMemory(m_lpVerInfo, pVerInfoRO, dwSize);
+                            UINT uLen;
+                            if(::VerQueryValue(m_lpVerInfo, _T("\\"), (LPVOID*)&m_pFixedFileInfo, &uLen))
+                            {
+                                ATLTRACE2(_T("%u.%u\n"), HIWORD(m_pFixedFileInfo->dwFileVersionMS), LOWORD(m_pFixedFileInfo->dwFileVersionMS));
+                                DWORD* translations;
+                                if(::VerQueryValue(m_lpVerInfo, _T("\\VarFileInfo\\Translation"), (LPVOID*)&translations, &uLen))
+                                {
+                                    size_t const numTranslations = uLen / sizeof(DWORD);
+                                    ATLTRACE2(_T("Number of translations: %u\n"), (UINT)numTranslations);
+                                    for(size_t i = 0; i < numTranslations; i++)
+                                    {
+                                        ATLTRACE2(_T("Translation %u: %08X\n"), (UINT)i, translations[i]);
+                                        switch(LOWORD(translations[i]))
+                                        {
+                                        case MAKELANGID(LANG_NEUTRAL, SUBLANG_NEUTRAL): // fallthrough
+                                        case MAKELANGID(LANG_ENGLISH, SUBLANG_ENGLISH_US):
+                                            if(1200 == HIWORD(translations[i])) // only Unicode entries
+                                            {
+                                                m_useTranslation = translations[i];
+                                                return;
+                                            }
+                                            break;
+                                        }
+                                    }
+                                }
+                            }
+                            else
+                            {
+                                m_pFixedFileInfo = NULL;
+                            }
+                        }
+                    }
+                }
+            }
+        }
+    }
+
+    virtual ~CVersionInfo()
+    {
+        ::LocalFree(m_lpVerInfo);
+    }
+
+    LPCTSTR operator[](LPCTSTR lpszKey) const
+    {
+        ATL::CString fullName;
+        fullName.Format(_T("\\StringFileInfo\\%04X%04X\\%s"), LOWORD(m_useTranslation), HIWORD(m_useTranslation), lpszKey);
+        ATLTRACE2(_T("Full name: %s\n"), fullName.GetString());
+        UINT uLen = 0;
+        LPTSTR lpszBuf = NULL;
+        if(::VerQueryValue(m_lpVerInfo, fullName, (LPVOID*)&lpszBuf, &uLen))
+        {
+            ATLTRACE2(_T("Value: %s\n"), lpszBuf);
+            return lpszBuf;
+        }
+        ATLTRACE2(_T("Value: NULL\n"));
+        return NULL;
+    }
+};
+
+class CAboutDlg :
+    public CDialogImpl<CAboutDlg>
+{
+    CHyperLink m_website, m_projectpage;
+    CVersionInfo m_verinfo;
+public:
+    enum { IDD = IDD_ABOUT };
+
+    BEGIN_MSG_MAP(CAboutDlg)
+        MESSAGE_HANDLER(WM_INITDIALOG, OnInitDialog)
+        COMMAND_ID_HANDLER(IDOK, OnCloseCmd)
+    END_MSG_MAP()
+
+    CAboutDlg()
+        : m_verinfo(_Module.GetModuleInstance())
+    {
+    }
+
+    LRESULT OnInitDialog(UINT /*uMsg*/, WPARAM /*wParam*/, LPARAM /*lParam*/, BOOL& /*bHandled*/)
+    {
+        CenterWindow(GetParent());
+
+        ATL::CString website(m_verinfo[_T("Website")]);
+        ATL::CString repo(m_verinfo[_T("Mercurial repository")]);
+        ATL::CString revision(m_verinfo[_T("Mercurial revision")]);
+
+        ATLVERIFY(m_website.SetHyperLink(website));
+        if(int slash = website.ReverseFind(_T('/')))
+        {
+            ATLVERIFY(m_website.SetLabel(&website.GetString()[slash+1]));
+        }
+        else
+        {
+            ATLVERIFY(m_website.SetLabel(website));
+        }
+        ATLVERIFY(m_website.SubclassWindow(GetDlgItem(IDC_STATIC_WEBSITE)));
+
+        ATLVERIFY(m_projectpage.SetLabel(repo));
+        ATLVERIFY(m_projectpage.SetHyperLink(repo));
+        ATLVERIFY(m_projectpage.SubclassWindow(GetDlgItem(IDC_STATIC_PROJECT_WEBSITE)));
+
+        ATLVERIFY(SetDlgItemText(IDC_STATIC_COPYRIGHT, m_verinfo[_T("LegalCopyright")]));
+        ATLVERIFY(SetDlgItemText(IDC_STATIC_DESCRIPTION, m_verinfo[_T("FileDescription")]));
+        ATLVERIFY(SetDlgItemText(IDC_STATIC_PROGNAME, m_verinfo[_T("ProductName")]));
+        ATLVERIFY(SetDlgItemText(IDC_STATIC_REVISION, m_verinfo[_T("Mercurial revision")]));
+
+        ATL::CString caption(_T("About "));
+        caption.Append(m_verinfo[_T("ProductName")]);
+        caption.Append(_T(" "));
+        caption.Append(m_verinfo[_T("FileVersion")]);
+        SetWindowText(caption);
+
+        return TRUE;
+    }
+
+    LRESULT OnCloseCmd(WORD /*wNotifyCode*/, WORD wID, HWND /*hWndCtl*/, BOOL& /*bHandled*/)
+    {
+        EndDialog(wID);
+        return 0;
+    }
+};
+
 typedef CWinTraitsOR<WS_TABSTOP | TVS_HASLINES | TVS_HASBUTTONS | TVS_SHOWSELALWAYS | TVS_INFOTIP, WS_EX_CLIENTEDGE, CControlWinTraits> CNtObjectsTreeViewTraits;
 typedef CWinTraitsOR<WS_TABSTOP | LVS_SHAREIMAGELISTS | LVS_SINGLESEL, 0, CSortListViewCtrlTraits> CNtObjectsListViewTraits;
 
@@ -201,8 +345,7 @@ public:
         CTreeItem ti = HitTest(pt, &flags);
         if(!ti.IsNull())
         {
-            // NB: we do NOT want to change the selection on right-click for the treeview
-            // ATLVERIFY(SelectItem(ti));
+            ATLVERIFY(SelectItem(ti));
 
             Directory* dir = reinterpret_cast<Directory*>(ti.GetData());
             if(dir)
@@ -259,7 +402,12 @@ public:
             return 0;
         if(pnmtv->itemNew.cChildren)
         {
-            ATLTRACE2(_T("Sort children of %p\n"), pnmtv->itemNew.hItem);
+#ifdef _DEBUG
+            if(Directory* dir = reinterpret_cast<Directory*>(GetItemData(pnmtv->itemNew.hItem)))
+                ATLTRACE2(_T("Sort children of %s (%p)\n"), dir->fullname(), pnmtv->itemNew.hItem);
+            else
+                ATLTRACE2(_T("Sort children of %p\n"), pnmtv->itemNew.hItem);
+#endif // _DEBUG
             SortTreeItemChildren_(pnmtv->itemNew.hItem);
         }
         return 0;
@@ -640,18 +788,22 @@ public:
     CNtObjectsListView m_listview;
     LONG m_tree_initialized; // only write to this member using Interlocked*()
     bool m_bFirstOnIdle;
+    UINT_PTR const m_AboutMenuItem;
 
     CNtObjectsMainFrame()
         : m_bFirstOnIdle(true) // to force initial refresh
+        , m_AboutMenuItem(::RegisterWindowMessage(_T("{2F95CC77-8F3F-4880-AA09-FDE7D65BA526}")))
     {
     }
 
     virtual BOOL PreTranslateMessage(MSG* pMsg)
     {
+        if(CFrameWindowImpl<CNtObjectsMainFrame>::PreTranslateMessage(pMsg))
+            return TRUE;
         // We need this such that WS_TABSTOP takes effect
         if(IsDialogMessage(pMsg))
             return TRUE;
-        return CFrameWindowImpl<CNtObjectsMainFrame>::PreTranslateMessage(pMsg);
+        return FALSE;
     }
 
     BEGIN_UPDATE_UI_MAP(CNtObjectsMainFrame)
@@ -663,9 +815,11 @@ public:
         MESSAGE_HANDLER(WM_CREATE, OnCreate)
         MESSAGE_HANDLER(WM_DESTROY, OnDestroy)
         MESSAGE_HANDLER(WM_GETMINMAXINFO, OnGetMinMaxInfo)
+        MESSAGE_HANDLER(WM_SYSCOMMAND, OnSysCommand)
         COMMAND_ID_HANDLER(ID_APP_EXIT, OnFileExit)
         COMMAND_ID_HANDLER(ID_VIEW_PROPERTIES, OnViewProperties)
         COMMAND_ID_HANDLER(ID_VIEW_REFRESH, OnViewRefresh)
+        COMMAND_ID_HANDLER(ID_SHOW_ABOUT, OnShowAbout)
         NOTIFY_CODE_HANDLER(LVN_ITEMCHANGED, OnLVItemChanged)
         NOTIFY_CODE_HANDLER(TVN_SELCHANGED, OnTVSelChanged)
         CHAIN_MSG_MAP(CUpdateUI<CNtObjectsMainFrame>)
@@ -681,6 +835,8 @@ public:
         // Add WS_EX_CONTROLPARENT such that tab stops work
         LONG exStyle = ::GetWindowLong(m_hWndClient, GWL_EXSTYLE);
         ::SetWindowLong(m_hWndClient, GWL_EXSTYLE, exStyle | WS_EX_CONTROLPARENT);
+        // The splitter should be smaller than the default width
+        m_vsplit.m_cxySplitBar = 3;
 
         ATLVERIFY(NULL != m_treeview.Create(m_hWndClient));
         ATLVERIFY(NULL != m_listview.Create(m_hWndClient));
@@ -691,6 +847,17 @@ public:
         ATLASSERT(m_vsplit.m_hWnd == ::GetDlgItem(m_hWnd, ::GetDlgCtrlID(m_vsplit)));
         ATLASSERT(m_treeview.m_hWnd == ::GetDlgItem(m_hWndClient, ::GetDlgCtrlID(m_treeview)));
         ATLASSERT(m_listview.m_hWnd == ::GetDlgItem(m_hWndClient, ::GetDlgCtrlID(m_listview)));
+
+        CMenuHandle sysmenu(GetSystemMenu(FALSE));
+        if(sysmenu.IsMenu())
+        {
+            ATL::CString menuString;
+            if(menuString.LoadString(IDS_ABOUT_MENUITEM))
+            {
+                ATLVERIFY(sysmenu.AppendMenu(MF_SEPARATOR));
+                ATLVERIFY(sysmenu.AppendMenu(MF_STRING, m_AboutMenuItem, menuString));
+            }
+        }
 
         m_vsplit.SetSplitterPanes(m_treeview, m_listview);
         UpdateLayout();
@@ -749,6 +916,10 @@ public:
 
     LRESULT OnViewProperties(WORD wNotifyCode, WORD wID, HWND hWndCtl, BOOL& /*bHandled*/)
     {
+#ifndef _DEBUG
+        UNREFERENCED_PARAMETER(wID);
+        UNREFERENCED_PARAMETER(wNotifyCode);
+#endif // _DEBUG
         ATLTRACE2(_T("hWndCtl = %p; wNotifyCode = %u (%04X); wID = %u (%04X)\n"), hWndCtl, wNotifyCode, wNotifyCode, wID, wID);
         if(hWndCtl == m_treeview.m_hWnd)
         {
@@ -801,6 +972,23 @@ public:
             m_listview.FillFromDirectory(m_treeview.ObjectRoot());
             (void)InterlockedExchange(&m_tree_initialized, 1);
         }
+        return 0;
+    }
+
+    LRESULT OnShowAbout(WORD /*wNotifyCode*/, WORD /*wID*/, HWND /*hWndCtl*/, BOOL& /*bHandled*/)
+    {
+        CAboutDlg dlg;
+        dlg.DoModal();
+        return 0;
+    }
+
+    LRESULT OnSysCommand(UINT /*uMsg*/, WPARAM wParam, LPARAM /*lParam*/, BOOL& bHandled)
+    {
+        ATLTRACE2(_T("WM_SYSCOMMAND lParam: %lu\n"), wParam);
+        if(m_AboutMenuItem == (UINT_PTR)wParam)
+            (void)OnShowAbout(0, 0, 0, bHandled);
+        else
+            bHandled = FALSE;
         return 0;
     }
 

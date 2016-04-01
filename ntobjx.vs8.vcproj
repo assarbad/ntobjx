@@ -70,8 +70,8 @@
 			/>
 			<Tool
 				Name="VCLinkerTool"
-				AdditionalOptions="&quot;/libpath:$(IntDir)&quot; /pdbaltpath:%_PDB% /delay:nobind /delayload:ntdll-delayed.dll"
-				AdditionalDependencies="ntdll-delayed.lib"
+				AdditionalOptions="&quot;/libpath:$(IntDir)&quot; /pdbaltpath:%_PDB% /delay:nobind /delayload:ntdll-delayed.dll /delayload:version.dll"
+				AdditionalDependencies="ntdll-delayed.lib version.lib"
 				OutputFile="$(OutDir)\ntobjx32D.exe"
 				LinkIncremental="1"
 				AdditionalLibraryDirectories=""
@@ -158,8 +158,8 @@
 			/>
 			<Tool
 				Name="VCLinkerTool"
-				AdditionalOptions="&quot;/libpath:$(IntDir)&quot; /pdbaltpath:%_PDB% /delay:nobind /delayload:ntdll-delayed.dll"
-				AdditionalDependencies="ntdll-delayed.lib"
+				AdditionalOptions="&quot;/libpath:$(IntDir)&quot; /pdbaltpath:%_PDB% /delay:nobind /delayload:ntdll-delayed.dll /delayload:version.dll"
+				AdditionalDependencies="ntdll-delayed.lib version.lib"
 				OutputFile="$(OutDir)\ntobjx64D.exe"
 				LinkIncremental="1"
 				AdditionalLibraryDirectories=""
@@ -246,8 +246,8 @@
 			/>
 			<Tool
 				Name="VCLinkerTool"
-				AdditionalOptions="&quot;/libpath:$(IntDir)&quot; /pdbaltpath:%_PDB% /delay:nobind /delayload:ntdll-delayed.dll /release /opt:nowin98 /subsystem:windows,5.00"
-				AdditionalDependencies="ntdll-delayed.lib"
+				AdditionalOptions="&quot;/libpath:$(IntDir)&quot; /pdbaltpath:%_PDB% /delay:nobind /delayload:ntdll-delayed.dll /delayload:version.dll /release /opt:nowin98 /subsystem:windows,5.00"
+				AdditionalDependencies="ntdll-delayed.lib version.lib"
 				OutputFile="$(OutDir)\ntobjx32.exe"
 				LinkIncremental="1"
 				AdditionalLibraryDirectories=""
@@ -337,8 +337,8 @@
 			/>
 			<Tool
 				Name="VCLinkerTool"
-				AdditionalOptions="&quot;/libpath:$(IntDir)&quot; /pdbaltpath:%_PDB% /delay:nobind /delayload:ntdll-delayed.dll /release /opt:nowin98 /subsystem:windows,5.02"
-				AdditionalDependencies="ntdll-delayed.lib"
+				AdditionalOptions="&quot;/libpath:$(IntDir)&quot; /pdbaltpath:%_PDB% /delay:nobind /delayload:ntdll-delayed.dll /delayload:version.dll /release /opt:nowin98 /subsystem:windows,5.02"
+				AdditionalDependencies="ntdll-delayed.lib version.lib"
 				OutputFile="$(OutDir)\ntobjx64.exe"
 				LinkIncremental="1"
 				AdditionalLibraryDirectories=""
@@ -543,6 +543,10 @@
 			>
 			<File
 				RelativePath="hgid.cmd"
+				>
+			</File>
+			<File
+				RelativePath="LICENSE.txt"
 				>
 			</File>
 			<File

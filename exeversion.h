@@ -41,12 +41,12 @@
 #define FILE_MINVER            PRD_MINVER // minor file version
 #define FILE_BUILD             PRD_BUILD // build number
 #define EXE_YEAR               2016 // current year or timespan (e.g. 2003-2007)
-#define TEXT_WEBSITE           http:/##/assarbad.net // website
-#define TEXT_PRODUCTNAME       Win Objects // product's name
+#define TEXT_WEBSITE           https:/##/assarbad.net // website
+#define TEXT_PRODUCTNAME       NT Objects // product's name
 #define TEXT_FILEDESC          Inspects the NT object manager namespace // component description
 #define TEXT_COMPANY           Oliver Schneider (assarbad.net) // company
 #define TEXT_MODULE            ntobjx // module name
-#define TEXT_COPYRIGHT         Copyright (c) EXE_YEAR TEXT_COMPANY // copyright information
+#define TEXT_COPYRIGHT         Copyright (c) EXE_YEAR TEXT_AUTHOR // copyright information
 #define TEXT_INTERNALNAME      ntobjx.exe
 #define HG_REPOSITORY          "https://bitbucket.org/assarbad/ntobjx"
 

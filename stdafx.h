@@ -22,7 +22,7 @@
 #   define _ATL_STATIC_REGISTRY
 #endif
 
-#define _WTL_USE_CSTRING
+#define _ATL_USE_CSTRING
 
 // Change these values to use different versions
 #ifndef WINVER
@@ -54,6 +54,7 @@ typedef CAppModule CNtObjectsAppModule;
 extern CNtObjectsAppModule _Module;
 
 #include <atlwin.h>
+#include <atlddx.h>
 #include <Shellapi.h>
 
 #if defined _M_IX86

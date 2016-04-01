@@ -37,6 +37,8 @@ TARGETLIBS=\
             $(SDK_LIB_PATH)\Comctl32.lib \
             $(SDK_LIB_PATH)\ole32.lib \
             $(SDK_LIB_PATH)\oleaut32.lib \
+            $(SDK_LIB_PATH)\shell32.lib \
+            $(SDK_LIB_PATH)\version.lib \
             $(SDK_LIB_PATH)\ntdll.lib
 
 SOURCES=ntobjx.cpp \

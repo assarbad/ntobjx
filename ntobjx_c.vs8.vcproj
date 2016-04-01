@@ -408,6 +408,10 @@
 			Name="Special Files"
 			Filter=""
 			>
+			<File
+				RelativePath="LICENSE.txt"
+				>
+			</File>
 			<Filter
 				Name="Module Definition Files"
 				Filter=""

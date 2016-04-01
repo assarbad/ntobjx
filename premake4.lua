@@ -106,10 +106,10 @@ solution (iif(release, slnname, "ntobjx"))
         targetdir       (iif(release, slnname, "build"))
         includedirs     {"wtl\\Include"}
         objdir          (int_dir)
-        links           {"ntdll-delayed"}
+        links           {"ntdll-delayed", "version"}
         resoptions      {"/nologo", "/l409"}
         resincludedirs  {".", "$(IntDir)"}
-        linkoptions     {"\"/libpath:$(IntDir)\"", "/pdbaltpath:%_PDB%", "/delay:nobind","/delayload:ntdll-delayed.dll"}
+        linkoptions     {"\"/libpath:$(IntDir)\"", "/pdbaltpath:%_PDB%", "/delay:nobind","/delayload:ntdll-delayed.dll","/delayload:version.dll"}
         defines         {"WIN32", "_WINDOWS", "STRICT"}
 
         --[[

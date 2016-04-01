@@ -102,9 +102,50 @@ IDR_MAINFRAME           ICON                    "res\\ntobjx.ico"
 
 IDR_MAINFRAME ACCELERATORS 
 BEGIN
-    VK_F5,          ID_VIEW_REFRESH,        VIRTKEY 
-    VK_F10,         ID_VIEW_PROPERTIES,     VIRTKEY 
+    VK_F12,         ID_SHOW_ABOUT,          VIRTKEY, NOINVERT
+    VK_F10,         ID_VIEW_PROPERTIES,     VIRTKEY, NOINVERT
+    VK_F5,          ID_VIEW_REFRESH,        VIRTKEY, NOINVERT
 END
+
+
+/////////////////////////////////////////////////////////////////////////////
+//
+// Dialog
+//
+
+IDD_ABOUT DIALOGEX 0, 0, 186, 104
+STYLE DS_SETFONT | DS_MODALFRAME | DS_FIXEDSYS | WS_POPUP | WS_CAPTION | WS_SYSMENU
+CAPTION "About"
+FONT 8, "MS Shell Dlg", 400, 0, 0x1
+BEGIN
+    DEFPUSHBUTTON   "OK",IDOK,68,83,50,14
+    CTEXT           "",IDC_STATIC_PROGNAME,7,7,172,8
+    CTEXT           "",IDC_STATIC_PROJECT_WEBSITE,7,61,172,8
+    CTEXT           "",IDC_STATIC_DESCRIPTION,7,15,172,8
+    CTEXT           "",IDC_STATIC_COPYRIGHT,7,24,172,8
+    CTEXT           "Source and code-signed binaries can be found at:",IDC_STATIC,7,53,172,8
+    CTEXT           "",IDC_STATIC_WEBSITE,7,34,172,8
+    CTEXT           "",IDC_STATIC_REVISION,7,73,172,8
+END
+
+
+/////////////////////////////////////////////////////////////////////////////
+//
+// DESIGNINFO
+//
+
+#ifdef APSTUDIO_INVOKED
+GUIDELINES DESIGNINFO 
+BEGIN
+    IDD_ABOUT, DIALOG
+    BEGIN
+        LEFTMARGIN, 7
+        RIGHTMARGIN, 179
+        TOPMARGIN, 7
+        BOTTOMMARGIN, 97
+    END
+END
+#endif    // APSTUDIO_INVOKED
 
 
 /////////////////////////////////////////////////////////////////////////////
@@ -115,6 +156,8 @@ END
 STRINGTABLE 
 BEGIN
     IDR_MAINFRAME           "ntobjx: NT Objects"
+    IDS_PROGRAM_DESCRIPTION "A program to explore the dark corners of NT"
+    IDS_ABOUT_MENUITEM      "About ntobjx\tF12"
 END
 
 STRINGTABLE 
