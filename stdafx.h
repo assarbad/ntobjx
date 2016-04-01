@@ -73,11 +73,7 @@ extern CNtObjectsAppModule _Module;
 #include "ntnative.h"
 
 #ifndef DDKBUILD
-#   if defined(_CONSOLE) || defined(_CONSOLE_APP)
-#       define DelayLoadError _tprintf
-#   else
-        EXTERN_C int __cdecl DelayLoadError(LPCTSTR lpszFormat, ...);
-#   endif
+    EXTERN_C int __cdecl DelayLoadError(LPCTSTR lpszFormat, ...);
     EXTERN_C void force_resolve_ntdll(void);
 #endif // DDKBUILD
 

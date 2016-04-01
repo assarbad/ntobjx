@@ -7,14 +7,19 @@
   ]]
 local action = _ACTION or ""
 local release = false
+local cmdline = false
 local slnname = ""
 local pfx = ""
+if _OPTIONS["cmdline"] then
+    cmdline = true
+end
 if _OPTIONS["release"] then
     print "INFO: Creating release build solution."
     release = true
     slnname = "ntobjx_release"
     pfx = slnname .. "_"
     _OPTIONS["release"] = pfx
+    cmdline = false
 end
 do
     -- This is mainly to support older premake4 builds
@@ -89,6 +94,7 @@ local function transformMN(input) -- transform the macro names for older Visual 
     return input
 end
 newoption { trigger = "release", description = "Creates a solution suitable for a release build." }
+newoption { trigger = "cmdline", description = "Also creates the project for the command line tool." }
 
 solution (iif(release, slnname, "ntobjx"))
     configurations  (iif(release, {"Release"}, {"Debug", "Release"}))
@@ -195,79 +201,87 @@ solution (iif(release, slnname, "ntobjx"))
         configuration {"vs2005 or vs2008 or vs2010 or vs2012", "x64"}
             defines         {"WINVER=0x0501"}
 
-    -- ntobjx_c project
-    project (iif(release, slnname, "ntobjx_c"))
-        local int_dir   = pfx.."intermediate/" .. action .. "_$(" .. transformMN("Platform") .. ")_$(" .. transformMN("Configuration") .. ")\\$(ProjectName)"
-        uuid            ("CA1F91D0-7D7E-4A9C-9DD1-6C65C2F37A59")
-        language        ("C++")
-        kind            ("ConsoleApp")
-        targetname      ("ntobjx_c")
-        flags           {"StaticRuntime", "Unicode", "NativeWChar", "ExtraWarnings", "WinMain", "NoMinimalRebuild", "NoIncrementalLink", "NoEditAndContinue"}
-        targetdir       (iif(release, slnname, "build"))
-        objdir          (int_dir)
-        links           {"ntdll-delayed"}
-        resoptions      {"/nologo", "/l409"}
-        resincludedirs  {".", "$(IntDir)"}
-        linkoptions     {"\"/libpath:$(IntDir)\"", "/pdbaltpath:%_PDB%", "/delay:nobind","/delayload:ntdll-delayed.dll"}
-        defines         {"WIN32", "_WINDOWS", "STRICT"}
+    if cmdline then
+        -- ntobjx_c project
+        project (iif(release, slnname, "ntobjx_c"))
+            local int_dir   = pfx.."intermediate/" .. action .. "_$(" .. transformMN("Platform") .. ")_$(" .. transformMN("Configuration") .. ")\\$(ProjectName)"
+            uuid            ("CA1F91D0-7D7E-4A9C-9DD1-6C65C2F37A59")
+            language        ("C++")
+            kind            ("ConsoleApp")
+            targetname      ("ntobjx_c")
+            flags           {"StaticRuntime", "Unicode", "NativeWChar", "ExtraWarnings", "WinMain", "NoMinimalRebuild", "NoIncrementalLink", "NoEditAndContinue"}
+            targetdir       (iif(release, slnname, "build"))
+            objdir          (int_dir)
+            links           {"ntdll-delayed"}
+            resoptions      {"/nologo", "/l409"}
+            resincludedirs  {".", "$(IntDir)"}
+            linkoptions     {"\"/libpath:$(IntDir)\"", "/pdbaltpath:%_PDB%", "/delay:nobind","/delayload:ntdll-delayed.dll"}
+            defines         {"WIN32", "_WINDOWS", "STRICT", "_CONSOLE"}
 
-        files
-        {
-            "ntdll-stubs/*.txt",
-            "ntnative.h",
-            "*.cpp",
-            "*.hpp",
-            "*.cmd", "*.txt", "*.md", "*.rst", "premake4.lua",
-        }
+            files
+            {
+                "ntdll-stubs/*.txt",
+                "ntnative.h",
+                "*.cpp",
+                "*.hpp",
+                "*.cmd", "*.txt", "*.md", "*.rst", "premake4.lua",
+            }
 
-        excludes
-        {
-            "ntobjx.cpp",
-            "hgid.h",
-            "fake_commodule.hpp",
-            "stdafx.*",
-        }
+            excludes
+            {
+                "ntobjx.cpp",
+                "hgid.h",
+                "fake_commodule.hpp",
+                "stdafx.*",
+            }
 
-        vpaths
-        {
-            ["Header Files/*"] = { "*.h" },
-            ["Source Files/*"] = { "*.cpp" },
-            ["Special Files/*"] = { "**.cmd", "**.txt", "**.md", "premake4.lua", },
-            ["Special Files/Module Definition Files/*"] = { "ntdll-stubs/*.txt", },
-        }
+            vpaths
+            {
+                ["Header Files/*"] = { "*.h" },
+                ["Source Files/*"] = { "*.cpp" },
+                ["Special Files/*"] = { "**.cmd", "**.txt", "**.md", "premake4.lua", },
+                ["Special Files/Module Definition Files/*"] = { "ntdll-stubs/*.txt", },
+            }
 
-        configuration {"Debug", "x32"}
-            targetsuffix    ("32D")
+            configuration {"Debug", "x32"}
+                targetsuffix    ("32D")
 
-        configuration {"Debug", "x64"}
-            targetsuffix    ("64D")
+            configuration {"Debug", "x64"}
+                targetsuffix    ("64D")
 
-        configuration {"Release", "x32"}
-            targetsuffix    ("32")
+            configuration {"Release", "x32"}
+                targetsuffix    ("32")
 
-        configuration {"Release", "x64"}
-            targetsuffix    ("64")
+            configuration {"Release", "x64"}
+                targetsuffix    ("64")
 
-        configuration {"Debug"}
-            flags           {"Symbols"}
+            configuration {"Debug"}
+                flags           {"Symbols"}
 
-        configuration {"x64"}
-            prebuildcommands{"lib.exe /nologo /nodefaultlib \"/def:ntdll-stubs\\ntdll-delayed.txt\" \"/out:$(IntDir)\\ntdll-delayed.lib\" /machine:x64", "\"$(ProjectDir)\\hgid.cmd\""}
+            configuration {"x64"}
+                prebuildcommands{"lib.exe /nologo /nodefaultlib \"/def:ntdll-stubs\\ntdll-delayed.txt\" \"/out:$(IntDir)\\ntdll-delayed.lib\" /machine:x64", "\"$(ProjectDir)\\hgid.cmd\""}
 
-        configuration {"x32"}
-            prebuildcommands{"cl.exe /nologo /c /TC /Ob0 ntdll-stubs\\ntdll-delayed-stubs.c \"/Fo$(IntDir)\\ntdll-delayed-stubs.obj\" & lib.exe /nologo \"/def:ntdll-stubs\\ntdll-delayed.txt\" \"/out:$(IntDir)\\ntdll-delayed.lib\" /machine:x86 \"$(IntDir)\\ntdll-delayed-stubs.obj\"", "\"$(ProjectDir)\\hgid.cmd\""}
+            configuration {"x32"}
+                prebuildcommands{"cl.exe /nologo /c /TC /Ob0 ntdll-stubs\\ntdll-delayed-stubs.c \"/Fo$(IntDir)\\ntdll-delayed-stubs.obj\" & lib.exe /nologo \"/def:ntdll-stubs\\ntdll-delayed.txt\" \"/out:$(IntDir)\\ntdll-delayed.lib\" /machine:x86 \"$(IntDir)\\ntdll-delayed-stubs.obj\"", "\"$(ProjectDir)\\hgid.cmd\""}
 
-        configuration {"Release"}
-            defines         ("NDEBUG")
-            flags           {"Optimize", "Symbols"}
-            linkoptions     {"/release", "/subsystem:console,5.00", "/opt:nowin98"}
-            buildoptions    {"/Oi", "/Os", "/Oy", "/Gy"}
+            configuration {"Release"}
+                defines         ("NDEBUG")
+                flags           {"Optimize", "Symbols"}
+                linkoptions     {"/release", "/opt:nowin98"}
+                buildoptions    {"/Oi", "/Os", "/Oy", "/Gy"}
 
-        configuration {"vs2013 or vs2015"}
-            defines         {"WINVER=0x0501"}
+            configuration {"Release", "x32"}
+                linkoptions     {"/subsystem:console,5.00"}
 
-        configuration {"vs2002 or vs2003 or vs2005 or vs2008 or vs2010 or vs2012", "x32"}
-            defines         {"WINVER=0x0500"}
+            configuration {"Release", "x64"}
+                linkoptions     {"/subsystem:console,5.02"}
 
-        configuration {"vs2005 or vs2008 or vs2010 or vs2012", "x64"}
-            defines         {"WINVER=0x0501"}
+            configuration {"vs2013 or vs2015"}
+                defines         {"WINVER=0x0501"}
+
+            configuration {"vs2002 or vs2003 or vs2005 or vs2008 or vs2010 or vs2012", "x32"}
+                defines         {"WINVER=0x0500"}
+
+            configuration {"vs2005 or vs2008 or vs2010 or vs2012", "x64"}
+                defines         {"WINVER=0x0501"}
+    end
