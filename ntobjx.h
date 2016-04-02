@@ -770,6 +770,10 @@ private:
 
 };
 
+#ifndef LVS_EX_DOUBLEBUFFER
+#   define LVS_EX_DOUBLEBUFFER     0x00010000
+#endif
+
 class CNtObjectsMainFrame : 
     public CFrameWindowImpl<CNtObjectsMainFrame>,
     public CUpdateUI<CNtObjectsMainFrame>,
