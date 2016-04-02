@@ -24,6 +24,17 @@
 
 #define _ATL_USE_CSTRING
 
+// This activates a slight modification in atlctrlx.h which prevents the link
+// color being read from the IE registry settings
+#ifndef _WTL_HYPERLINK_NO_IESETTINGS
+#   define _WTL_HYPERLINK_NO_IESETTINGS
+#endif
+// This activates a slight modification in atlctrlx.h which removes certain
+// sort types, in particular those which lead to a dependency to oleaut32.dll
+#ifndef _WTL_SORTLISTVIEW_NO_OLEAUT32
+#   define _WTL_SORTLISTVIEW_NO_OLEAUT32
+#endif
+
 // Change these values to use different versions
 #ifndef WINVER
 #   define WINVER           0x0500

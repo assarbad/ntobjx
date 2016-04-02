@@ -1542,6 +1542,10 @@ public:
 		// set link colors
 		if(m_bPaintLabel)
 		{
+#ifdef _WTL_HYPERLINK_NO_IESETTINGS
+			m_clrLink = RGB(0, 0, 0xFF);
+			m_clrVisited = RGB(0x80, 0, 0x80);
+#else
 			CRegKeyEx rk;
 			LONG lRet = rk.Open(HKEY_CURRENT_USER, _T("Software\\Microsoft\\Internet Explorer\\Settings"));
 			if(lRet == ERROR_SUCCESS)
@@ -1568,6 +1572,7 @@ public:
 						m_clrVisited = clr;
 				}
 			}
+#endif
 		}
 	}
 
@@ -2990,12 +2995,14 @@ enum
 	LVCOLSORT_NONE,
 	LVCOLSORT_TEXT,   // default
 	LVCOLSORT_TEXTNOCASE,
+#ifndef _WTL_SORTLISTVIEW_NO_OLEAUT32
 	LVCOLSORT_LONG,
 	LVCOLSORT_DOUBLE,
 	LVCOLSORT_DECIMAL,
 	LVCOLSORT_DATETIME,
 	LVCOLSORT_DATE,
 	LVCOLSORT_TIME,
+#endif // _WTL_SORTLISTVIEW_NO_OLEAUT32
 	LVCOLSORT_CUSTOM,
 	LVCOLSORT_LAST = LVCOLSORT_CUSTOM
 };
@@ -3024,9 +3031,11 @@ public:
 		DWORD_PTR dwItemData;
 		union
 		{
+#ifndef _WTL_SORTLISTVIEW_NO_OLEAUT32
 			long lValue;
 			double dblValue;
 			DECIMAL decValue;
+#endif // _WTL_SORTLISTVIEW_NO_OLEAUT32
 			LPCTSTR pszValue;
 		};
 	};
@@ -3201,7 +3210,9 @@ public:
 		LVCompareParam* pParam = NULL;
 		ATLTRY(pParam = new LVCompareParam[nCount]);
 		PFNLVCOMPARE pFunc = NULL;
+#ifndef _WTL_SORTLISTVIEW_NO_OLEAUT32
 		TCHAR pszTemp[pT->m_cchCmpTextMax] = { 0 };
+#endif
 		bool bStrValue = false;
 
 		switch(wType)
@@ -3227,6 +3238,7 @@ public:
 				bStrValue = true;
 			}
 			break;
+#ifndef _WTL_SORTLISTVIEW_NO_OLEAUT32
 		case LVCOLSORT_LONG:
 			{
 				pFunc = (PFNLVCOMPARE)pT->LVCompareLong;
@@ -3286,6 +3298,7 @@ public:
 				}
 			}
 			break;
+#endif
 		default:
 			ATLTRACE2(atlTraceUI, 0, _T("Unknown value for sort type in CSortListViewImpl::DoSortItems()\n"));
 			break;
@@ -3423,6 +3436,7 @@ public:
 		dc.SelectPen(hpenOld);
 	}
 
+#ifndef _WTL_SORTLISTVIEW_NO_OLEAUT32
 	double DateStrToDouble(LPCTSTR lpstr, DWORD dwFlags)
 	{
 		ATLASSERT(lpstr != NULL);
@@ -3493,6 +3507,7 @@ public:
 		}
 		return true;
 	}
+#endif
 
 // Overrideable PFNLVCOMPARE functions
 	static int CALLBACK LVCompareText(LPARAM lParam1, LPARAM lParam2, LPARAM lParamSort)
