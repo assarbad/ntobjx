@@ -1,6 +1,8 @@
 The individual source files other than those of the WTL are dual-licensed under
-the Microsoft Public License (MsPL) as well as the MIT license (reproduced
-below). The resulting binary is released under the MsPL.
+the Microsoft Public License (MS-PL) as well as the MIT license (reproduced
+below). The resulting binary is released under the MS-PL.
+
+The license text can be found in the wtl/MS-PL.txt text file.
 
 --------------------------------------------------------------------------------
 

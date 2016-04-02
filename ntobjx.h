@@ -484,17 +484,15 @@ private:
     // We create our image list dynamically from the icons
     void PrepareImageList_()
     {
-        ATLVERIFY(m_imagelist.Create(imgListElemWidth, imgListElemHeight, 0, 1, 1));
+        ATLTRACE2(_T("Preparing image list for %s\n"), _T(__FUNCTION__));
         WORD iconList[] = { IDI_OBJMGR_ROOT, IDI_DIRECTORY };
-        CRect rect(0, 0, imgListElemWidth * _countof(iconList), imgListElemHeight);
-        CMemoryDC memdc(GetDC(), rect);
+        ATLVERIFY(m_imagelist.Create(imgListElemWidth, imgListElemHeight, ILC_COLOR32 | ILC_MASK, (int)_countof(iconList), (int)_countof(iconList)));
         for(size_t i = 0; i < _countof(iconList); i++)
         {
-            CIcon icon(static_cast<HICON>(::LoadImage(_Module.GetResourceInstance(), MAKEINTRESOURCE(iconList[i]), IMAGE_ICON, imgListElemWidth, imgListElemHeight, LR_DEFAULTCOLOR)));
-            ATLVERIFY(!icon.IsNull());
-            ATLVERIFY(memdc.DrawIconEx(static_cast<int>(i) * imgListElemWidth, 0, icon, imgListElemWidth, imgListElemHeight));
+            HICON hIcon = static_cast<HICON>(::LoadImage(_Module.GetResourceInstance(), MAKEINTRESOURCE(iconList[i]), IMAGE_ICON, imgListElemWidth, imgListElemHeight, LR_CREATEDIBSECTION));
+            ATLTRACE2(_T("Icon handle: %p\n"), hIcon);
+            m_imagelist.AddIcon(hIcon);
         }
-        ATLVERIFY(-1 != m_imagelist.Add(memdc.GetCurrentBitmap()));
         (void)SetImageList(m_imagelist);
     }
 
@@ -534,8 +532,8 @@ public:
         MESSAGE_HANDLER(WM_RBUTTONDOWN, OnRightButtonDown)
         NOTIFY_CODE_HANDLER(HDN_ITEMCLICKA, OnHeaderItemClick)
         NOTIFY_CODE_HANDLER(HDN_ITEMCLICKW, OnHeaderItemClick)
-        CHAIN_MSG_MAP(baseClass)
         DEFAULT_REFLECTION_HANDLER()
+        CHAIN_MSG_MAP(baseClass)
     END_MSG_MAP()
 
     CNtObjectsListView()
@@ -714,24 +712,22 @@ private:
     // We create our image list dynamically from the icons
     void PrepareImageList_()
     {
+        ATLTRACE2(_T("Preparing image list for %s\n"), _T(__FUNCTION__));
         const int iResIconTypeMappingSize = static_cast<int>(resIconTypeMappingSize);
-        ATLVERIFY(m_imagelist.Create(imgListElemWidth, imgListElemHeight, 0, iResIconTypeMappingSize, iResIconTypeMappingSize));
-        CRect rect(0, 0, imgListElemWidth * iResIconTypeMappingSize, imgListElemHeight);
-        CMemoryDC memdc(GetDC(), rect);
+        ATLVERIFY(m_imagelist.Create(imgListElemWidth, imgListElemHeight, ILC_COLOR32 | ILC_MASK, iResIconTypeMappingSize, iResIconTypeMappingSize));
         for(int i = 0; i < iResIconTypeMappingSize; i++)
         {
-            CIcon icon(static_cast<HICON>(::LoadImage(_Module.GetResourceInstance(), MAKEINTRESOURCE(resIconTypeMapping[i].resId), IMAGE_ICON, imgListElemWidth, imgListElemHeight, LR_DEFAULTCOLOR)));
-            ATLVERIFY(!icon.IsNull());
-            ATLVERIFY(memdc.DrawIconEx(i * imgListElemWidth, 0, icon, imgListElemWidth, imgListElemHeight));
+            HICON hIcon = static_cast<HICON>(::LoadImage(_Module.GetResourceInstance(), MAKEINTRESOURCE(resIconTypeMapping[i].resId), IMAGE_ICON, imgListElemWidth, imgListElemHeight, LR_CREATEDIBSECTION));
+            ATLTRACE2(_T("Icon handle: %p - %s\n"), hIcon, resIconTypeMapping[i].typeName);
+            m_imagelist.AddIcon(hIcon);
         }
-        ATLVERIFY(-1 != m_imagelist.Add(memdc.GetCurrentBitmap()));
         (void)SetImageList(m_imagelist, LVSIL_SMALL);
     }
 
     void DeleteAllColumns_()
     {
         ATLTRACE2(_T("Column count: %i\n"), GetColumnCount());
-        // On older Windows/comctl versions it's impossible to remove column 0
+        // On older Windows/common control versions it's impossible to remove column 0
         for(int i = 1; i < GetColumnCount(); i++)
         {
             ATLVERIFY(DeleteColumn(i));
@@ -789,11 +785,14 @@ public:
     LONG m_tree_initialized; // only write to this member using Interlocked*()
     bool m_bFirstOnIdle;
     UINT_PTR const m_AboutMenuItem;
+    ATL::CString m_lastSelected;
+    HRESULT (CALLBACK* DllGetVersion)(DLLVERSIONINFO *);
 
     CNtObjectsMainFrame()
         : m_bFirstOnIdle(true) // to force initial refresh
         , m_AboutMenuItem(::RegisterWindowMessage(_T("{2F95CC77-8F3F-4880-AA09-FDE7D65BA526}")))
     {
+        *(FARPROC*)&DllGetVersion = ::GetProcAddress(::GetModuleHandle(_T("shell32.dll")), "DllGetVersion");
     }
 
     virtual BOOL PreTranslateMessage(MSG* pMsg)
@@ -840,7 +839,18 @@ public:
 
         ATLVERIFY(NULL != m_treeview.Create(m_hWndClient));
         ATLVERIFY(NULL != m_listview.Create(m_hWndClient));
-        m_listview.SetExtendedListViewStyle(LVS_EX_FULLROWSELECT);
+        if(DllGetVersion)
+        {
+            DLLVERSIONINFO dllvi = {sizeof(DLLVERSIONINFO), 0, 0, 0, 0};
+            if(SUCCEEDED(DllGetVersion(&dllvi)) && dllvi.dwMajorVersion >= 6)
+                m_listview.SetExtendedListViewStyle(LVS_EX_FULLROWSELECT | LVS_EX_DOUBLEBUFFER);
+            else
+                m_listview.SetExtendedListViewStyle(LVS_EX_FULLROWSELECT);
+        }
+        else
+        {
+            m_listview.SetExtendedListViewStyle(LVS_EX_FULLROWSELECT);
+        }
         ATLTRACE2(_T("Control ID for splitter: %i\n"), ::GetDlgCtrlID(m_vsplit));
         ATLTRACE2(_T("Control ID for treeview: %i\n"), ::GetDlgCtrlID(m_treeview));
         ATLTRACE2(_T("Control ID for listview: %i\n"), ::GetDlgCtrlID(m_listview));
@@ -919,8 +929,15 @@ public:
 #ifndef _DEBUG
         UNREFERENCED_PARAMETER(wID);
         UNREFERENCED_PARAMETER(wNotifyCode);
-#endif // _DEBUG
+#endif
         ATLTRACE2(_T("hWndCtl = %p; wNotifyCode = %u (%04X); wID = %u (%04X)\n"), hWndCtl, wNotifyCode, wNotifyCode, wID, wID);
+#ifdef _DEBUG
+        if(!m_lastSelected.IsEmpty())
+        {
+            ATLTRACE2(_T("Last selected item: %s\n"), m_lastSelected.GetString());
+        }
+#endif
+
         if(hWndCtl == m_treeview.m_hWnd)
         {
             AtlMessageBox(m_hWnd, _T("Properties from TreeView"));
@@ -928,6 +945,10 @@ public:
         else if(hWndCtl == m_listview.m_hWnd)
         {
             AtlMessageBox(m_hWnd, _T("Properties from ListView"));
+        }
+        else
+        {
+            AtlMessageBox(m_hWnd, _T("Properties via hotkey or menu?!"));
         }
         return 0;
     }
@@ -941,7 +962,7 @@ public:
         {
             if(GenericObject* obj = reinterpret_cast<GenericObject*>(pnmlv->lParam))
             {
-                ::SetWindowText(m_hWndStatusBar, obj->fullname());
+                SetSelected_(obj->fullname());
                 bHandled = TRUE;
             }
         }
@@ -957,7 +978,7 @@ public:
         if(m_tree_initialized && dir)
         {
             m_listview.FillFromDirectory(*dir);
-            ::SetWindowText(m_hWndStatusBar, dir->fullname());
+            SetSelected_(dir->fullname());
             bHandled = TRUE;
         }
         return 0;
@@ -970,6 +991,7 @@ public:
         if(m_treeview.EmptyAndRefill())
         {
             m_listview.FillFromDirectory(m_treeview.ObjectRoot());
+            SetSelected_(m_treeview.ObjectRoot().fullname());
             (void)InterlockedExchange(&m_tree_initialized, 1);
         }
         return 0;
@@ -992,4 +1014,11 @@ public:
         return 0;
     }
 
+private:
+
+    void SetSelected_(LPCTSTR fullName)
+    {
+        m_lastSelected = fullName;
+        ::SetWindowText(m_hWndStatusBar, m_lastSelected);
+    }
 };
