@@ -308,6 +308,34 @@ public:
     }
 };
 
+class CSuppressRedraw
+{
+    HWND m_hWnd;
+    CSuppressRedraw();
+    CSuppressRedraw(CSuppressRedraw const&);
+    CSuppressRedraw& operator=(CSuppressRedraw const&);
+public:
+    CSuppressRedraw(HWND hWnd)
+        : m_hWnd(hWnd)
+    {
+        if(::IsWindow(m_hWnd))
+        {
+            ::SendMessage(m_hWnd, WM_SETREDRAW, FALSE, 0);
+        }
+    }
+
+    ~CSuppressRedraw()
+    {
+        if(::IsWindow(m_hWnd))
+        {
+            ::SendMessage(m_hWnd, WM_SETREDRAW, TRUE, 0);
+            CRect rect;
+            ATLVERIFY(::GetClientRect(m_hWnd, &rect));
+            ATLVERIFY(::InvalidateRect(m_hWnd, &rect, FALSE));
+        }
+    }
+};
+
 typedef CWinTraitsOR<WS_TABSTOP | TVS_HASLINES | TVS_HASBUTTONS | TVS_SHOWSELALWAYS | TVS_INFOTIP, WS_EX_CLIENTEDGE, CControlWinTraits> CNtObjectsTreeViewTraits;
 typedef CWinTraitsOR<WS_TABSTOP | LVS_SHAREIMAGELISTS | LVS_SINGLESEL, 0, CSortListViewCtrlTraits> CNtObjectsListViewTraits;
 
@@ -452,6 +480,7 @@ public:
             {
                 PrepareImageList_();
             }
+            CSuppressRedraw suppressRedraw(m_hWnd);
             if(DeleteAllItems())
             {
                 // Recursively fill the tree
@@ -542,6 +571,7 @@ public:
 
     void FillFromDirectory(Directory& current)
     {
+        CSuppressRedraw suppressRedraw(m_hWnd);
         DeleteAllItems();
         if(::IsWindow(m_hWnd) && m_imagelist.IsNull())
         {
@@ -568,6 +598,7 @@ public:
                 , current[i]->type()
                 );
             widths[1] = max(GetStringWidth(current[i]->type()), widths[1]);
+            ATLTRACE2(_T("%s:%i [%s:%i] / %i:%i\n"), current[i]->name(), GetStringWidth(current[i]->name()), current[i]->type(), GetStringWidth(current[i]->type()), widths[0], widths[1]);
             SymbolicLink* symlink = dynamic_cast<SymbolicLink*>(current[i]);
             if(symlink)
             {
@@ -577,17 +608,19 @@ public:
                     , symlink->target()
                     );
                 widths[2] = max(GetStringWidth(symlink->target()), widths[2]);
+                ATLTRACE2(_T("    %s:%i [%i]\n"), symlink->target(), GetStringWidth(symlink->target()), widths[2]);
             }
         }
         CRect rect;
         ATLVERIFY(GetWindowRect(&rect));
-        int const maxWidths[] = {rect.right-rect.left - 50, 100, 200};
+        int const maxWidths[] = {rect.right-rect.left - 50, 150, 200};
         // Try to set an optimum column width
         for(int i = 0; i <  _countof(widths); i++)
         {
             if(-1 != widths[i])
             {
-                ATLVERIFY(SetColumnWidth(i, min(widths[i] + imgListElemWidth + 0x10, maxWidths[i])));
+                int currcol = min(widths[i] + imgListElemWidth + (i ? 0 : 0x10), maxWidths[i]);
+                ATLVERIFY(SetColumnWidth(i, currcol));
             }
         }
         // Sort according to name column
