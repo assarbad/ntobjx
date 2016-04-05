@@ -34,6 +34,9 @@
 #ifndef _WTL_SORTLISTVIEW_NO_OLEAUT32
 #   define _WTL_SORTLISTVIEW_NO_OLEAUT32
 #endif
+#ifndef _WTL_NEW_PAGE_NOTIFY_HANDLERS
+#   define _WTL_NEW_PAGE_NOTIFY_HANDLERS
+#endif
 
 // Change these values to use different versions
 #ifndef WINVER

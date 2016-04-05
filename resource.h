@@ -27,6 +27,7 @@
 #define ID_COLNAME_OBJTYPE              32781
 #define ID_COLNAME_OBJLNKTGT            32782
 #define ID_SHOW_ABOUT                   32783
+#define IDS_PROPERTIES                  32784
 
 // Next default values for new objects
 // 

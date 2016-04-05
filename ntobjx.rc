@@ -16,10 +16,8 @@
 // English (U.S.) resources
 
 #if !defined(AFX_RESOURCE_DLL) || defined(AFX_TARG_ENU)
-#ifdef _WIN32
 LANGUAGE LANG_ENGLISH, SUBLANG_ENGLISH_US
 #pragma code_page(1252)
-#endif //_WIN32
 
 #ifdef APSTUDIO_INVOKED
 /////////////////////////////////////////////////////////////////////////////
@@ -51,7 +49,7 @@ END
 // Menu
 //
 
-IDR_MAINFRAME MENU 
+IDR_MAINFRAME MENU
 BEGIN
     POPUP "&File"
     BEGIN
@@ -64,7 +62,7 @@ BEGIN
     END
 END
 
-IDR_POPUP_MENU1 MENU 
+IDR_POPUP_MENU1 MENU
 BEGIN
     POPUP "Generic object"
     BEGIN
@@ -95,12 +93,13 @@ END
 // remains consistent on all systems.
 IDR_MAINFRAME           ICON                    "res\\ntobjx.ico"
 
+
 /////////////////////////////////////////////////////////////////////////////
 //
 // Accelerator
 //
 
-IDR_MAINFRAME ACCELERATORS 
+IDR_MAINFRAME ACCELERATORS
 BEGIN
     VK_F12,         ID_SHOW_ABOUT,          VIRTKEY, NOINVERT
     VK_F10,         ID_VIEW_PROPERTIES,     VIRTKEY, NOINVERT
@@ -137,8 +136,8 @@ BEGIN
     LTEXT           "&Name:",IDC_STATIC,12,18,22,8
     LTEXT           "&Full path:",IDC_STATIC,12,36,31,8
     LTEXT           "&Type:",IDC_STATIC,12,54,20,8
-    GROUPBOX        "References",IDC_STATIC,6,72,131,40
-    GROUPBOX        "Quota charges (memory use)",IDC_STATIC,144,72,131,40
+    GROUPBOX        "References",IDC_STATIC,7,72,131,40
+    GROUPBOX        "Quota charges (memory use)",IDC_STATIC,141,72,131,40
     EDITTEXT        IDC_EDIT_NAME,48,18,218,12,ES_AUTOHSCROLL | ES_READONLY | NOT WS_BORDER
     EDITTEXT        IDC_EDIT_FULLNAME,48,36,218,12,ES_AUTOHSCROLL | ES_READONLY | NOT WS_BORDER
     EDITTEXT        IDC_EDIT_TYPE,48,54,218,12,ES_AUTOHSCROLL | ES_READONLY | NOT WS_BORDER
@@ -151,7 +150,7 @@ END
 //
 
 #ifdef APSTUDIO_INVOKED
-GUIDELINES DESIGNINFO 
+GUIDELINES DESIGNINFO
 BEGIN
     IDD_ABOUT, DIALOG
     BEGIN
@@ -177,20 +176,20 @@ END
 // String Table
 //
 
-STRINGTABLE 
+STRINGTABLE
 BEGIN
     IDR_MAINFRAME           "ntobjx: NT Objects"
     IDS_PROGRAM_DESCRIPTION "A program to explore the dark corners of NT"
     IDS_ABOUT_MENUITEM      "About ntobjx\tF12"
 END
 
-STRINGTABLE 
+STRINGTABLE
 BEGIN
     ID_APP_ABOUT            "Display program information, version number and copyright\nAbout"
     ID_APP_EXIT             "Quit the application\nExit"
 END
 
-STRINGTABLE 
+STRINGTABLE
 BEGIN
     ID_VIEW_PROPERTIES      "Show the properties of the selected object\nProperties"
     ID_POPUPMENU_COPYNAME   "Copy name of object to clipboard"
@@ -202,12 +201,13 @@ BEGIN
     ID_COLNAME_OBJLNKTGT    "Target"
 END
 
-STRINGTABLE 
+STRINGTABLE
 BEGIN
     ID_VIEW_REFRESH         "Refresh the list of objects\nRefresh"
+    IDS_PROPERTIES          "Properties of "
 END
 
-STRINGTABLE 
+STRINGTABLE
 BEGIN
     ATL_IDS_SCSIZE          "Change the window size"
     ATL_IDS_SCMOVE          "Change the window position"
@@ -218,13 +218,13 @@ BEGIN
     ATL_IDS_SCCLOSE         "Close the active window and prompts to save the documents"
 END
 
-STRINGTABLE 
+STRINGTABLE
 BEGIN
     ATL_IDS_SCRESTORE       "Restore the window to normal size"
     ATL_IDS_SCTASKLIST      "Activate Task List"
 END
 
-STRINGTABLE 
+STRINGTABLE
 BEGIN
     ATL_IDS_IDLEMESSAGE     "Ready"
 END

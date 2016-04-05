@@ -162,7 +162,7 @@ namespace
             ATLVERIFY(::CloseClipboard());
         }
     }
-}
+} // anonymous namespace
 
 class CVersionInfo
 {
@@ -246,6 +246,89 @@ public:
     }
 };
 
+class CSuppressRedraw
+{
+    HWND m_hWnd;
+    CSuppressRedraw();
+    CSuppressRedraw(CSuppressRedraw const&);
+    CSuppressRedraw& operator=(CSuppressRedraw const&);
+public:
+    CSuppressRedraw(HWND hWnd)
+        : m_hWnd(hWnd)
+    {
+        if(::IsWindow(m_hWnd))
+        {
+            ::SendMessage(m_hWnd, WM_SETREDRAW, FALSE, 0);
+        }
+    }
+
+    ~CSuppressRedraw()
+    {
+        if(::IsWindow(m_hWnd))
+        {
+            ::SendMessage(m_hWnd, WM_SETREDRAW, TRUE, 0);
+            CRect rect;
+            ATLVERIFY(::GetClientRect(m_hWnd, &rect));
+            ATLVERIFY(::InvalidateRect(m_hWnd, &rect, FALSE));
+        }
+    }
+};
+
+class CObjectPropertySheet :
+    public CPropertySheetImpl<CObjectPropertySheet>
+{
+    class CObjectDetailsPage :
+        public CPropertyPageImpl<CObjectDetailsPage>,
+        public CWinDataExchange<CObjectDetailsPage>
+    {
+        typedef CPropertyPageImpl<CObjectDetailsPage> baseClass;
+    public:
+        enum { IDD = IDD_PROPERTIES };
+
+        BEGIN_MSG_MAP(CObjectDetailsPage)
+            MESSAGE_HANDLER(WM_INITDIALOG, OnInitDialog)
+            CHAIN_MSG_MAP(baseClass);
+        END_MSG_MAP()
+            BEGIN_DDX_MAP(CObjectDetailsPage)
+            END_DDX_MAP()
+
+            CObjectDetailsPage(ATL::_U_STRINGorID title = (LPCTSTR)NULL)
+            : baseClass(title)
+        {
+        }
+
+        LRESULT OnInitDialog(UINT /*uMsg*/, WPARAM /*wParam*/, LPARAM /*lParam*/, BOOL& bHandled)
+        {
+            bHandled = FALSE;
+            return TRUE;
+        }
+    };
+
+    typedef CPropertySheetImpl<CObjectPropertySheet> baseClass;
+    CObjectDetailsPage m_details;
+    ATL::CString m_objName;
+public:
+    BEGIN_MSG_MAP(CObjectPropertySheet)
+        MESSAGE_HANDLER(WM_INITDIALOG, OnInitDialog)
+        CHAIN_MSG_MAP(baseClass);
+    END_MSG_MAP()
+
+    CObjectPropertySheet(ATL::CString objName)
+        : baseClass((LPCTSTR)NULL, 0, NULL)
+        , m_details()
+        , m_objName(objName)
+    {
+        AddPage(m_details);
+        SetTitle(objName, PSH_PROPTITLE);
+    }
+
+    LRESULT OnInitDialog(UINT /*uMsg*/, WPARAM /*wParam*/, LPARAM /*lParam*/, BOOL& bHandled)
+    {
+        bHandled = FALSE;
+        return TRUE;
+    }
+};
+
 class CAboutDlg :
     public CDialogImpl<CAboutDlg>
 {
@@ -305,34 +388,6 @@ public:
     {
         EndDialog(wID);
         return 0;
-    }
-};
-
-class CSuppressRedraw
-{
-    HWND m_hWnd;
-    CSuppressRedraw();
-    CSuppressRedraw(CSuppressRedraw const&);
-    CSuppressRedraw& operator=(CSuppressRedraw const&);
-public:
-    CSuppressRedraw(HWND hWnd)
-        : m_hWnd(hWnd)
-    {
-        if(::IsWindow(m_hWnd))
-        {
-            ::SendMessage(m_hWnd, WM_SETREDRAW, FALSE, 0);
-        }
-    }
-
-    ~CSuppressRedraw()
-    {
-        if(::IsWindow(m_hWnd))
-        {
-            ::SendMessage(m_hWnd, WM_SETREDRAW, TRUE, 0);
-            CRect rect;
-            ATLVERIFY(::GetClientRect(m_hWnd, &rect));
-            ATLVERIFY(::InvalidateRect(m_hWnd, &rect, FALSE));
-        }
     }
 };
 
@@ -955,41 +1010,6 @@ public:
         return 0;
     }
 
-    LRESULT OnFileExit(WORD /*wNotifyCode*/, WORD /*wID*/, HWND /*hWndCtl*/, BOOL& /*bHandled*/)
-    {
-        PostMessage(WM_CLOSE);
-        return 0;
-    }
-
-    LRESULT OnViewProperties(WORD wNotifyCode, WORD wID, HWND hWndCtl, BOOL& /*bHandled*/)
-    {
-#ifndef _DEBUG
-        UNREFERENCED_PARAMETER(wID);
-        UNREFERENCED_PARAMETER(wNotifyCode);
-#endif
-        ATLTRACE2(_T("hWndCtl = %p; wNotifyCode = %u (%04X); wID = %u (%04X)\n"), hWndCtl, wNotifyCode, wNotifyCode, wID, wID);
-#ifdef _DEBUG
-        if(!m_lastSelected.IsEmpty())
-        {
-            ATLTRACE2(_T("Last selected item: %s\n"), m_lastSelected.GetString());
-        }
-#endif
-
-        if(hWndCtl == m_treeview.m_hWnd)
-        {
-            AtlMessageBox(m_hWnd, _T("Properties from TreeView"));
-        }
-        else if(hWndCtl == m_listview.m_hWnd)
-        {
-            AtlMessageBox(m_hWnd, _T("Properties from ListView"));
-        }
-        else
-        {
-            AtlMessageBox(m_hWnd, _T("Properties via hotkey or menu?!"));
-        }
-        return 0;
-    }
-
     LRESULT OnLVItemChanged(int /*idCtrl*/, LPNMHDR pnmh, BOOL& bHandled)
     {
         LPNMLISTVIEW pnmlv = reinterpret_cast<LPNMLISTVIEW>(pnmh);
@@ -1051,6 +1071,36 @@ public:
         return 0;
     }
 
+    LRESULT OnFileExit(WORD /*wNotifyCode*/, WORD /*wID*/, HWND /*hWndCtl*/, BOOL& /*bHandled*/)
+    {
+        PostMessage(WM_CLOSE);
+        return 0;
+    }
+
+    LRESULT OnViewProperties(WORD wNotifyCode, WORD wID, HWND hWndCtl, BOOL& /*bHandled*/)
+    {
+#ifndef _DEBUG
+        UNREFERENCED_PARAMETER(wNotifyCode);
+        UNREFERENCED_PARAMETER(wID);
+        UNREFERENCED_PARAMETER(hWndCtl);
+#endif
+        ATLTRACE2(_T("hWndCtl = %p; wNotifyCode = %u (%04X); wID = %u (%04X)\n"), hWndCtl, wNotifyCode, wNotifyCode, wID, wID);
+#ifdef _DEBUG
+        if(!m_lastSelected.IsEmpty())
+        {
+            ATLTRACE2(_T("Last selected item: %s\n"), m_lastSelected.GetString());
+        }
+#endif
+
+        if(!m_lastSelected.IsEmpty())
+        {
+            CObjectPropertySheet objprop(m_lastSelected);
+            (void)objprop.DoModal(m_hWnd);
+        }
+
+        return 0;
+    }
+
 private:
 
     void SetSelected_(LPCTSTR fullName)
@@ -1059,3 +1109,5 @@ private:
         ::SetWindowText(m_hWndStatusBar, m_lastSelected);
     }
 };
+
+// TODO: Multi-pane status bar to also show the number of objects (and perhaps types + symlinks) in the list-view
