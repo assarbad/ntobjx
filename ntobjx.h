@@ -282,6 +282,8 @@ class CNoCaretEditT :
 public:
     BEGIN_MSG_MAP(CNoCaretEditT<T>)
         MESSAGE_HANDLER(WM_SETFOCUS, OnSetFocus)
+        MESSAGE_HANDLER(WM_SETFOCUS, OnKillFocus)
+        MESSAGE_HANDLER(WM_LBUTTONDBLCLK, OnDoubleClick)
     END_MSG_MAP()
 
     CNoCaretEditT()
@@ -299,6 +301,24 @@ public:
         LRESULT ret = DefWindowProc(uMsg, wParam, lParam);
         HideCaret();
         SetSel(-1, 0); // clear selection (i.e. do not select full contents when edit receives focus)
+        PostMessage(WM_KEYDOWN, VK_HOME, 0);
+        PostMessage(WM_KEYUP, VK_HOME, 0);
+        return ret;
+    }
+
+    LRESULT OnKillFocus(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL& /*bHandled*/)
+    {
+        // FIXME: currently doesn't seem to work. This is supposed to synthesize a VK_HOME key press inside the edit field
+        SetSel(-1, 0); // clear selection
+        PostMessage(WM_KEYDOWN, VK_HOME, 0);
+        PostMessage(WM_KEYUP, VK_HOME, 0);
+        return DefWindowProc(uMsg, wParam, lParam);
+    }
+
+    LRESULT OnDoubleClick(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL& /*bHandled*/)
+    {
+        LRESULT ret = DefWindowProc(uMsg, wParam, lParam);
+        SetSel(0, -1); // select all
         return ret;
     }
 };
@@ -380,7 +400,7 @@ class CAboutDlg :
     public CDialogImpl<CAboutDlg>
 {
     CHyperLink m_website, m_projectpage;
-    CVersionInfo m_verinfo;
+    CVersionInfo& m_verinfo;
 public:
     enum { IDD = IDD_ABOUT };
 
@@ -389,8 +409,8 @@ public:
         COMMAND_ID_HANDLER(IDOK, OnCloseCmd)
     END_MSG_MAP()
 
-    CAboutDlg()
-        : m_verinfo(_Module.GetModuleInstance())
+    CAboutDlg(CVersionInfo& verinfo)
+        : m_verinfo(verinfo)
     {
     }
 
@@ -453,6 +473,7 @@ public:
     DECLARE_WND_SUPERCLASS(_T("NtObjectsTreeView"), CTreeViewCtrlEx::GetWndClassName())
 
     BEGIN_MSG_MAP(CNtObjectsTreeView)
+        //MESSAGE_HANDLER(WM_SETFOCUS, OnSetFocus)
         MESSAGE_HANDLER(WM_CONTEXTMENU, OnContextMenu)
         NOTIFY_CODE_HANDLER(TVN_ITEMEXPANDING, OnTVItemExpanding)
         NOTIFY_CODE_HANDLER(TVN_GETINFOTIP, OnGetInfoTip)
@@ -462,6 +483,15 @@ public:
     CNtObjectsTreeView()
         : m_bInitialized(false)
     {}
+
+#if 0
+    LRESULT OnSetFocus(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL& /*bHandled*/)
+    {
+        LRESULT ret = DefWindowProc(uMsg, wParam, lParam);
+        // TODO: does the listview require a refresh?
+        return ret;
+    }
+#endif // 0\
 
     LRESULT OnContextMenu(UINT /*uMsg*/, WPARAM /*wParam*/, LPARAM /*lParam*/, BOOL& /*bHandled*/)
     {
@@ -826,6 +856,8 @@ public:
         if(ItemFromHitTest_(lvhtti, pt))
         {
             using namespace NtObjMgr;
+            // If we found an item, select it
+            ATLVERIFY(SelectItem(lvhtti.iItem));
 
             LVITEM item = {0};
             item.iItem = lvhtti.iItem;
@@ -836,9 +868,14 @@ public:
             {
                 if(Directory* dir = dynamic_cast<Directory*>(itemobj))
                 {
-                    FillFromDirectory(*dir);
+                    if(dir->size())
+                    {
+                        FillFromDirectory(*dir);
+                        return 0;
+                    }
                 }
             }
+            ::SendMessage(GetParent(), WM_COMMAND, MAKEWPARAM(ID_VIEW_PROPERTIES, 0), reinterpret_cast<LPARAM>(m_hWnd));
         }
         return 0;
     }
@@ -1012,12 +1049,14 @@ public:
     bool m_bFirstOnIdle;
     UINT_PTR const m_AboutMenuItem;
     GenericObject* m_lastSelected;
+    CVersionInfo m_verinfo;
     HRESULT (CALLBACK* DllGetVersion)(DLLVERSIONINFO *);
 
     CNtObjectsMainFrame()
         : m_bFirstOnIdle(true) // to force initial refresh
         , m_AboutMenuItem(::RegisterWindowMessage(_T("{2F95CC77-8F3F-4880-AA09-FDE7D65BA526}")))
         , m_lastSelected(0)
+        , m_verinfo(_Module.GetModuleInstance())
     {
         *(FARPROC*)&DllGetVersion = ::GetProcAddress(::GetModuleHandle(_T("shell32.dll")), "DllGetVersion");
     }
@@ -1100,6 +1139,18 @@ public:
         UpdateLayout();
         m_vsplit.SetSplitterPosPct(20);
         m_vsplit.m_cxyMin = 180; //  minimum size of the treeview
+
+        ATL::CString oldDlgTitle;
+        BOOL b = GetWindowText(oldDlgTitle.GetBufferSetLength(MAX_PATH), MAX_PATH);
+        ATLTRACE2(_T("%u -> GetWindowText\n"), b);
+        if(b)
+        {
+            ATLTRACE2(_T("Old title: %s\n"), oldDlgTitle.GetString());
+            ATL::CString newDlgTitle;
+            newDlgTitle.Format(_T("%s: version %s, rev: %s"), oldDlgTitle.GetString(), m_verinfo[_T("ProductVersion")], m_verinfo[_T("Mercurial revision")]);
+            ATLTRACE2(_T("New title: %s\n"), newDlgTitle.GetString());
+            ATLVERIFY(SetWindowText(newDlgTitle.GetString()));
+        }
 
         // register object for message filtering and idle updates
         CMessageLoop* pLoop = _Module.GetMessageLoop();
@@ -1189,7 +1240,7 @@ public:
 
     LRESULT OnShowAbout(WORD /*wNotifyCode*/, WORD /*wID*/, HWND /*hWndCtl*/, BOOL& /*bHandled*/)
     {
-        CAboutDlg dlg;
+        CAboutDlg dlg(m_verinfo);
         dlg.DoModal();
         return 0;
     }
@@ -1223,7 +1274,6 @@ public:
         {
             ATLTRACE2(_T("Last selected item: %s\n"), m_lastSelected->fullname().GetString());
         }
-#endif
         if(hWndCtl == m_listview.m_hWnd)
         {
             ATLTRACE2(_T("From ListView\n"));
@@ -1236,6 +1286,7 @@ public:
         {
             ATLTRACE2(_T("From main menu or hotkey\n"));
         }
+#endif
 
         if(m_lastSelected)
         {

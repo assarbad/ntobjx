@@ -36,9 +36,11 @@
 #define TEXT_AUTHOR            Oliver Schneider // author (optional value)
 #define PRD_MAJVER             1 // major product version
 #define PRD_MINVER             1 // minor product version
+#define PRD_PATCH              1 // patch number
 #define PRD_BUILD              0 // build number for product
 #define FILE_MAJVER            PRD_MAJVER // major file version
 #define FILE_MINVER            PRD_MINVER // minor file version
+#define FILE_PATCH             PRD_PATCH // patch number
 #define FILE_BUILD             PRD_BUILD // build number
 #define EXE_YEAR               2016 // current year or timespan (e.g. 2003-2007)
 #define TEXT_WEBSITE           https:/##/assarbad.net // website
@@ -64,8 +66,8 @@
             WIDESTRING(buffer) \
             };
 
-#define CREATE_XVER(maj,min,build) maj ## , ## min ## , 0, ## build
-#define CREATE_FVER(maj,min,build) maj ## . ## min ## .0. ## build
-#define CREATE_PVER(maj,min,build) maj ## . ## min
+#define CREATE_XVER(maj,min,patch,build) maj ## , ## min ## , ## patch ## , ## build
+#define CREATE_FVER(maj,min,patch,build) maj ## . ## min ## . ## patch ## . ## build
+#define CREATE_PVER(maj,min,patch,build) maj ## . ## min
 
 #endif // __EXEVERSION_H_VERSION__
