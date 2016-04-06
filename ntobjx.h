@@ -2,7 +2,7 @@
 ///
 /// The GUI controls and main frame window classes for ntobjx.
 ///
-/// Dual-licensed under MsPL and MIT license (see below).
+/// Dual-licensed under MS-PL and MIT license (see below).
 ///
 ///////////////////////////////////////////////////////////////////////////////
 ///
@@ -201,7 +201,7 @@ public:
                                         ATLTRACE2(_T("Translation %u: %08X\n"), (UINT)i, translations[i]);
                                         switch(LOWORD(translations[i]))
                                         {
-                                        case MAKELANGID(LANG_NEUTRAL, SUBLANG_NEUTRAL): // fallthrough
+                                        case MAKELANGID(LANG_NEUTRAL, SUBLANG_NEUTRAL): // fall through
                                         case MAKELANGID(LANG_ENGLISH, SUBLANG_ENGLISH_US):
                                             if(1200 == HIWORD(translations[i])) // only Unicode entries
                                             {
@@ -274,6 +274,37 @@ public:
     }
 };
 
+template <typename T>
+class CNoCaretEditT :
+    public CWindowImpl<CNoCaretEditT<T>, CEdit>
+{
+    typedef CWindowImpl<CNoCaretEditT<T>, CEdit> baseClass;
+public:
+    BEGIN_MSG_MAP(CNoCaretEditT<T>)
+        MESSAGE_HANDLER(WM_SETFOCUS, OnSetFocus)
+    END_MSG_MAP()
+
+    CNoCaretEditT()
+    {
+    }
+
+    CNoCaretEditT<T>& operator=(HWND hWnd)
+    {
+        m_hWnd = hWnd;
+        return *this;
+    }
+
+    LRESULT OnSetFocus(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL& /*bHandled*/)
+    {
+        LRESULT ret = DefWindowProc(uMsg, wParam, lParam);
+        HideCaret();
+        SetSel(-1, 0); // clear selection (i.e. do not select full contents when edit receives focus)
+        return ret;
+    }
+};
+
+typedef CNoCaretEditT<CWindow>   CNoCaretEdit;
+
 class CObjectPropertySheet :
     public CPropertySheetImpl<CObjectPropertySheet>
 {
@@ -282,23 +313,40 @@ class CObjectPropertySheet :
         public CWinDataExchange<CObjectDetailsPage>
     {
         typedef CPropertyPageImpl<CObjectDetailsPage> baseClass;
+        GenericObject*  m_obj;
+        CNoCaretEdit    m_edtName;
+        CNoCaretEdit    m_edtFullname;
+        CNoCaretEdit    m_edtType;
     public:
         enum { IDD = IDD_PROPERTIES };
 
         BEGIN_MSG_MAP(CObjectDetailsPage)
             MESSAGE_HANDLER(WM_INITDIALOG, OnInitDialog)
-            CHAIN_MSG_MAP(baseClass);
+            CHAIN_MSG_MAP(baseClass)
         END_MSG_MAP()
-            BEGIN_DDX_MAP(CObjectDetailsPage)
-            END_DDX_MAP()
+        BEGIN_DDX_MAP(CObjectDetailsPage)
+            DDX_CONTROL(IDC_EDIT_NAME, m_edtName)
+            DDX_CONTROL(IDC_EDIT_FULLNAME, m_edtFullname)
+            DDX_CONTROL(IDC_EDIT_TYPE, m_edtType)
+        END_DDX_MAP()
 
-            CObjectDetailsPage(ATL::_U_STRINGorID title = (LPCTSTR)NULL)
-            : baseClass(title)
+        CObjectDetailsPage(GenericObject* obj)
+            : baseClass((LPCTSTR)NULL)
+            , m_obj(obj)
         {
         }
 
         LRESULT OnInitDialog(UINT /*uMsg*/, WPARAM /*wParam*/, LPARAM /*lParam*/, BOOL& bHandled)
         {
+            DoDataExchange(); // this subclasses the controls
+
+            if(m_obj)
+            {
+                m_edtName.SetWindowText(m_obj->name());
+                m_edtFullname.SetWindowText(m_obj->fullname());
+                m_edtType.SetWindowText(m_obj->type());
+            }
+
             bHandled = FALSE;
             return TRUE;
         }
@@ -306,20 +354,19 @@ class CObjectPropertySheet :
 
     typedef CPropertySheetImpl<CObjectPropertySheet> baseClass;
     CObjectDetailsPage m_details;
-    ATL::CString m_objName;
 public:
     BEGIN_MSG_MAP(CObjectPropertySheet)
         MESSAGE_HANDLER(WM_INITDIALOG, OnInitDialog)
-        CHAIN_MSG_MAP(baseClass);
+        CHAIN_MSG_MAP(baseClass)
     END_MSG_MAP()
 
-    CObjectPropertySheet(ATL::CString objName)
+    CObjectPropertySheet(GenericObject* obj)
         : baseClass((LPCTSTR)NULL, 0, NULL)
-        , m_details()
-        , m_objName(objName)
+        , m_details(obj)
     {
+        ATLASSERT(NULL != obj);
         AddPage(m_details);
-        SetTitle(objName, PSH_PROPTITLE);
+        SetTitle(obj->name(), PSH_PROPTITLE);
     }
 
     LRESULT OnInitDialog(UINT /*uMsg*/, WPARAM /*wParam*/, LPARAM /*lParam*/, BOOL& bHandled)
@@ -394,7 +441,8 @@ public:
 typedef CWinTraitsOR<WS_TABSTOP | TVS_HASLINES | TVS_HASBUTTONS | TVS_SHOWSELALWAYS | TVS_INFOTIP, WS_EX_CLIENTEDGE, CControlWinTraits> CNtObjectsTreeViewTraits;
 typedef CWinTraitsOR<WS_TABSTOP | LVS_SHAREIMAGELISTS | LVS_SINGLESEL, 0, CSortListViewCtrlTraits> CNtObjectsListViewTraits;
 
-class CNtObjectsTreeView : public CWindowImpl<CNtObjectsTreeView, CTreeViewCtrlEx, CNtObjectsTreeViewTraits>
+class CNtObjectsTreeView :
+    public CWindowImpl<CNtObjectsTreeView, CTreeViewCtrlEx, CNtObjectsTreeViewTraits>
 {
     bool m_bInitialized;
     Directory m_objroot;
@@ -405,7 +453,7 @@ public:
     DECLARE_WND_SUPERCLASS(_T("NtObjectsTreeView"), CTreeViewCtrlEx::GetWndClassName())
 
     BEGIN_MSG_MAP(CNtObjectsTreeView)
-        MESSAGE_HANDLER(WM_RBUTTONDOWN, OnRightButtonDown)
+        MESSAGE_HANDLER(WM_CONTEXTMENU, OnContextMenu)
         NOTIFY_CODE_HANDLER(TVN_ITEMEXPANDING, OnTVItemExpanding)
         NOTIFY_CODE_HANDLER(TVN_GETINFOTIP, OnGetInfoTip)
         DEFAULT_REFLECTION_HANDLER()
@@ -415,7 +463,7 @@ public:
         : m_bInitialized(false)
     {}
 
-    LRESULT OnRightButtonDown(UINT /*uMsg*/, WPARAM /*wParam*/, LPARAM /*lParam*/, BOOL& /*bHandled*/)
+    LRESULT OnContextMenu(UINT /*uMsg*/, WPARAM /*wParam*/, LPARAM /*lParam*/, BOOL& /*bHandled*/)
     {
         CPoint pt, spt;
         ATLVERIFY(::GetCursorPos(&pt));
@@ -430,8 +478,7 @@ public:
         {
             ATLVERIFY(SelectItem(ti));
 
-            Directory* dir = reinterpret_cast<Directory*>(ti.GetData());
-            if(dir)
+            if(Directory* dir = reinterpret_cast<Directory*>(ti.GetData()))
             {
                 // Load menu resource
                 CMenu menu;
@@ -490,7 +537,7 @@ public:
                 ATLTRACE2(_T("Sort children of %s (%p)\n"), dir->fullname(), pnmtv->itemNew.hItem);
             else
                 ATLTRACE2(_T("Sort children of %p\n"), pnmtv->itemNew.hItem);
-#endif // _DEBUG
+#endif
             SortTreeItemChildren_(pnmtv->itemNew.hItem);
         }
         return 0;
@@ -569,7 +616,7 @@ private:
     void PrepareImageList_()
     {
         ATLTRACE2(_T("Preparing image list for %s\n"), _T(__FUNCTION__));
-        WORD iconList[] = { IDI_OBJMGR_ROOT, IDI_DIRECTORY };
+        WORD iconList[] = { IDI_OBJMGR_ROOT, IDI_DIRECTORY, IDI_EMPTY_DIRECTORY };
         ATLVERIFY(m_imagelist.Create(imgListElemWidth, imgListElemHeight, ILC_COLOR32 | ILC_MASK, (int)_countof(iconList), (int)_countof(iconList)));
         for(size_t i = 0; i < _countof(iconList); i++)
         {
@@ -597,14 +644,16 @@ private:
             Directory* entry = dynamic_cast<Directory*>(current[i]);
             if(entry)
             {
-                HTREEITEM curritem = InsertItem(TVIF_TEXT | TVIF_SELECTEDIMAGE | TVIF_IMAGE | TVIF_PARAM, entry->name(), 1, 1, 0, 0, reinterpret_cast<LPARAM>(entry), parent, TVI_LAST);
+                const int imgidx = entry->size() ? 1 : 2;
+                HTREEITEM curritem = InsertItem(TVIF_TEXT | TVIF_SELECTEDIMAGE | TVIF_IMAGE | TVIF_PARAM, entry->name(), imgidx, imgidx, 0, 0, reinterpret_cast<LPARAM>(entry), parent, TVI_LAST);
                 Fill_(curritem, *entry);
             }
         }
     }
 };
 
-class CNtObjectsListView : public CSortListViewCtrlImpl<CNtObjectsListView, CListViewCtrl, CNtObjectsListViewTraits>
+class CNtObjectsListView :
+    public CSortListViewCtrlImpl<CNtObjectsListView, CListViewCtrl, CNtObjectsListViewTraits>
 {
     CImageList m_imagelist;
 protected:
@@ -613,7 +662,8 @@ public:
     DECLARE_WND_SUPERCLASS(_T("NtObjectsListView"), CListViewCtrl::GetWndClassName())
 
     BEGIN_MSG_MAP(CNtObjectsListView)
-        MESSAGE_HANDLER(WM_RBUTTONDOWN, OnRightButtonDown)
+        MESSAGE_HANDLER(WM_CONTEXTMENU, OnContextMenu)
+        MESSAGE_HANDLER(WM_LBUTTONDBLCLK, OnDoubleClick)
         NOTIFY_CODE_HANDLER(HDN_ITEMCLICKA, OnHeaderItemClick)
         NOTIFY_CODE_HANDLER(HDN_ITEMCLICKW, OnHeaderItemClick)
         DEFAULT_REFLECTION_HANDLER()
@@ -643,7 +693,7 @@ public:
                 , current[i]->name()
                 , 0
                 , 0
-                , GetImageIndexByType_(current[i]->type())
+                , GetImageIndexByType_(current[i])
                 , reinterpret_cast<LPARAM>(current[i])
                 );
             widths[0] = max(GetStringWidth(current[i]->name()), widths[0]);
@@ -682,19 +732,15 @@ public:
         SortItems(0);
     }
 
-    LRESULT OnRightButtonDown(UINT /*uMsg*/, WPARAM /*wParam*/, LPARAM /*lParam*/, BOOL& /*bHandled*/)
+    LRESULT OnContextMenu(UINT /*uMsg*/, WPARAM /*wParam*/, LPARAM /*lParam*/, BOOL& /*bHandled*/)
     {
-        CPoint pt;
-        ATLVERIFY(::GetCursorPos(&pt));
-        ATLTRACE2(_T("Point of click: %d/%d\n"), pt.x, pt.y);
-
         // Find where the user clicked, so we know the item
         LVHITTESTINFO lvhtti = {0};
-        lvhtti.pt = pt;
-        ATLVERIFY(ScreenToClient(&lvhtti.pt));
-        HitTest(&lvhtti);
-        if(-1 != lvhtti.iItem)
+        CPoint pt;
+
+        if(ItemFromHitTest_(lvhtti, pt))
         {
+            using namespace NtObjMgr;
             // If we found an item, select it
             ATLVERIFY(SelectItem(lvhtti.iItem));
 
@@ -703,13 +749,35 @@ public:
             item.mask = LVIF_PARAM;
             ATLVERIFY(GetItem(&item));
             GenericObject* itemobj = reinterpret_cast<GenericObject*>(item.lParam);
-            SymbolicLink* symlink = dynamic_cast<SymbolicLink*>(itemobj);
+
+            ATLASSERT(0 == otGeneric);
+            ATLASSERT(1 == otSymlink);
+            ATLASSERT(2 == otDirectory);
+
+            /*
+            Not a coincidence, the ordering of:
+
+                otGeneric
+                otSymlink
+                otDirectory
+
+            matches the submenu indexes.
+            */
+            int submenuidx = itemobj->objtype();
+            if(otDirectory == submenuidx)
+            {
+                if(Directory* dir = dynamic_cast<Directory*>(itemobj))
+                {
+                    if(!dir->size())
+                        submenuidx = otGeneric;
+                }
+            }
 
             // Load menu resource
             CMenu menu;
             ATLVERIFY(menu.LoadMenu(IDR_POPUP_MENU1));
             // Get the popup menu at index 0 from the menu resource
-            CMenuHandle popup = menu.GetSubMenu((symlink) ? 1 : 0);
+            CMenuHandle popup = menu.GetSubMenu(submenuidx);
 
             // Let the user pick
             int idCmd = popup.TrackPopupMenuEx(
@@ -733,15 +801,45 @@ public:
                 case ID_POPUPMENU_PROPERTIES:
                     ::SendMessage(GetParent(), WM_COMMAND, MAKEWPARAM(ID_VIEW_PROPERTIES, 0), reinterpret_cast<LPARAM>(m_hWnd));
                     break;
+                case ID_POPUPMENU_OPENDIRECTORY:
+                    if(Directory* dir = dynamic_cast<Directory*>(itemobj))
+                    {
+                        FillFromDirectory(*dir);
+                    }
+                    break;
                 default:
                     ATLTRACE2(_T("Chosen command: %i\n"), idCmd);
                     break;
                 }
-
             }
-
         }
 
+        return 0;
+    }
+
+    LRESULT OnDoubleClick(UINT /*uMsg*/, WPARAM /*wParam*/, LPARAM /*lParam*/, BOOL& /*bHandled*/)
+    {
+        // Find where the user clicked, so we know the item
+        LVHITTESTINFO lvhtti = {0};
+        CPoint pt;
+
+        if(ItemFromHitTest_(lvhtti, pt))
+        {
+            using namespace NtObjMgr;
+
+            LVITEM item = {0};
+            item.iItem = lvhtti.iItem;
+            item.mask = LVIF_PARAM;
+            ATLVERIFY(GetItem(&item));
+            GenericObject* itemobj = reinterpret_cast<GenericObject*>(item.lParam);
+            if(otDirectory == itemobj->objtype())
+            {
+                if(Directory* dir = dynamic_cast<Directory*>(itemobj))
+                {
+                    FillFromDirectory(*dir);
+                }
+            }
+        }
         return 0;
     }
 
@@ -765,10 +863,11 @@ public:
     {
         if(!iSortCol)
         {
+            using namespace NtObjMgr;
             GenericObject* obj1 = reinterpret_cast<GenericObject*>(pItem1->dwItemData);
             GenericObject* obj2 = reinterpret_cast<GenericObject*>(pItem2->dwItemData);
-            bool isDir1 = (0 == _tcsicmp(_T("Directory"), obj1->type()));
-            bool isDir2 = (0 == _tcsicmp(_T("Directory"), obj2->type()));
+            bool isDir1 = (otDirectory == obj1->objtype());
+            bool isDir2 = (otDirectory == obj2->objtype());
             if(isDir1 && isDir2)
                 return _tcsicmp(pItem1->pszValue, pItem2->pszValue);
             if(!isDir1 && !isDir2)
@@ -783,14 +882,49 @@ public:
 
 private:
 
-    // Retrieve the image index based on the type string
-    int GetImageIndexByType_(LPCTSTR typeName)
+    bool ItemFromHitTest_(LVHITTESTINFO& lvhtti, CPoint& pt)
     {
+        ATLVERIFY(::GetCursorPos(&pt));
+        ATLTRACE2(_T("Point of click: %d/%d\n"), pt.x, pt.y);
+
+        lvhtti.pt = pt;
+        ATLVERIFY(ScreenToClient(&lvhtti.pt));
+        return (-1 != HitTest(&lvhtti));
+    }
+
+    // Retrieve the image index based on the type string
+    int GetImageIndexByType_(GenericObject* obj)
+    {
+        LPCTSTR typeName = obj->type();
         int retval = 0;
         for(size_t i = 0; i < resIconTypeMappingSize; i++)
         {
             if(0 == _tcsicmp(typeName, resIconTypeMapping[i].typeName))
             {
+                if(IDI_DIRECTORY == resIconTypeMapping[i].resId)
+                {
+                    // This program is not multi-threaded, so this works, otherwise we'd need locking here
+                    static int emptydir = -1;
+                    if(Directory* dir = dynamic_cast<Directory*>(obj))
+                    {
+                        if(!dir->size())
+                        {
+                            if(-1 == emptydir)
+                            {
+                                for(size_t j = 0; j < resIconTypeMappingSize; j++)
+                                {
+                                    if(0 == _tcsicmp(_T(OBJTYPESTR_EMPTY_DIRECTORY), resIconTypeMapping[j].typeName))
+                                    {
+                                        emptydir = static_cast<int>(j);
+                                        break;
+                                    }
+                                }
+                            }
+                            ATLASSERT(-1 != emptydir);
+                            return emptydir;
+                        }
+                    }
+                }
                 return static_cast<int>(i);
             }
         }
@@ -829,6 +963,7 @@ private:
             {ID_COLNAME_OBJTYPE},
             {ID_COLNAME_OBJLNKTGT},
         };
+
         // FIXME: later we may want to reinitialize columns when switching UI languages
         if(GetColumnCount() < _countof(columnDefaults))
         {
@@ -855,7 +990,6 @@ private:
             }
         }
     }
-
 };
 
 #ifndef LVS_EX_DOUBLEBUFFER
@@ -877,12 +1011,13 @@ public:
     LONG m_tree_initialized; // only write to this member using Interlocked*()
     bool m_bFirstOnIdle;
     UINT_PTR const m_AboutMenuItem;
-    ATL::CString m_lastSelected;
+    GenericObject* m_lastSelected;
     HRESULT (CALLBACK* DllGetVersion)(DLLVERSIONINFO *);
 
     CNtObjectsMainFrame()
         : m_bFirstOnIdle(true) // to force initial refresh
         , m_AboutMenuItem(::RegisterWindowMessage(_T("{2F95CC77-8F3F-4880-AA09-FDE7D65BA526}")))
+        , m_lastSelected(0)
     {
         *(FARPROC*)&DllGetVersion = ::GetProcAddress(::GetModuleHandle(_T("shell32.dll")), "DllGetVersion");
     }
@@ -1017,11 +1152,9 @@ public:
         bHandled = FALSE;
         if(pnmlv && (pnmlv->uChanged & LVIF_STATE) && (pnmlv->uNewState & LVIS_SELECTED))
         {
-            if(GenericObject* obj = reinterpret_cast<GenericObject*>(pnmlv->lParam))
-            {
-                SetSelected_(obj->fullname());
-                bHandled = TRUE;
-            }
+            GenericObject* obj = reinterpret_cast<GenericObject*>(pnmlv->lParam);
+            SetSelected_(obj);
+            bHandled = TRUE;
         }
         return 0;
     }
@@ -1035,7 +1168,7 @@ public:
         if(m_tree_initialized && dir)
         {
             m_listview.FillFromDirectory(*dir);
-            SetSelected_(dir->fullname());
+            SetSelected_(dir);
             bHandled = TRUE;
         }
         return 0;
@@ -1048,7 +1181,7 @@ public:
         if(m_treeview.EmptyAndRefill())
         {
             m_listview.FillFromDirectory(m_treeview.ObjectRoot());
-            SetSelected_(m_treeview.ObjectRoot().fullname());
+            SetSelected_(&m_treeview.ObjectRoot());
             (void)InterlockedExchange(&m_tree_initialized, 1);
         }
         return 0;
@@ -1086,14 +1219,27 @@ public:
 #endif
         ATLTRACE2(_T("hWndCtl = %p; wNotifyCode = %u (%04X); wID = %u (%04X)\n"), hWndCtl, wNotifyCode, wNotifyCode, wID, wID);
 #ifdef _DEBUG
-        if(!m_lastSelected.IsEmpty())
+        if(m_lastSelected)
         {
-            ATLTRACE2(_T("Last selected item: %s\n"), m_lastSelected.GetString());
+            ATLTRACE2(_T("Last selected item: %s\n"), m_lastSelected->fullname().GetString());
         }
 #endif
-
-        if(!m_lastSelected.IsEmpty())
+        if(hWndCtl == m_listview.m_hWnd)
         {
+            ATLTRACE2(_T("From ListView\n"));
+        }
+        else if(hWndCtl == m_treeview.m_hWnd)
+        {
+            ATLTRACE2(_T("From TreeView\n"));
+        }
+        else
+        {
+            ATLTRACE2(_T("From main menu or hotkey\n"));
+        }
+
+        if(m_lastSelected)
+        {
+            ATLTRACE2(_T("last selected = %p -> %s\n"), m_lastSelected, m_lastSelected->fullname());
             CObjectPropertySheet objprop(m_lastSelected);
             (void)objprop.DoModal(m_hWnd);
         }
@@ -1103,11 +1249,9 @@ public:
 
 private:
 
-    void SetSelected_(LPCTSTR fullName)
+    void SetSelected_(GenericObject* obj)
     {
-        m_lastSelected = fullName;
-        ::SetWindowText(m_hWndStatusBar, m_lastSelected);
+        m_lastSelected = obj;
+        ::SetWindowText(m_hWndStatusBar, (m_lastSelected) ? m_lastSelected->fullname().GetString() : _T(""));
     }
 };
-
-// TODO: Multi-pane status bar to also show the number of objects (and perhaps types + symlinks) in the list-view

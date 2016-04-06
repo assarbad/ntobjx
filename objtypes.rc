@@ -62,6 +62,7 @@ IDI_TMTX                    IDI_TMEN
 IDI_OBJMGR_ROOT          ICON "res\\objects\\ObjMgrRoot.ico"
 IDI_UNKNOWN_OBJTYPE      ICON "res\\objects\\UnknownType.ico"
 IDI_SYMLINK_TO_DIRECTORY ICON "res\\objects\\SymbolicLink-to-Directory.ico"
+IDI_EMPTY_DIRECTORY      ICON "res\\objects\\EmptyDirectory.ico"
 
 IDI_MAILSLOT             ICON "res\\objects\\Mailslot.ico"
 IDI_PIPE                 ICON "res\\objects\\Pipe.ico"

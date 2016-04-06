@@ -1,5 +1,5 @@
 #ifndef __OBJTYPES_H_VER__
-#define __OBJTYPES_H_VER__ 2016032200
+#define __OBJTYPES_H_VER__ 2016040618
 // $Id$
 #if (defined(_MSC_VER) && (_MSC_VER >= 1020)) || defined(__MCPP)
 #pragma once
@@ -50,7 +50,7 @@
 // Special types
 #define IDI_OBJMGR_ROOT          5900
 #define IDI_SYMLINK_TO_DIRECTORY 5901
-
+#define IDI_EMPTY_DIRECTORY      5902
 
 // "Aliases" (i.e. we reuse the images) of the above types
 #define IDI_ALPCPORT             IDI_PORT
@@ -59,57 +59,59 @@
 #define IDI_TMTM                 IDI_TMEN
 #define IDI_TMTX                 IDI_TMEN
 
-#define OBJTYPESTR_ADAPTER              L"Adapter"
-#define OBJTYPESTR_CALLBACK             L"Callback"
-#define OBJTYPESTR_COMPOSITIONSURFACE   L"CompositionSurface"
-#define OBJTYPESTR_CONTROLLER           L"Controller"
-#define OBJTYPESTR_DEBUGOBJECT          L"DebugObject"
-#define OBJTYPESTR_DESKTOP              L"Desktop"
-#define OBJTYPESTR_DEVICE               L"Device"
-#define OBJTYPESTR_DIRECTORY            L"Directory"
-#define OBJTYPESTR_DRIVER               L"Driver"
-#define OBJTYPESTR_EVENT                L"Event"
-#define OBJTYPESTR_EVENTPAIR            L"EventPair"
-#define OBJTYPESTR_FILE                 L"File"
-#define OBJTYPESTR_FILTERCONNECTIONPORT L"FilterConnectionPort"
-#define OBJTYPESTR_IOCOMPLETION         L"IoCompletion"
-#define OBJTYPESTR_JOB                  L"Job"
-#define OBJTYPESTR_KEY                  L"Key"
-#define OBJTYPESTR_KEYEDEVENT           L"KeyedEvent"
-#define OBJTYPESTR_MUTANT               L"Mutant"
-#define OBJTYPESTR_PCWOBJECT            L"PcwObject"
-#define OBJTYPESTR_PORT                 L"Port"
-#define OBJTYPESTR_POWERREQUEST         L"PowerRequest"
-#define OBJTYPESTR_PROCESS              L"Process"
-#define OBJTYPESTR_SECTION              L"Section"
-#define OBJTYPESTR_SEMAPHORE            L"Semaphore"
-#define OBJTYPESTR_SESSION              L"Session"
-#define OBJTYPESTR_SYMBOLICLINK         L"SymbolicLink"
-#define OBJTYPESTR_THREAD               L"Thread"
-#define OBJTYPESTR_TIMER                L"Timer"
-#define OBJTYPESTR_TMEN                 L"TmEn"
-#define OBJTYPESTR_TOKEN                L"Token"
-#define OBJTYPESTR_TYPE                 L"Type"
-#define OBJTYPESTR_USERAPCRESERVE       L"UserApcReserve"
-#define OBJTYPESTR_WAITABLEPORT         L"WaitablePort"
-#define OBJTYPESTR_WAITCOMPLETIONPKT    L"WaitCompletionPacket"
-#define OBJTYPESTR_WINDOWSTATION        L"WindowStation"
-#define OBJTYPESTR_WMIGUID              L"WmiGuid"
-#define OBJTYPESTR_MAILSLOT             L"Mailslot"
-#define OBJTYPESTR_PIPE                 L"Pipe"
+#define OBJTYPESTR_ADAPTER              "Adapter"
+#define OBJTYPESTR_CALLBACK             "Callback"
+#define OBJTYPESTR_COMPOSITIONSURFACE   "CompositionSurface"
+#define OBJTYPESTR_CONTROLLER           "Controller"
+#define OBJTYPESTR_DEBUGOBJECT          "DebugObject"
+#define OBJTYPESTR_DESKTOP              "Desktop"
+#define OBJTYPESTR_DEVICE               "Device"
+#define OBJTYPESTR_DIRECTORY            "Directory"
+#define OBJTYPESTR_DRIVER               "Driver"
+#define OBJTYPESTR_EVENT                "Event"
+#define OBJTYPESTR_EVENTPAIR            "EventPair"
+#define OBJTYPESTR_FILE                 "File"
+#define OBJTYPESTR_FILTERCONNECTIONPORT "FilterConnectionPort"
+#define OBJTYPESTR_IOCOMPLETION         "IoCompletion"
+#define OBJTYPESTR_JOB                  "Job"
+#define OBJTYPESTR_KEY                  "Key"
+#define OBJTYPESTR_KEYEDEVENT           "KeyedEvent"
+#define OBJTYPESTR_MUTANT               "Mutant"
+#define OBJTYPESTR_PCWOBJECT            "PcwObject"
+#define OBJTYPESTR_PORT                 "Port"
+#define OBJTYPESTR_POWERREQUEST         "PowerRequest"
+#define OBJTYPESTR_PROCESS              "Process"
+#define OBJTYPESTR_SECTION              "Section"
+#define OBJTYPESTR_SEMAPHORE            "Semaphore"
+#define OBJTYPESTR_SESSION              "Session"
+#define OBJTYPESTR_SYMBOLICLINK         "SymbolicLink"
+#define OBJTYPESTR_THREAD               "Thread"
+#define OBJTYPESTR_TIMER                "Timer"
+#define OBJTYPESTR_TMEN                 "TmEn"
+#define OBJTYPESTR_TOKEN                "Token"
+#define OBJTYPESTR_TYPE                 "Type"
+#define OBJTYPESTR_USERAPCRESERVE       "UserApcReserve"
+#define OBJTYPESTR_WAITABLEPORT         "WaitablePort"
+#define OBJTYPESTR_WAITCOMPLETIONPKT    "WaitCompletionPacket"
+#define OBJTYPESTR_WINDOWSTATION        "WindowStation"
+#define OBJTYPESTR_WMIGUID              "WmiGuid"
 
 // "Aliases" (i.e. we reuse the images) of the above types
-#define OBJTYPESTR_ALPCPORT             L"ALPC Port"
-#define OBJTYPESTR_FILTERCOMMUNICATIONPORT L"FilterCommunicationPort"
-#define OBJTYPESTR_TMRM                 L"TmRm"
-#define OBJTYPESTR_TMTM                 L"TmTm"
-#define OBJTYPESTR_TMTX                 L"TmTx"
+#define OBJTYPESTR_ALPCPORT             "ALPC Port"
+#define OBJTYPESTR_FILTERCOMMUNICATIONPORT "FilterCommunicationPort"
+#define OBJTYPESTR_TMRM                 "TmRm"
+#define OBJTYPESTR_TMTM                 "TmTm"
+#define OBJTYPESTR_TMTX                 "TmTx"
 
-#define OBJTYPESTR_UNKNOWN_OBJTYPE      L"Unknown object type"
+#define OBJTYPESTR_MAILSLOT             "Mailslot"
+#define OBJTYPESTR_PIPE                 "Pipe"
+
+#define OBJTYPESTR_UNKNOWN_OBJTYPE      "Unknown object type"
+#define OBJTYPESTR_EMPTY_DIRECTORY      "Empty Directory"
 
 #ifndef RC_INVOKED
-#define TBL_ENTRY(x) IDI_##x, OBJTYPESTR_##x
-struct { WORD resId; LPCWSTR typeName; } resIconTypeMapping[] =
+#define TBL_ENTRY(x) IDI_##x, _T(OBJTYPESTR_##x)
+struct { WORD resId; LPCTSTR typeName; } resIconTypeMapping[] =
 {
     TBL_ENTRY(UNKNOWN_OBJTYPE),
     TBL_ENTRY(ADAPTER),
@@ -155,6 +157,7 @@ struct { WORD resId; LPCWSTR typeName; } resIconTypeMapping[] =
     TBL_ENTRY(TMTX),
     TBL_ENTRY(MAILSLOT),
     TBL_ENTRY(PIPE),
+    TBL_ENTRY(EMPTY_DIRECTORY),
 };
 #undef TBL_ENTRY
 size_t const resIconTypeMappingSize = sizeof(resIconTypeMapping)/sizeof(resIconTypeMapping[0]);

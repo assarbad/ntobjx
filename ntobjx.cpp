@@ -2,7 +2,7 @@
 ///
 /// Main entry point to ntobjx.
 ///
-/// Dual-licensed under MsPL and MIT license (see below).
+/// Dual-licensed under MS-PL and MIT license (see below).
 ///
 ///////////////////////////////////////////////////////////////////////////////
 ///

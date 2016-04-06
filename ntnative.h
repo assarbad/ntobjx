@@ -2,7 +2,7 @@
 ///
 /// Type and function declarations for the NT native API.
 ///
-/// Dual-licensed under MsPL and MIT license (see below).
+/// Dual-licensed under MS-PL and MIT license (see below).
 ///
 ///////////////////////////////////////////////////////////////////////////////
 ///

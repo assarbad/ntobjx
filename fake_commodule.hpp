@@ -10,7 +10,7 @@
 ///   #include "fake_commodule.hpp"
 ///   #undef _ATL_NO_COMMODULE
 ///
-/// Dual-licensed under MsPL and MIT license (see below).
+/// Dual-licensed under MS-PL and MIT license (see below).
 ///
 ///////////////////////////////////////////////////////////////////////////////
 ///

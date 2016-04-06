@@ -81,6 +81,15 @@ BEGIN
         MENUITEM SEPARATOR
         MENUITEM "Pr&operties\tF10",            ID_POPUPMENU_PROPERTIES
     END
+    POPUP "Directory object"
+    BEGIN
+        MENUITEM "&Open"                        ID_POPUPMENU_OPENDIRECTORY
+        MENUITEM "Copy &name",                  ID_POPUPMENU_COPYNAME
+        MENUITEM "Copy full &path",             ID_POPUPMENU_COPYFULLPATH
+        MENUITEM "Copy full path as C/C++ &string", ID_POPUPMENU_COPYASCSTRING
+        MENUITEM SEPARATOR
+        MENUITEM "Pr&operties\tF10",            ID_POPUPMENU_PROPERTIES
+    END
 END
 
 

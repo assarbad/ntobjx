@@ -27,7 +27,7 @@
 ///////////////////////////////////////////////////////////////////////////////
 
 #ifndef __OBJMGR_HPP_VER__
-#define __OBJMGR_HPP_VER__ 2016032815
+#define __OBJMGR_HPP_VER__ 2016040618
 #if (defined(_MSC_VER) && (_MSC_VER >= 1020)) || defined(__MCPP)
 #pragma once
 #endif // Check for "#pragma once" support
@@ -38,6 +38,13 @@
 
 namespace NtObjMgr{
 
+    typedef enum
+    {
+        otGeneric,
+        otSymlink,
+        otDirectory,
+    } objtype_t;
+
     // Base interface from which everything derives
     template<typename T> interface IObjectT
     {
@@ -45,13 +52,28 @@ namespace NtObjMgr{
         virtual T const& name() const = 0;
         virtual T const& fullname() const = 0;
         virtual T const& type() const = 0;
+        virtual objtype_t objtype() const = 0;
     };
 
-    template<typename T> class GenericObjectT: public IObjectT<T>
+    template<typename T> interface ISymlinkT
+    {
+        virtual T const& target() const = 0;
+    };
+
+    template<typename T> interface IDirectoryT
+    {
+        virtual size_t size() const = 0;
+    };
+
+    template<typename T> class SymbolicLinkT;
+    template<typename T> class DirectoryT;
+
+    template<typename T> class GenericObjectT:
+        public IObjectT<T>
     {
         typedef IObjectT<T> Inherited;
 
-        void setParent_()
+        inline void setParent_()
         {
             if((m_parent.GetLength() == 1) && (m_parent[0] == L'\\'))
             {
@@ -72,7 +94,6 @@ namespace NtObjMgr{
         {
             setParent_();
             m_fullname = m_parent + L"\\" + m_name;
-            //DbgPrint(L"%ws -> %ws\n", m_fullname.GetString(), m_type.GetString());
         }
         GenericObjectT(LPCWSTR name, LPCWSTR type, LPCWSTR parent = NULL)
             : m_name(name)
@@ -82,26 +103,30 @@ namespace NtObjMgr{
         {
             setParent_();
             m_fullname = m_parent + L"\\" + m_name;
-            //DbgPrint(L"%ws -> %ws\n", m_fullname.GetString(), m_type.GetString());
         }
 
         virtual ~GenericObjectT()
         {
         }
 
-        virtual T const& name() const
+        inline virtual T const& name() const
         {
             return m_name;
         }
 
-        virtual T const& fullname() const
+        inline virtual T const& fullname() const
         {
             return m_fullname;
         }
 
-        virtual T const& type() const
+        inline virtual T const& type() const
         {
             return m_type;
+        }
+
+        inline virtual objtype_t objtype() const
+        {
+            return otGeneric;
         }
 
     protected:
@@ -117,7 +142,9 @@ namespace NtObjMgr{
     };
     typedef GenericObjectT<ATL::CString> GenericObject;
 
-    template<typename T> class SymbolicLinkT: public GenericObjectT<T>
+    template<typename T> class SymbolicLinkT :
+        public GenericObjectT<T>,
+        public ISymlinkT<T>
     {
         typedef GenericObjectT<T> Inherited;
 
@@ -142,12 +169,17 @@ namespace NtObjMgr{
         {
         }
 
-        virtual T const& target() const
+        inline virtual T const& target() const
         {
             return m_linktgt;
         }
 
-        NTSTATUS getLastNtStatus() const
+        inline virtual objtype_t objtype() const
+        {
+            return otSymlink;
+        }
+
+        inline NTSTATUS getLastNtStatus() const
         {
             return m_lastStatus;
         }
@@ -170,7 +202,6 @@ namespace NtObjMgr{
                 if(NT_SUCCESS(m_lastStatus))
                 {
                     m_linktgt = T(usLinkTarget.Buffer, usLinkTarget.Length / sizeof(WCHAR));
-                    //DbgPrint(L"\tlink target -> %ws\n", m_linktgt.GetString());
                 }
                 m_lastStatus = ::NtClose(hLink);
             }
@@ -189,7 +220,9 @@ namespace NtObjMgr{
     };
     typedef SymbolicLinkT<ATL::CString> SymbolicLink;
 
-    template<typename T> class DirectoryT: public GenericObjectT<T>
+    template<typename T> class DirectoryT :
+        public GenericObjectT<T>,
+        public IDirectoryT<T>
     {
         typedef GenericObjectT<T> Inherited;
         typedef ATL::CAtlArray<Inherited*, ATL::CPrimitiveElementTraits<Inherited*> > EntryList;
@@ -229,9 +262,14 @@ namespace NtObjMgr{
             m_entries.RemoveAll();
         }
 
-        NTSTATUS getLastNtStatus() const
+        inline NTSTATUS getLastNtStatus() const
         {
             return m_lastStatus;
+        }
+
+        inline virtual objtype_t objtype() const
+        {
+            return otDirectory;
         }
 
         bool refresh()
@@ -271,6 +309,13 @@ namespace NtObjMgr{
                             }
                         }
                     }
+#ifdef _DEBUG
+                    else
+                    {
+                        if(STATUS_NO_MORE_ENTRIES != m_lastStatus)
+                            ATLTRACE2(_T("NtQueryDirectoryObject returned: %08X\n"), m_lastStatus);
+                    }
+#endif
                     if(STATUS_MORE_ENTRIES == m_lastStatus)
                     {
                         start = idx;
@@ -287,12 +332,12 @@ namespace NtObjMgr{
                 case STATUS_SUCCESS:
                 case STATUS_NO_MORE_ENTRIES:
                     {
-                        // FIXME: sort tmplist
                         EntryList deletions;
-                        deletions.Copy(m_entries);
+                        deletions.Copy(m_entries); // take copy of old list
                         size_t const todelete = deletions.GetCount();
-                        m_entries.Copy(tmplist);
+                        m_entries.Copy(tmplist); // overwrite with new list
                         m_cached = true;
+                        // Delete objects from old list
                         for(size_t i = 0; i < todelete; i++)
                         {
                             delete deletions[i];
@@ -308,12 +353,12 @@ namespace NtObjMgr{
             return false;
         }
 
-        size_t size() const
+        inline size_t size() const
         {
             return m_entries.GetCount();
         }
 
-        Inherited*& operator[](size_t idx)
+        inline Inherited*& operator[](size_t idx)
         {
             return m_entries.GetAt(idx);
         }

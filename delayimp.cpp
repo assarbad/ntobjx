@@ -4,7 +4,7 @@
 ///   This code allows us to delay resolving of functions from ntdll.dll to
 ///   runtime by using a little trick.
 ///
-/// Dual-licensed under MsPL and MIT license (see below).
+/// Dual-licensed under MS-PL and MIT license (see below).
 ///
 ///////////////////////////////////////////////////////////////////////////////
 ///
