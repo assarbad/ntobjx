@@ -13,7 +13,7 @@
 #undef APSTUDIO_READONLY_SYMBOLS
 
 /////////////////////////////////////////////////////////////////////////////
-// English (U.S.) resources
+// English (United States) resources
 
 #if !defined(AFX_RESOURCE_DLL) || defined(AFX_TARG_ENU)
 LANGUAGE LANG_ENGLISH, SUBLANG_ENGLISH_US
@@ -83,12 +83,20 @@ BEGIN
     END
     POPUP "Directory object"
     BEGIN
-        MENUITEM "&Open"                        ID_POPUPMENU_OPENDIRECTORY
+        MENUITEM "&Open",                       ID_POPUPMENU_OPENDIRECTORY
         MENUITEM "Copy &name",                  ID_POPUPMENU_COPYNAME
         MENUITEM "Copy full &path",             ID_POPUPMENU_COPYFULLPATH
         MENUITEM "Copy full path as C/C++ &string", ID_POPUPMENU_COPYASCSTRING
         MENUITEM SEPARATOR
         MENUITEM "Pr&operties\tF10",            ID_POPUPMENU_PROPERTIES
+    END
+END
+
+IDR_POPUP_HYPERLINK1 MENU
+BEGIN
+    POPUP "Hyperlink context menu"
+    BEGIN
+        MENUITEM "Copy link URL",               ID_POPUPMENU_COPYURL
     END
 END
 
@@ -147,9 +155,9 @@ BEGIN
     LTEXT           "&Type:",IDC_STATIC,12,54,20,8
     GROUPBOX        "References",IDC_STATIC,7,72,131,40
     GROUPBOX        "Quota charges (memory use)",IDC_STATIC,141,72,131,40
-    EDITTEXT        IDC_EDIT_NAME,48,18,218,12,ES_AUTOHSCROLL | ES_READONLY | NOT WS_BORDER
-    EDITTEXT        IDC_EDIT_FULLNAME,48,36,218,12,ES_AUTOHSCROLL | ES_READONLY | NOT WS_BORDER
-    EDITTEXT        IDC_EDIT_TYPE,48,54,218,12,ES_AUTOHSCROLL | ES_READONLY | NOT WS_BORDER
+    EDITTEXT        IDC_EDIT_NAME,48,18,218,12,ES_AUTOHSCROLL | ES_READONLY | NOT WS_BORDER,WS_EX_STATICEDGE
+    EDITTEXT        IDC_EDIT_FULLNAME,48,36,218,12,ES_AUTOHSCROLL | ES_READONLY | NOT WS_BORDER,WS_EX_STATICEDGE
+    EDITTEXT        IDC_EDIT_TYPE,48,54,218,12,ES_AUTOHSCROLL | ES_READONLY | NOT WS_BORDER,WS_EX_STATICEDGE
 END
 
 
@@ -213,6 +221,10 @@ END
 STRINGTABLE
 BEGIN
     ID_VIEW_REFRESH         "Refresh the list of objects\nRefresh"
+END
+
+STRINGTABLE
+BEGIN
     IDS_PROPERTIES          "Properties of "
 END
 
@@ -238,7 +250,7 @@ BEGIN
     ATL_IDS_IDLEMESSAGE     "Ready"
 END
 
-#endif    // English (U.S.) resources
+#endif    // English (United States) resources
 /////////////////////////////////////////////////////////////////////////////
 
 

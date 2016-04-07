@@ -52,6 +52,34 @@ namespace
     int const imgListElemWidth = 16;
     int const imgListElemHeight = 16;
 
+    // Requires open clipboard and doesn't close it
+    BOOL SetClipboardString(LPCTSTR lpsz)
+    {
+        ATL::CString s(lpsz);
+        SIZE_T allocLength = (s.GetLength() + 2) * sizeof(TCHAR);
+        ATLTRACE2(_T("Buffer size: %u\n"), allocLength);
+        HGLOBAL hMem = ::GlobalAlloc(GMEM_MOVEABLE | GMEM_ZEROINIT, allocLength);
+        if(hMem)
+        {
+            if(LPVOID lpMem = ::GlobalLock(hMem))
+            {
+                LPTSTR lpStr = static_cast<LPTSTR>(lpMem);
+                _tcscpy_s(lpStr, s.GetLength() + 1, s.GetString());
+                ::GlobalUnlock(hMem);
+            }
+#   if defined(_UNICODE) || defined(UNICODE)
+            return (NULL != ::SetClipboardData(CF_UNICODETEXT, hMem));
+#   else
+#       error "Not implemented for ANSI/CF_TEXT"
+#   endif
+        }
+        else
+        {
+            ATLTRACE2(_T("Could not allocate memory using GlobalAlloc().\n"));
+        }
+        return FALSE;
+    }
+
     void CopyItemToClipboard(HWND hWndSource, int idCmd, GenericObject* obj)
     {
         if(::OpenClipboard(hWndSource))
@@ -138,27 +166,7 @@ namespace
                 }
                 break;
             }
-            SIZE_T allocLength = (s.GetLength() + 2) * sizeof(TCHAR);
-            ATLTRACE2(_T("Buffer size: %u\n"), allocLength);
-            HGLOBAL hMem = ::GlobalAlloc(GMEM_MOVEABLE | GMEM_ZEROINIT, allocLength);
-            if(hMem)
-            {
-                if(LPVOID lpMem = ::GlobalLock(hMem))
-                {
-                    LPTSTR lpStr = static_cast<LPTSTR>(lpMem);
-                    _tcscpy_s(lpStr, s.GetLength() + 1, s.GetString());
-                    ::GlobalUnlock(hMem);
-                }
-#   if defined(_UNICODE) || defined(UNICODE)
-                ::SetClipboardData(CF_UNICODETEXT, hMem);
-#   else
-#       error "Not implemented for ANSI/CF_TEXT"
-#   endif
-            }
-            else
-            {
-                ATLTRACE2(_T("Could not allocate memory using GlobalAlloc().\n"));
-            }
+            ATLVERIFY(SetClipboardString(s.GetString()));
             ATLVERIFY(::CloseClipboard());
         }
     }
@@ -282,7 +290,6 @@ class CNoCaretEditT :
 public:
     BEGIN_MSG_MAP(CNoCaretEditT<T>)
         MESSAGE_HANDLER(WM_SETFOCUS, OnSetFocus)
-        MESSAGE_HANDLER(WM_SETFOCUS, OnKillFocus)
         MESSAGE_HANDLER(WM_LBUTTONDBLCLK, OnDoubleClick)
     END_MSG_MAP()
 
@@ -301,18 +308,9 @@ public:
         LRESULT ret = DefWindowProc(uMsg, wParam, lParam);
         HideCaret();
         SetSel(-1, 0); // clear selection (i.e. do not select full contents when edit receives focus)
-        PostMessage(WM_KEYDOWN, VK_HOME, 0);
-        PostMessage(WM_KEYUP, VK_HOME, 0);
+        SendMessage(WM_KEYDOWN, VK_HOME, 0);
+        SendMessage(WM_KEYUP, VK_HOME, 0);
         return ret;
-    }
-
-    LRESULT OnKillFocus(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL& /*bHandled*/)
-    {
-        // FIXME: currently doesn't seem to work. This is supposed to synthesize a VK_HOME key press inside the edit field
-        SetSel(-1, 0); // clear selection
-        PostMessage(WM_KEYDOWN, VK_HOME, 0);
-        PostMessage(WM_KEYUP, VK_HOME, 0);
-        return DefWindowProc(uMsg, wParam, lParam);
     }
 
     LRESULT OnDoubleClick(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL& /*bHandled*/)
@@ -396,10 +394,72 @@ public:
     }
 };
 
+template <typename T>
+class CHyperLinkCtxMenuImpl : public CHyperLinkImpl<T>
+{
+public:
+    BEGIN_MSG_MAP(CHyperLinkCtxMenuImpl<T>)
+        MESSAGE_HANDLER(WM_CONTEXTMENU, OnContextMenu)
+        CHAIN_MSG_MAP(CHyperLinkImpl<T>)
+        DEFAULT_REFLECTION_HANDLER()
+    END_MSG_MAP()
+
+    LRESULT OnContextMenu(UINT /*uMsg*/, WPARAM /*wParam*/, LPARAM /*lParam*/, BOOL& /*bHandled*/)
+    {
+        CPoint pt;
+        ATLVERIFY(::GetCursorPos(&pt));
+        ATLTRACE2(_T("Point of click: %d/%d\n"), pt.x, pt.y);
+
+        CMenu menu;
+        ATLVERIFY(menu.LoadMenu(IDR_POPUP_HYPERLINK1));
+        // Get the popup menu at index 0 from the menu resource
+        CMenuHandle popup = menu.GetSubMenu(0);
+
+        // Let the user pick
+        int idCmd = popup.TrackPopupMenuEx(
+            TPM_LEFTALIGN | TPM_RETURNCMD | TPM_RIGHTBUTTON
+            , pt.x
+            , pt.y
+            , GetParent()
+            , NULL
+            );
+
+        if(idCmd)
+        {
+            switch(idCmd)
+            {
+            case ID_POPUPMENU_COPYURL:
+                if(m_lpstrHyperLink)
+                {
+                    ATLTRACE2(_T("Copy URL\n"), idCmd);
+                    if(::OpenClipboard(GetParent()))
+                    {
+                        ATLVERIFY(SetClipboardString(m_lpstrHyperLink));
+                        ATLVERIFY(::CloseClipboard());
+                    }
+                }
+                break;
+            default:
+                ATLTRACE2(_T("Chosen command: %i\n"), idCmd);
+                break;
+            }
+        }
+
+        return 0;
+    }
+};
+
+class CHyperLinkCtxMenu : public CHyperLinkCtxMenuImpl<CHyperLinkCtxMenu>
+{
+public:
+    DECLARE_WND_CLASS(_T("WTL_CHyperLinkCtxMenu"))
+};
+
+
 class CAboutDlg :
     public CDialogImpl<CAboutDlg>
 {
-    CHyperLink m_website, m_projectpage;
+    CHyperLinkCtxMenu m_website, m_projectpage, m_revisionurl;
     CVersionInfo& m_verinfo;
 public:
     enum { IDD = IDD_ABOUT };
@@ -421,6 +481,7 @@ public:
         ATL::CString website(m_verinfo[_T("Website")]);
         ATL::CString repo(m_verinfo[_T("Mercurial repository")]);
         ATL::CString revision(m_verinfo[_T("Mercurial revision")]);
+        ATL::CString revisionurl(m_verinfo[_T("Mercurial revision URL")]);
 
         ATLVERIFY(m_website.SetHyperLink(website));
         if(int slash = website.ReverseFind(_T('/')))
@@ -437,10 +498,13 @@ public:
         ATLVERIFY(m_projectpage.SetHyperLink(repo));
         ATLVERIFY(m_projectpage.SubclassWindow(GetDlgItem(IDC_STATIC_PROJECT_WEBSITE)));
 
+        ATLVERIFY(m_revisionurl.SetLabel(revision));
+        ATLVERIFY(m_revisionurl.SetHyperLink(revisionurl));
+        ATLVERIFY(m_revisionurl.SubclassWindow(GetDlgItem(IDC_STATIC_REVISION)));
+
         ATLVERIFY(SetDlgItemText(IDC_STATIC_COPYRIGHT, m_verinfo[_T("LegalCopyright")]));
         ATLVERIFY(SetDlgItemText(IDC_STATIC_DESCRIPTION, m_verinfo[_T("FileDescription")]));
         ATLVERIFY(SetDlgItemText(IDC_STATIC_PROGNAME, m_verinfo[_T("ProductName")]));
-        ATLVERIFY(SetDlgItemText(IDC_STATIC_REVISION, m_verinfo[_T("Mercurial revision")]));
 
         ATL::CString caption(_T("About "));
         caption.Append(m_verinfo[_T("ProductName")]);
