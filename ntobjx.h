@@ -287,13 +287,21 @@ class CNoCaretEditT :
     public CWindowImpl<CNoCaretEditT<T>, CEdit>
 {
     typedef CWindowImpl<CNoCaretEditT<T>, CEdit> baseClass;
+    bool m_haveFocus;
 public:
     BEGIN_MSG_MAP(CNoCaretEditT<T>)
         MESSAGE_HANDLER(WM_SETFOCUS, OnSetFocus)
+        MESSAGE_HANDLER(WM_KILLFOCUS, OnKillFocus)
         MESSAGE_HANDLER(WM_LBUTTONDBLCLK, OnDoubleClick)
     END_MSG_MAP()
 
+    inline bool HasFocus() const
+    {
+        return m_haveFocus;
+    }
+
     CNoCaretEditT()
+        : m_haveFocus(false)
     {
     }
 
@@ -310,7 +318,14 @@ public:
         SetSel(-1, 0); // clear selection (i.e. do not select full contents when edit receives focus)
         SendMessage(WM_KEYDOWN, VK_HOME, 0);
         SendMessage(WM_KEYUP, VK_HOME, 0);
+        m_haveFocus = true;
         return ret;
+    }
+
+    LRESULT OnKillFocus(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL& /*bHandled*/)
+    {
+        m_haveFocus = false;
+        return DefWindowProc(uMsg, wParam, lParam);
     }
 
     LRESULT OnDoubleClick(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL& /*bHandled*/)
@@ -340,6 +355,7 @@ class CObjectPropertySheet :
 
         BEGIN_MSG_MAP(CObjectDetailsPage)
             MESSAGE_HANDLER(WM_INITDIALOG, OnInitDialog)
+            MESSAGE_HANDLER(WM_CTLCOLORSTATIC, OnCtlColorStatic)
             CHAIN_MSG_MAP(baseClass)
         END_MSG_MAP()
         BEGIN_DDX_MAP(CObjectDetailsPage)
@@ -367,6 +383,31 @@ class CObjectPropertySheet :
 
             bHandled = FALSE;
             return TRUE;
+        }
+
+        LRESULT OnCtlColorStatic(UINT /*uMsg*/, WPARAM wParam, LPARAM lParam, BOOL& /*bHandled*/)
+        {
+            HDC hDC = reinterpret_cast<HDC>(wParam);
+            HWND hWndCtrl = reinterpret_cast<HWND>(lParam);
+            bool bHasFocus = false;
+            switch(::GetDlgCtrlID(hWndCtrl))
+            {
+            case IDC_EDIT_NAME:
+               bHasFocus = m_edtName.HasFocus();
+               break;
+            case IDC_EDIT_FULLNAME:
+                bHasFocus = m_edtFullname.HasFocus();
+                break;
+            case IDC_EDIT_TYPE:
+                bHasFocus = m_edtType.HasFocus();
+                break;
+            default:
+                break;
+            }
+            COLORREF clr = (bHasFocus) ? ::GetSysColor(COLOR_3DFACE) : RGB(0xFF, 0xFF, 0xFF);
+            ::SetBkColor(hDC, clr);
+            ::SetDCBrushColor(hDC, clr);
+            return reinterpret_cast<LRESULT>(::GetStockObject(DC_BRUSH));
         }
     };
 
@@ -461,12 +502,14 @@ class CAboutDlg :
 {
     CHyperLinkCtxMenu m_website, m_projectpage, m_revisionurl;
     CVersionInfo& m_verinfo;
+    CIcon m_appicon;
 public:
     enum { IDD = IDD_ABOUT };
 
     BEGIN_MSG_MAP(CAboutDlg)
         MESSAGE_HANDLER(WM_INITDIALOG, OnInitDialog)
         COMMAND_ID_HANDLER(IDOK, OnCloseCmd)
+        COMMAND_ID_HANDLER(IDCANCEL, OnCloseCmd)
     END_MSG_MAP()
 
     CAboutDlg(CVersionInfo& verinfo)
@@ -511,6 +554,10 @@ public:
         caption.Append(_T(" "));
         caption.Append(m_verinfo[_T("FileVersion")]);
         SetWindowText(caption);
+
+        m_appicon.LoadIcon(IDR_MAINFRAME);
+        ATLVERIFY(!m_appicon.IsNull());
+        SetIcon(m_appicon);
 
         return TRUE;
     }
@@ -757,7 +804,9 @@ public:
 
     BEGIN_MSG_MAP(CNtObjectsListView)
         MESSAGE_HANDLER(WM_CONTEXTMENU, OnContextMenu)
+        MESSAGE_HANDLER(WM_GETDLGCODE, OnGetDlgCode)
         MESSAGE_HANDLER(WM_LBUTTONDBLCLK, OnDoubleClick)
+        MESSAGE_HANDLER(WM_CHAR, OnChar)
         NOTIFY_CODE_HANDLER(HDN_ITEMCLICKA, OnHeaderItemClick)
         NOTIFY_CODE_HANDLER(HDN_ITEMCLICKW, OnHeaderItemClick)
         DEFAULT_REFLECTION_HANDLER()
@@ -855,7 +904,7 @@ public:
                 otSymlink
                 otDirectory
 
-            matches the submenu indexes.
+            matches the sub menu indexes.
             */
             int submenuidx = itemobj->objtype();
             if(otDirectory == submenuidx)
@@ -911,6 +960,33 @@ public:
         return 0;
     }
 
+    LRESULT OnGetDlgCode(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL& /*bHandled*/)
+    {
+        return DLGC_WANTALLKEYS | DefWindowProc(uMsg, wParam, lParam);
+    }
+
+    LRESULT OnChar(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL& /*bHandled*/)
+    {
+        ATLTRACE2(_T("key code: %u\n"), wParam);
+        switch(wParam)
+        {
+        case VK_RETURN:
+            if(int idx = GetNextItem(-1, LVNI_SELECTED))
+            {
+                ATLASSERT(1 == GetSelectedCount());
+                if(-1 != idx)
+                {
+                    OpenPropertiesOrDirectory_(idx);
+                }
+            }
+            break;
+        case VK_TAB:
+            GetParent().GetNextDlgTabItem(m_hWnd).SetFocus(); // Allows to still use tab to change focus
+            return 0;
+        }
+        return DefWindowProc(uMsg, wParam, lParam);
+    }
+
     LRESULT OnDoubleClick(UINT /*uMsg*/, WPARAM /*wParam*/, LPARAM /*lParam*/, BOOL& /*bHandled*/)
     {
         // Find where the user clicked, so we know the item
@@ -922,24 +998,7 @@ public:
             using namespace NtObjMgr;
             // If we found an item, select it
             ATLVERIFY(SelectItem(lvhtti.iItem));
-
-            LVITEM item = {0};
-            item.iItem = lvhtti.iItem;
-            item.mask = LVIF_PARAM;
-            ATLVERIFY(GetItem(&item));
-            GenericObject* itemobj = reinterpret_cast<GenericObject*>(item.lParam);
-            if(otDirectory == itemobj->objtype())
-            {
-                if(Directory* dir = dynamic_cast<Directory*>(itemobj))
-                {
-                    if(dir->size())
-                    {
-                        FillFromDirectory(*dir);
-                        return 0;
-                    }
-                }
-            }
-            ::SendMessage(GetParent(), WM_COMMAND, MAKEWPARAM(ID_VIEW_PROPERTIES, 0), reinterpret_cast<LPARAM>(m_hWnd));
+            OpenPropertiesOrDirectory_(lvhtti.iItem);
         }
         return 0;
     }
@@ -982,6 +1041,29 @@ public:
     }
 
 private:
+
+    void OpenPropertiesOrDirectory_(int idx)
+    {
+        using namespace NtObjMgr;
+
+        LVITEM item = {0};
+        item.iItem = idx;
+        item.mask = LVIF_PARAM;
+        ATLVERIFY(GetItem(&item));
+        GenericObject* itemobj = reinterpret_cast<GenericObject*>(item.lParam);
+        if(otDirectory == itemobj->objtype())
+        {
+            if(Directory* dir = dynamic_cast<Directory*>(itemobj))
+            {
+                if(dir->size())
+                {
+                    FillFromDirectory(*dir);
+                    return;
+                }
+            }
+        }
+        ::SendMessage(GetParent(), WM_COMMAND, MAKEWPARAM(ID_VIEW_PROPERTIES, 0), reinterpret_cast<LPARAM>(m_hWnd));
+    }
 
     bool ItemFromHitTest_(LVHITTESTINFO& lvhtti, CPoint& pt)
     {
