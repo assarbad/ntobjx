@@ -5,6 +5,10 @@
 
 #pragma once
 
+#if !defined(_UNICODE) && !defined(UNICODE)
+#	error This applications must be built with _UNICODE defined.
+#endif
+
 #ifdef NDEBUG
 #   ifdef _WIN64
 #       pragma optimize("gs", on)
@@ -104,3 +108,8 @@ typedef struct _objtype_comment_t
 
 extern const objtype_comment_t comments[];
 LPCTSTR findComment(LPCTSTR matchString);
+
+// Compatibility for VS2003
+#if (_MSC_VER < 1400)
+#	define _tcscpy_s(x, y, z) _tcscpy(x, z)
+#endif

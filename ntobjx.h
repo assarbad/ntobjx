@@ -402,7 +402,7 @@ class CObjectPropertySheet :
                 bHasFocus = m_edtType.HasFocus();
                 break;
             default:
-                break;
+                return FALSE; // default handling
             }
             COLORREF clr = (bHasFocus) ? ::GetSysColor(COLOR_3DFACE) : RGB(0xFF, 0xFF, 0xFF);
             ::SetBkColor(hDC, clr);
@@ -761,7 +761,7 @@ private:
         ATLVERIFY(m_imagelist.Create(imgListElemWidth, imgListElemHeight, ILC_COLOR32 | ILC_MASK, (int)_countof(iconList), (int)_countof(iconList)));
         for(size_t i = 0; i < _countof(iconList); i++)
         {
-            HICON hIcon = static_cast<HICON>(::LoadImage(_Module.GetResourceInstance(), MAKEINTRESOURCE(iconList[i]), IMAGE_ICON, imgListElemWidth, imgListElemHeight, LR_CREATEDIBSECTION));
+            HICON hIcon = static_cast<HICON>(AtlLoadIconImage(MAKEINTRESOURCE(iconList[i]), LR_CREATEDIBSECTION, imgListElemWidth, imgListElemHeight));
             ATLTRACE2(_T("Icon handle: %p\n"), hIcon);
             m_imagelist.AddIcon(hIcon);
         }
@@ -1122,7 +1122,7 @@ private:
         ATLVERIFY(m_imagelist.Create(imgListElemWidth, imgListElemHeight, ILC_COLOR32 | ILC_MASK, iResIconTypeMappingSize, iResIconTypeMappingSize));
         for(int i = 0; i < iResIconTypeMappingSize; i++)
         {
-            HICON hIcon = static_cast<HICON>(::LoadImage(_Module.GetResourceInstance(), MAKEINTRESOURCE(resIconTypeMapping[i].resId), IMAGE_ICON, imgListElemWidth, imgListElemHeight, LR_CREATEDIBSECTION));
+            HICON hIcon = static_cast<HICON>(AtlLoadIconImage(MAKEINTRESOURCE(resIconTypeMapping[i].resId), LR_CREATEDIBSECTION, imgListElemWidth, imgListElemHeight));
             ATLTRACE2(_T("Icon handle: %p - %s\n"), hIcon, resIconTypeMapping[i].typeName);
             m_imagelist.AddIcon(hIcon);
         }
@@ -1188,6 +1188,7 @@ class CNtObjectsMainFrame :
 public:
     DECLARE_FRAME_WND_CLASS(_T("NtObjectsMainFrame"), IDR_MAINFRAME)
 
+    CMultiPaneStatusBarCtrl m_status;
     CSplitterWindow m_vsplit;
     CNtObjectsTreeView m_treeview;
     CNtObjectsListView m_listview;
@@ -1227,6 +1228,7 @@ public:
         MESSAGE_HANDLER(WM_DESTROY, OnDestroy)
         MESSAGE_HANDLER(WM_GETMINMAXINFO, OnGetMinMaxInfo)
         MESSAGE_HANDLER(WM_SYSCOMMAND, OnSysCommand)
+        MESSAGE_HANDLER(WM_APPCOMMAND, OnAppCommand)
         COMMAND_ID_HANDLER(ID_APP_EXIT, OnFileExit)
         COMMAND_ID_HANDLER(ID_VIEW_PROPERTIES, OnViewProperties)
         COMMAND_ID_HANDLER(ID_VIEW_REFRESH, OnViewRefresh)
@@ -1241,7 +1243,9 @@ public:
     {
         m_tree_initialized = 0;
 
-        CreateSimpleStatusBar();
+        ATLVERIFY(CreateSimpleStatusBar());
+        m_status.SubclassWindow(m_hWndStatusBar);
+
         m_hWndClient = m_vsplit.Create(m_hWnd, rcDefault, NULL, WS_CHILD | WS_VISIBLE | WS_CLIPSIBLINGS | WS_CLIPCHILDREN);
         // Add WS_EX_CONTROLPARENT such that tab stops work
         LONG exStyle = ::GetWindowLong(m_hWndClient, GWL_EXSTYLE);
@@ -1398,6 +1402,81 @@ public:
             (void)OnShowAbout(0, 0, 0, bHandled);
         else
             bHandled = FALSE;
+        return 0;
+    }
+
+    LRESULT OnAppCommand(UINT /*uMsg*/, WPARAM /*wParam*/, LPARAM lParam, BOOL& bHandled)
+    {
+        SHORT cmd  = GET_APPCOMMAND_LPARAM(lParam);
+#ifdef _DEBUG
+        WORD uDevice = GET_DEVICE_LPARAM(lParam);
+        WORD uKeys = GET_KEYSTATE_LPARAM(lParam);
+        switch(cmd)
+        {
+        case APPCOMMAND_BROWSER_BACKWARD:
+            ATLTRACE2(_T("APPCOMMAND_BROWSER_BACKWARD"));
+            break;
+        case APPCOMMAND_MEDIA_PREVIOUSTRACK:
+            ATLTRACE2(_T("APPCOMMAND_MEDIA_PREVIOUSTRACK"));
+            break;
+        case APPCOMMAND_BROWSER_FORWARD:
+            ATLTRACE2(_T("APPCOMMAND_BROWSER_FORWARD"));
+            break;
+        case APPCOMMAND_MEDIA_NEXTTRACK:
+            ATLTRACE2(_T("APPCOMMAND_MEDIA_NEXTTRACK"));
+            break;
+        }
+        switch(uDevice)
+        {
+        case FAPPCOMMAND_KEY:
+            ATLTRACE2(_T(": FAPPCOMMAND_KEY"));
+            break;
+        case FAPPCOMMAND_MOUSE:
+            ATLTRACE2(_T(": FAPPCOMMAND_MOUSE"));
+            break;
+        case FAPPCOMMAND_OEM:
+            ATLTRACE2(_T(": FAPPCOMMAND_OEM"));
+            break;
+        }
+        switch(uKeys)
+        {
+        case MK_CONTROL:
+            ATLTRACE2(_T(", MK_CONTROL"));
+            break;
+        case MK_LBUTTON:
+            ATLTRACE2(_T(", MK_LBUTTON"));
+            break;
+        case MK_MBUTTON:
+            ATLTRACE2(_T(", MK_MBUTTON"));
+            break;
+        case MK_RBUTTON:
+            ATLTRACE2(_T(", MK_RBUTTON"));
+            break;
+        case MK_SHIFT:
+            ATLTRACE2(_T(", MK_SHIFT"));
+            break;
+        case MK_XBUTTON1:
+            ATLTRACE2(_T(", MK_XBUTTON1"));
+            break;
+        case MK_XBUTTON2:
+            ATLTRACE2(_T(", MK_XBUTTON2"));
+            break;
+        }
+        ATLTRACE2(_T("\n"));
+#endif
+/*
+        switch(cmd)
+        {
+        case APPCOMMAND_BROWSER_BACKWARD:
+        case APPCOMMAND_MEDIA_PREVIOUSTRACK:
+            break;
+        case APPCOMMAND_BROWSER_FORWARD:
+        case APPCOMMAND_MEDIA_NEXTTRACK:
+            break;
+        }
+*/
+
+        bHandled = FALSE;
         return 0;
     }
 

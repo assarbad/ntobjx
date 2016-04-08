@@ -1,5 +1,13 @@
-#define _NTDLLBUILD_
-#define _NTSYSTEM_
+#ifndef _WIN32_WINNT
+#   define _WIN32_WINNT 0x0500
+#endif
+#ifndef WINVER
+#   define WINVER 0x0500
+#endif
+#if (_MSCVER >= 1400)
+#   define _NTDLLBUILD_
+#   define _NTSYSTEM_
+#endif
 #include <Windows.h>
 #include "../ntnative.h"
 

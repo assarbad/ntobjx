@@ -29,22 +29,45 @@
 ///////////////////////////////////////////////////////////////////////////////
 
 #ifndef __NTNATIVE_H_VER__
-#define __NTNATIVE_H_VER__ 2016032815
+#define __NTNATIVE_H_VER__ 2016040823
 #if (defined(_MSC_VER) && (_MSC_VER >= 1020)) || defined(__MCPP)
 #pragma once
 #endif // Check for "#pragma once" support
 
-#ifdef DDKBUILD
+// Fake the SAL annotations where they don't exist.
+// Now I am running VS2005 with Windows 7 SP1 SDK integrated. Possible that's why it works there.
+#if (_MSC_VER < 1400)
+#   define __success(x)
+#   define __field_range(x, y)
+#   define __kernel_entry
+#   define __in
+#   define __in_opt
+#   define __inout
+#   define __inout_opt
+#   define __out
+#   define __out_bcount(x)
+#   define __out_opt
+#   define __out_bcount_opt(x)
+#   define __reserved
+#endif
+
+#if defined(DDKBUILD)
 #   include <WinDef.h>
 #else
+#   pragma push_macro("NTSYSCALLAPI")
+#   ifdef NTSYSCALLAPI
+#       undef NTSYSCALLAPI
+#       define NTSYSCALLAPI
+#   endif
 #   include <winternl.h>
+#   pragma pop_macro("NTSYSCALLAPI")
 #endif // DDKBUILD
 #pragma warning(disable:4005)
 #include <ntstatus.h>
 #pragma warning(default:4005)
 
-#ifdef DDKBUILD
-#   ifdef __cplusplus
+#if defined(DDKBUILD)
+#   if defined(__cplusplus)
     extern "C" {
 #   endif
     typedef struct _UNICODE_STRING {
@@ -107,13 +130,13 @@
             }
 #   endif
 
-#   ifdef __cplusplus
+#   if defined(__cplusplus)
     }
 #   endif
 #endif // DDKBUILD
 
 #ifndef RTL_CONSTANT_STRING
-#ifdef __cplusplus
+#if defined(__cplusplus)
 extern "C++"
 {
     char _RTL_CONSTANT_STRING_type_check(const char *s);
@@ -137,7 +160,7 @@ extern "C++"
 }
 #endif // RTL_CONSTANT_STRING
 
-#ifdef __cplusplus
+#if defined(__cplusplus)
 extern "C" {
 #endif
 
@@ -662,7 +685,7 @@ NtUnmapViewOfSection(
 #define ZwMapViewOfSection NtMapViewOfSection
 #define ZwUnmapViewOfSection NtUnmapViewOfSection
 
-#ifdef __cplusplus
+#if defined(__cplusplus)
 }
 #endif
 
