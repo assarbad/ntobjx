@@ -41,6 +41,7 @@
 #   define __field_range(x, y)
 #   define __kernel_entry
 #   define __in
+#   define __in_bcount(x)
 #   define __in_opt
 #   define __inout
 #   define __inout_opt
@@ -119,21 +120,28 @@
         PCWSTR SourceString
         );
 
-#   ifndef InitializeObjectAttributes
-#       define InitializeObjectAttributes( p, n, a, r, s ) { \
-            (p)->Length = sizeof( OBJECT_ATTRIBUTES );          \
-            (p)->RootDirectory = r;                             \
-            (p)->Attributes = a;                                \
-            (p)->ObjectName = n;                                \
-            (p)->SecurityDescriptor = s;                        \
-            (p)->SecurityQualityOfService = NULL;               \
-            }
-#   endif
-
 #   if defined(__cplusplus)
     }
 #   endif
 #endif // DDKBUILD
+
+#ifndef InitializeObjectAttributes
+#   define InitializeObjectAttributes( p, n, a, r, s ) { \
+        (p)->Length = sizeof( OBJECT_ATTRIBUTES );          \
+        (p)->RootDirectory = r;                             \
+        (p)->Attributes = a;                                \
+        (p)->ObjectName = n;                                \
+        (p)->SecurityDescriptor = s;                        \
+        (p)->SecurityQualityOfService = NULL;               \
+        }
+#endif
+
+#if (_MSC_VER < 1400)
+typedef enum _OBJECT_INFORMATION_CLASS {
+    ObjectBasicInformation = 0,
+    ObjectTypeInformation = 2
+} OBJECT_INFORMATION_CLASS;
+#endif
 
 #ifndef RTL_CONSTANT_STRING
 #if defined(__cplusplus)
