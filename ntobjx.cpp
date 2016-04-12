@@ -172,7 +172,7 @@ int WINAPI _tWinMain(HINSTANCE hInstance, HINSTANCE /*hPrevInstance*/, LPTSTR lp
     HRESULT hRes = ::CoInitializeEx(NULL, COINIT_MULTITHREADED);
     ATLASSERT(SUCCEEDED(hRes));
 
-    AtlInitCommonControls(ICC_BAR_CLASSES); // add flags to support other controls
+    AtlInitCommonControls(ICC_LISTVIEW_CLASSES | ICC_TREEVIEW_CLASSES | ICC_TAB_CLASSES);
 
 #ifndef DDKBUILD
     force_resolve_ntdll();

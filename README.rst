@@ -1,7 +1,6 @@
 ﻿====================
  ntobjx: NT objects
 ====================
-:Author: Oliver Schneider
 
 About
 -----

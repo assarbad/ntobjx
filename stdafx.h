@@ -67,6 +67,7 @@
 
 #include <atlapp.h> /* chokes if _ATL_NO_COMMODULE is defined */
 #include <atlmisc.h>
+#include <atlsimpcoll.h>
 
 typedef CAppModule CNtObjectsAppModule;
 extern CNtObjectsAppModule _Module;

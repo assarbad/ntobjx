@@ -49,6 +49,7 @@
 
 namespace
 {
+    size_t const maxVisitedDepth = 10;
     int const imgListElemWidth = 16;
     int const imgListElemHeight = 16;
 
@@ -282,61 +283,9 @@ public:
     }
 };
 
-template <typename T>
-class CNoCaretEditT :
-    public CWindowImpl<CNoCaretEditT<T>, CEdit>
-{
-    typedef CWindowImpl<CNoCaretEditT<T>, CEdit> baseClass;
-    bool m_haveFocus;
-public:
-    BEGIN_MSG_MAP(CNoCaretEditT<T>)
-        MESSAGE_HANDLER(WM_SETFOCUS, OnSetFocus)
-        MESSAGE_HANDLER(WM_KILLFOCUS, OnKillFocus)
-        MESSAGE_HANDLER(WM_LBUTTONDBLCLK, OnDoubleClick)
-    END_MSG_MAP()
-
-    inline bool HasFocus() const
-    {
-        return m_haveFocus;
-    }
-
-    CNoCaretEditT()
-        : m_haveFocus(false)
-    {
-    }
-
-    CNoCaretEditT<T>& operator=(HWND hWnd)
-    {
-        m_hWnd = hWnd;
-        return *this;
-    }
-
-    LRESULT OnSetFocus(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL& /*bHandled*/)
-    {
-        LRESULT ret = DefWindowProc(uMsg, wParam, lParam);
-        HideCaret();
-        SetSel(-1, 0); // clear selection (i.e. do not select full contents when edit receives focus)
-        SendMessage(WM_KEYDOWN, VK_HOME, 0);
-        SendMessage(WM_KEYUP, VK_HOME, 0);
-        m_haveFocus = true;
-        return ret;
-    }
-
-    LRESULT OnKillFocus(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL& /*bHandled*/)
-    {
-        m_haveFocus = false;
-        return DefWindowProc(uMsg, wParam, lParam);
-    }
-
-    LRESULT OnDoubleClick(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL& /*bHandled*/)
-    {
-        LRESULT ret = DefWindowProc(uMsg, wParam, lParam);
-        SetSel(0, -1); // select all
-        return ret;
-    }
-};
-
-typedef CNoCaretEditT<CWindow>   CNoCaretEdit;
+#include <Aclui.h>
+#include <Aclapi.h>
+#pragma comment(lib, "aclui.lib")
 
 class CObjectPropertySheet :
     public CPropertySheetImpl<CObjectPropertySheet>
@@ -346,23 +295,18 @@ class CObjectPropertySheet :
         public CWinDataExchange<CObjectDetailsPage>
     {
         typedef CPropertyPageImpl<CObjectDetailsPage> baseClass;
+        typedef BOOL (__stdcall *TFNIsThemeDialogTextureEnabled)(HWND);
         GenericObject*  m_obj;
-        CNoCaretEdit    m_edtName;
-        CNoCaretEdit    m_edtFullname;
-        CNoCaretEdit    m_edtType;
+        CEdit           m_edtName;
+        CEdit           m_edtFullname;
+        CEdit           m_edtType;
     public:
         enum { IDD = IDD_PROPERTIES };
 
         BEGIN_MSG_MAP(CObjectDetailsPage)
             MESSAGE_HANDLER(WM_INITDIALOG, OnInitDialog)
-            MESSAGE_HANDLER(WM_CTLCOLORSTATIC, OnCtlColorStatic)
             CHAIN_MSG_MAP(baseClass)
         END_MSG_MAP()
-        BEGIN_DDX_MAP(CObjectDetailsPage)
-            DDX_CONTROL(IDC_EDIT_NAME, m_edtName)
-            DDX_CONTROL(IDC_EDIT_FULLNAME, m_edtFullname)
-            DDX_CONTROL(IDC_EDIT_TYPE, m_edtType)
-        END_DDX_MAP()
 
         CObjectDetailsPage(GenericObject* obj)
             : baseClass((LPCTSTR)NULL)
@@ -370,9 +314,11 @@ class CObjectPropertySheet :
         {
         }
 
-        LRESULT OnInitDialog(UINT /*uMsg*/, WPARAM /*wParam*/, LPARAM /*lParam*/, BOOL& bHandled)
+        LRESULT OnInitDialog(UINT /*uMsg*/, WPARAM /*wParam*/, LPARAM /*lParam*/, BOOL& /*bHandled*/)
         {
-            DoDataExchange(); // this subclasses the controls
+            m_edtName.Attach(GetDlgItem(IDC_EDIT_NAME));
+            m_edtFullname.Attach(GetDlgItem(IDC_EDIT_FULLNAME));
+            m_edtType.Attach(GetDlgItem(IDC_EDIT_TYPE));
 
             if(m_obj)
             {
@@ -381,38 +327,100 @@ class CObjectPropertySheet :
                 m_edtType.SetWindowText(m_obj->type());
             }
 
-            bHandled = FALSE;
             return TRUE;
         }
+    };
 
-        LRESULT OnCtlColorStatic(UINT /*uMsg*/, WPARAM wParam, LPARAM lParam, BOOL& /*bHandled*/)
+    class CSecurityInformation :
+        public ISecurityInformation
+    {
+        GenericObject*  m_obj;
+    public:
+        CSecurityInformation(GenericObject* obj)
+            : m_obj(obj)
         {
-            HDC hDC = reinterpret_cast<HDC>(wParam);
-            HWND hWndCtrl = reinterpret_cast<HWND>(lParam);
-            bool bHasFocus = false;
-            switch(::GetDlgCtrlID(hWndCtrl))
+        }
+
+        STDMETHOD(QueryInterface)(REFIID riid, void **ppvObj)
+        {
+            if(riid == IID_IUnknown || riid == IID_ISecurityInformation)
             {
-            case IDC_EDIT_NAME:
-               bHasFocus = m_edtName.HasFocus();
-               break;
-            case IDC_EDIT_FULLNAME:
-                bHasFocus = m_edtFullname.HasFocus();
-                break;
-            case IDC_EDIT_TYPE:
-                bHasFocus = m_edtType.HasFocus();
-                break;
-            default:
-                return FALSE; // default handling
+                *ppvObj = this;
+                return S_OK;
             }
-            COLORREF clr = (bHasFocus) ? ::GetSysColor(COLOR_3DFACE) : RGB(0xFF, 0xFF, 0xFF);
-            ::SetBkColor(hDC, clr);
-            ::SetDCBrushColor(hDC, clr);
-            return reinterpret_cast<LRESULT>(::GetStockObject(DC_BRUSH));
+            return E_NOINTERFACE;
+        }
+
+        STDMETHOD_(ULONG, AddRef)()
+        {
+            return 2;
+        }
+
+        STDMETHOD_(ULONG, Release)()
+        {
+            return 1;
+        }
+
+        STDMETHOD(GetObjectInformation)(PSI_OBJECT_INFO pObjectInfo)
+        {
+            pObjectInfo->dwFlags = SI_ADVANCED | SI_READONLY;
+            pObjectInfo->hInstance = NULL;
+            pObjectInfo->pszPageTitle = NULL;
+            pObjectInfo->pszObjectName = const_cast<LPTSTR>(m_obj->name().GetString());
+
+            return S_OK;
+        }
+
+        STDMETHOD(GetSecurity)(SECURITY_INFORMATION si, PSECURITY_DESCRIPTOR *ppSecurityDescriptor, BOOL /*fDefault*/)
+        {
+            // FIXME: open object m_obj
+            DWORD dwResult = ::GetSecurityInfo(INVALID_HANDLE_VALUE, SE_KERNEL_OBJECT, si, NULL, NULL, NULL, NULL, ppSecurityDescriptor);
+            return (ERROR_SUCCESS == dwResult) ? S_OK : HRESULT_FROM_WIN32(GetLastError());
+        }
+
+        STDMETHOD(SetSecurity)(SECURITY_INFORMATION /*si*/, PSECURITY_DESCRIPTOR /*pSecurityDescriptor*/)
+        {
+            return E_NOTIMPL;
+        }
+
+        STDMETHOD(GetAccessRights) (const GUID* /*pguidObjectType*/, DWORD /*dwFlags*/, PSI_ACCESS *ppAccess, ULONG *pcAccesses, ULONG *piDefaultAccess)
+        {
+            static SI_ACCESS accessNameMapping[] =
+            {
+                { &GUID_NULL, GENERIC_READ, _T("Read"), SI_ACCESS_GENERAL },
+                { &GUID_NULL, GENERIC_WRITE, _T("Write"), SI_ACCESS_GENERAL },
+                { &GUID_NULL, GENERIC_EXECUTE, _T("Execute"), SI_ACCESS_GENERAL },
+                { &GUID_NULL, MUTANT_QUERY_STATE, _T("Query State"), SI_ACCESS_GENERAL },
+                { &GUID_NULL, EVENT_MODIFY_STATE, _T("Modify State"), SI_ACCESS_GENERAL },
+                { &GUID_NULL, SYNCHRONIZE, _T("Synchronize"), SI_ACCESS_GENERAL }
+            };
+
+            *ppAccess = accessNameMapping;
+            *pcAccesses = _countof(accessNameMapping);
+            *piDefaultAccess = 0;
+
+            return S_OK;
+        }
+
+        STDMETHOD(MapGeneric)(const GUID* /*pguidObjectType*/, UCHAR* /*pAceFlags*/, ACCESS_MASK* /*pMask*/)
+        {
+            return S_OK;
+        }
+
+        STDMETHOD(GetInheritTypes)(PSI_INHERIT_TYPE* /*ppInheritTypes*/, ULONG* /*pcInheritTypes*/)
+        {
+            return S_OK;
+        }
+
+        STDMETHOD(PropertySheetPageCallback)(HWND /*hwnd*/, UINT /*uMsg*/, SI_PAGE_TYPE /*uPage*/)
+        {
+            return S_OK;
         }
     };
 
     typedef CPropertySheetImpl<CObjectPropertySheet> baseClass;
     CObjectDetailsPage m_details;
+    CSecurityInformation m_security;
 public:
     BEGIN_MSG_MAP(CObjectPropertySheet)
         MESSAGE_HANDLER(WM_INITDIALOG, OnInitDialog)
@@ -422,9 +430,11 @@ public:
     CObjectPropertySheet(GenericObject* obj)
         : baseClass((LPCTSTR)NULL, 0, NULL)
         , m_details(obj)
+        , m_security(obj)
     {
         ATLASSERT(NULL != obj);
         AddPage(m_details);
+        AddPage(::CreateSecurityPage(&m_security));
         SetTitle(obj->name(), PSH_PROPTITLE);
     }
 
@@ -1197,11 +1207,12 @@ public:
     UINT_PTR const m_AboutMenuItem;
     GenericObject* m_lastSelected;
     CVersionInfo m_verinfo;
+    CSimpleArray<ATL::CString> m_visitedList;
     HRESULT (CALLBACK* DllGetVersion)(DLLVERSIONINFO *);
 
     CNtObjectsMainFrame()
         : m_bFirstOnIdle(true) // to force initial refresh
-        , m_AboutMenuItem(::RegisterWindowMessage(_T("{2F95CC77-8F3F-4880-AA09-FDE7D65BA526}")))
+        , m_AboutMenuItem(::RegisterWindowMessage(_T("ntobjx_{2F95CC77-8F3F-4880-AA09-FDE7D65BA526}")))
         , m_lastSelected(0)
         , m_verinfo(_Module.GetModuleInstance())
     {
@@ -1381,9 +1392,9 @@ public:
         (void)InterlockedExchange(&m_tree_initialized, 0);
         if(m_treeview.EmptyAndRefill())
         {
+            (void)InterlockedExchange(&m_tree_initialized, 1);
             m_listview.FillFromDirectory(m_treeview.ObjectRoot());
             SetSelected_(&m_treeview.ObjectRoot());
-            (void)InterlockedExchange(&m_tree_initialized, 1);
         }
         return 0;
     }
@@ -1464,17 +1475,19 @@ public:
         }
         ATLTRACE2(_T("\n"));
 #endif
-/*
-        switch(cmd)
+        if(int sz = m_visitedList.GetSize())
         {
-        case APPCOMMAND_BROWSER_BACKWARD:
-        case APPCOMMAND_MEDIA_PREVIOUSTRACK:
-            break;
-        case APPCOMMAND_BROWSER_FORWARD:
-        case APPCOMMAND_MEDIA_NEXTTRACK:
-            break;
+            ATLASSERT(sz > 0);
+            switch(cmd)
+            {
+            case APPCOMMAND_BROWSER_BACKWARD:
+            case APPCOMMAND_MEDIA_PREVIOUSTRACK:
+                break;
+            case APPCOMMAND_BROWSER_FORWARD:
+            case APPCOMMAND_MEDIA_NEXTTRACK:
+                break;
+            }
         }
-*/
 
         bHandled = FALSE;
         return 0;
@@ -1528,6 +1541,18 @@ private:
     void SetSelected_(GenericObject* obj)
     {
         m_lastSelected = obj;
-        ::SetWindowText(m_hWndStatusBar, (m_lastSelected) ? m_lastSelected->fullname().GetString() : _T(""));
+        LPCWSTR fullName = (m_lastSelected) ? m_lastSelected->fullname().GetString() : _T("");
+        if(m_lastSelected)
+        {
+            ATLASSERT(maxVisitedDepth > 0);
+            // Should we trim the list?
+            while(m_visitedList.GetSize() >= maxVisitedDepth)
+            {
+                ATLVERIFY(m_visitedList.RemoveAt(0));
+                ATLTRACE2(_T("Trimmed visited list. New size: %i\n"), m_visitedList.GetSize());
+            }
+        }
+        ATLVERIFY(m_visitedList.Add(fullName));
+        ::SetWindowText(m_hWndStatusBar, fullName);
     }
 };
