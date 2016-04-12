@@ -283,9 +283,11 @@ public:
     }
 };
 
-#include <Aclui.h>
-#include <Aclapi.h>
-#pragma comment(lib, "aclui.lib")
+#ifndef DDKBUILD
+#   include <Aclui.h>
+#   include <Aclapi.h>
+#   pragma comment(lib, "aclui.lib")
+#endif // DDKBUILD
 
 class CObjectPropertySheet :
     public CPropertySheetImpl<CObjectPropertySheet>
@@ -331,6 +333,7 @@ class CObjectPropertySheet :
         }
     };
 
+#ifndef DDKBUILD
     class CSecurityInformation :
         public ISecurityInformation
     {
@@ -417,10 +420,13 @@ class CObjectPropertySheet :
             return S_OK;
         }
     };
+#endif // DDKBUILD
 
     typedef CPropertySheetImpl<CObjectPropertySheet> baseClass;
     CObjectDetailsPage m_details;
+#ifndef DDKBUILD
     CSecurityInformation m_security;
+#endif // DDKBUILD
 public:
     BEGIN_MSG_MAP(CObjectPropertySheet)
         MESSAGE_HANDLER(WM_INITDIALOG, OnInitDialog)
@@ -430,11 +436,15 @@ public:
     CObjectPropertySheet(GenericObject* obj)
         : baseClass((LPCTSTR)NULL, 0, NULL)
         , m_details(obj)
+#ifndef DDKBUILD
         , m_security(obj)
+#endif // DDKBUILD
     {
         ATLASSERT(NULL != obj);
         AddPage(m_details);
+#ifndef DDKBUILD
         AddPage(::CreateSecurityPage(&m_security));
+#endif // DDKBUILD
         SetTitle(obj->name(), PSH_PROPTITLE);
     }
 
