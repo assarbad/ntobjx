@@ -60,15 +60,16 @@ CNtObjectsAppModule _Module;
 #define EXACT_ENTRY(match, comment)   { _T(match), _T(comment), 0x0 }
 #define EXACTI_ENTRY(match, comment)   { _T(match), _T(comment), 0x1 }
 
+/*lint -save -e651 */
 const objtype_comment_t comments[] = {
     EXACTI_ENTRY("\\ArcName", "Symlinks mapping ARC-style (Advanced RISC Computing) names to NT-style names; used during early boot stages"),
     EXACTI_ENTRY("\\BaseNamedObjects", "This is where global ALPC port, event, job, mutex (mutant), semaphore, symbolic link, section (memory mapped file) and waitable timer objects live"),
     EXACTI_ENTRY("\\Callback", "Callback objects"),
     EXACTI_ENTRY("\\Device", "Where drivers conventionally create and look for device objects"),
-    EXACTI_ENTRY("\\DosDevices", "Legacy name and alias for the local \\??\nAlso see: \\GLOBAL??"),
+    EXACTI_ENTRY("\\DosDevices", "Legacy name and alias for the local \\\?\?\nAlso see: \\GLOBAL\?\?"),
     EXACTI_ENTRY("\\Driver", "Contains instances of driver objects"),
     EXACTI_ENTRY("\\FileSystem", "Available FS, FS filter and FS recognizer device and driver objects"),
-    EXACTI_ENTRY("\\GLOBAL??", "Global (across all sessions) 'DOS' device names on a machine with terminal services enabled"),
+    EXACTI_ENTRY("\\GLOBAL\?\?", "Global (across all sessions) 'DOS' device names on a machine with terminal services enabled"),
     EXACTI_ENTRY("\\KernelObjects", "Contains event objects that signal low resource conditions, memory errors, the completion of certain operating system tasks, as well as objects representing sessions\nSource: Windows Internals, 6th ed."),
     EXACTI_ENTRY("\\KnownDlls", "Section objects of preloaded known DLLs and Win32-path to known DLLs\nAlso see: HKLM\\SYSTEM\\CurrentControlSet\\Control\\Session Manager\\KnownDLLs\\DllDirectory"),
     EXACTI_ENTRY("\\KnownDlls32", "Section objects of preloaded known 32-bit DLLs on 64-bit systems\nAlso see: HKLM\\SYSTEM\\CurrentControlSet\\Control\\Session Manager\\KnownDLLs\\DllDirectory32"),
@@ -82,7 +83,7 @@ const objtype_comment_t comments[] = {
     EXACTI_ENTRY("\\Windows", "Contains window station objects"),
     EXACTI_ENTRY("\\Windows\\WindowStations", "Catalog of window stations\nA WindowStation is the container for a Desktop, which in turn hosts the visible windows"),
     // Non-Directory objects
-    EXACTI_ENTRY("\\??", "Contains session-local 'DOS' device names, such as drive letters ('C:', ...) and 'NUL'; also see \\GLOBAL??"),
+    EXACTI_ENTRY("\\\?\?", "Contains session-local 'DOS' device names, such as drive letters ('C:', ...) and 'NUL'; also see \\GLOBAL\?\?"),
     EXACTI_ENTRY("\\REGISTRY", "The root of the registry as seen outside the Win32 subsystem"),
     EXACTI_ENTRY("\\SystemRoot", "The device path to your %SystemRoot%; e.g. the true path of C:\\Windows"),
     EXACTI_ENTRY("\\Device\\Mailslot", "The device that offers mailslots in their own 'DOS' namespace"),
@@ -90,6 +91,7 @@ const objtype_comment_t comments[] = {
     EXACTI_ENTRY("\\Device\\PhysicalMemory", "Section allows reresenting 'physical' memory"),
     //PATTERN_ENTRY("\\Device\\HarddiskVolume*", "Device object that represents a volume, i.e. partition, on a disk"),
 };
+/*lint -restore */
 
 #undef PATTERN_ENTRY
 #undef EXACT_ENTRY

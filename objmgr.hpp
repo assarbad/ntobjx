@@ -27,7 +27,7 @@
 ///////////////////////////////////////////////////////////////////////////////
 
 #ifndef __OBJMGR_HPP_VER__
-#define __OBJMGR_HPP_VER__ 2016040618
+#define __OBJMGR_HPP_VER__ 2016041420
 #if (defined(_MSC_VER) && (_MSC_VER >= 1020)) || defined(__MCPP)
 #pragma once
 #endif // Check for "#pragma once" support
@@ -57,11 +57,13 @@ namespace NtObjMgr{
 
     template<typename T> interface ISymlinkT
     {
+        virtual ~ISymlinkT() {}
         virtual T const& target() const = 0;
     };
 
     template<typename T> interface IDirectoryT
     {
+        virtual ~IDirectoryT() {}
         virtual size_t size() const = 0;
     };
 
@@ -86,18 +88,18 @@ namespace NtObjMgr{
         }
 
     public:
-        GenericObjectT(UNICODE_STRING const& name, UNICODE_STRING const& type, LPCWSTR parent = NULL)
-            : m_name(name.Buffer, name.Length / sizeof(WCHAR))
-            , m_type(type.Buffer, type.Length / sizeof(WCHAR))
+        GenericObjectT(UNICODE_STRING const& name_, UNICODE_STRING const& tpname, LPCWSTR parent = NULL)
+            : m_name(name_.Buffer, name_.Length / sizeof(WCHAR))
+            , m_type(tpname.Buffer, tpname.Length / sizeof(WCHAR))
             , m_parent((parent) ? parent : L"")
             , m_fullname()
         {
             setParent_();
             m_fullname = m_parent + L"\\" + m_name;
         }
-        GenericObjectT(LPCWSTR name, LPCWSTR type, LPCWSTR parent = NULL)
-            : m_name(name)
-            , m_type(type)
+        GenericObjectT(LPCWSTR name_, LPCWSTR tpname, LPCWSTR parent = NULL)
+            : m_name(name_)
+            , m_type(tpname)
             , m_parent((parent) ? parent : L"")
             , m_fullname()
         {
@@ -109,22 +111,22 @@ namespace NtObjMgr{
         {
         }
 
-        inline virtual T const& name() const
+        inline T const& name() const
         {
             return m_name;
         }
 
-        inline virtual T const& fullname() const
+        inline T const& fullname() const
         {
             return m_fullname;
         }
 
-        inline virtual T const& type() const
+        inline T const& type() const
         {
             return m_type;
         }
 
-        inline virtual objtype_t objtype() const
+        inline objtype_t objtype() const
         {
             return otGeneric;
         }
@@ -146,19 +148,21 @@ namespace NtObjMgr{
         public GenericObjectT<T>,
         public ISymlinkT<T>
     {
+        /*lint -save -e1516 */
         typedef GenericObjectT<T> Inherited;
+        /*lint -restore */
 
     public:
-        SymbolicLinkT(UNICODE_STRING const& name, UNICODE_STRING const& type, LPCWSTR parent = NULL)
-            : Inherited(name, type, parent)
+        SymbolicLinkT(UNICODE_STRING const& name_, UNICODE_STRING const& tpname, LPCWSTR parent = NULL)
+            : Inherited(name_, tpname, parent)
             , m_linktgt()
             , m_lastStatus(STATUS_SUCCESS)
             , m_cached(refresh())
         {
         }
 
-        SymbolicLinkT(LPCWSTR name, LPCWSTR type, LPCWSTR parent = NULL)
-            : Inherited(name, type, parent)
+        SymbolicLinkT(LPCWSTR name_, LPCWSTR tpname, LPCWSTR parent = NULL)
+            : Inherited(name_, tpname, parent)
             , m_linktgt()
             , m_lastStatus(STATUS_SUCCESS)
             , m_cached(refresh())
@@ -169,12 +173,12 @@ namespace NtObjMgr{
         {
         }
 
-        inline virtual T const& target() const
+        inline T const& target() const
         {
             return m_linktgt;
         }
 
-        inline virtual objtype_t objtype() const
+        inline objtype_t objtype() const
         {
             return otSymlink;
         }
@@ -196,7 +200,8 @@ namespace NtObjMgr{
             {
                 size_t const bufSize = 0x7FFF;
                 CTempBuffer<WCHAR> buf(bufSize);
-                UNICODE_STRING usLinkTarget = { 0, bufSize * sizeof(WCHAR), LPWSTR(buf) };
+                LPWSTR lpszBuf = LPWSTR(buf);
+                UNICODE_STRING usLinkTarget = { 0, bufSize * sizeof(WCHAR), lpszBuf };
                 ULONG len = 0;
                 m_lastStatus = ::NtQuerySymbolicLinkObject(hLink, &usLinkTarget, &len);
                 if(NT_SUCCESS(m_lastStatus))
@@ -224,9 +229,10 @@ namespace NtObjMgr{
         public GenericObjectT<T>,
         public IDirectoryT<T>
     {
+        /*lint -save -e1516 */
         typedef GenericObjectT<T> Inherited;
+        /*lint -restore */
         typedef ATL::CAtlArray<Inherited*, ATL::CPrimitiveElementTraits<Inherited*> > EntryList;
-
     public:
         DirectoryT(LPCWSTR objdir = L"")
             : Inherited(objdir, L"Directory")
@@ -236,16 +242,16 @@ namespace NtObjMgr{
         {
         }
 
-        DirectoryT(UNICODE_STRING const& name, UNICODE_STRING const& type, LPCWSTR parent = NULL)
-            : Inherited(name, type, parent)
+        DirectoryT(UNICODE_STRING const& name_, UNICODE_STRING const& tpname, LPCWSTR parent = NULL)
+            : Inherited(name_, tpname, parent)
             , m_entries()
             , m_lastStatus(STATUS_SUCCESS)
             , m_cached(refresh())
         {
         }
 
-        DirectoryT(LPCWSTR name, LPCWSTR type, LPCWSTR parent = NULL)
-            : Inherited(name, type, parent)
+        DirectoryT(LPCWSTR name_, LPCWSTR tpname, LPCWSTR parent = NULL)
+            : Inherited(name_, tpname, parent)
             , m_entries()
             , m_lastStatus(STATUS_SUCCESS)
             , m_cached(refresh())
@@ -257,7 +263,14 @@ namespace NtObjMgr{
             size_t const listsize = m_entries.GetCount();
             for(size_t i = 0; i < listsize; i++)
             {
-                delete m_entries[i];
+                try
+                {
+                    delete m_entries[i];
+                }
+                catch (...)
+                {
+                    ATLTRACE2(_T("The delete operator barfed when cleaning up cached entries.\n"));
+                }
             }
             m_entries.RemoveAll();
         }
@@ -267,7 +280,7 @@ namespace NtObjMgr{
             return m_lastStatus;
         }
 
-        inline virtual objtype_t objtype() const
+        inline objtype_t objtype() const
         {
             return otDirectory;
         }

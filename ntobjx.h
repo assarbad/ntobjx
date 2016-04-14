@@ -49,7 +49,7 @@
 
 namespace
 {
-    size_t const maxVisitedDepth = 10;
+    int const maxVisitedDepth = 10;
     int const imgListElemWidth = 16;
     int const imgListElemHeight = 16;
 
@@ -276,9 +276,16 @@ public:
         if(::IsWindow(m_hWnd))
         {
             ::SendMessage(m_hWnd, WM_SETREDRAW, TRUE, 0);
-            CRect rect;
-            ATLVERIFY(::GetClientRect(m_hWnd, &rect));
-            ATLVERIFY(::InvalidateRect(m_hWnd, &rect, FALSE));
+            try
+            {
+                CRect rect;
+                ATLVERIFY(::GetClientRect(m_hWnd, &rect));
+                ATLVERIFY(::InvalidateRect(m_hWnd, &rect, FALSE));
+            }
+            catch (...)
+            {
+                ATLTRACE2(_T("Someone barfed at us while trying to invalidate the client rect.\n"));
+            }
         }
     }
 };
@@ -297,7 +304,6 @@ class CObjectPropertySheet :
         public CWinDataExchange<CObjectDetailsPage>
     {
         typedef CPropertyPageImpl<CObjectDetailsPage> baseClass;
-        typedef BOOL (__stdcall *TFNIsThemeDialogTextureEnabled)(HWND);
         GenericObject*  m_obj;
         CEdit           m_edtName;
         CEdit           m_edtFullname;
@@ -601,7 +607,9 @@ class CNtObjectsTreeView :
 protected:
     typedef CWindowImpl<CNtObjectsTreeView, CTreeViewCtrlEx, CNtObjectsTreeViewTraits> baseClass;
 public:
+    /*lint -save -e446 */
     DECLARE_WND_SUPERCLASS(_T("NtObjectsTreeView"), CTreeViewCtrlEx::GetWndClassName())
+    /*lint -restore */
 
     BEGIN_MSG_MAP(CNtObjectsTreeView)
         //MESSAGE_HANDLER(WM_SETFOCUS, OnSetFocus)
@@ -622,7 +630,7 @@ public:
         // TODO: does the listview require a refresh?
         return ret;
     }
-#endif // 0\
+#endif // 0
 
     LRESULT OnContextMenu(UINT /*uMsg*/, WPARAM /*wParam*/, LPARAM /*lParam*/, BOOL& /*bHandled*/)
     {
@@ -695,7 +703,7 @@ public:
         {
 #ifdef _DEBUG
             if(Directory* dir = reinterpret_cast<Directory*>(GetItemData(pnmtv->itemNew.hItem)))
-                ATLTRACE2(_T("Sort children of %s (%p)\n"), dir->fullname(), pnmtv->itemNew.hItem);
+                ATLTRACE2(_T("Sort children of %s (%p)\n"), dir->fullname().GetString(), pnmtv->itemNew.hItem);
             else
                 ATLTRACE2(_T("Sort children of %p\n"), pnmtv->itemNew.hItem);
 #endif
@@ -730,10 +738,12 @@ public:
         return 0;
     }
 
+    /*lint -save -e1536 */
     Directory& ObjectRoot()
     {
         return m_objroot;
     }
+    /*lint -restore */
 
     bool EmptyAndRefill()
     {
@@ -820,7 +830,9 @@ class CNtObjectsListView :
 protected:
     typedef CSortListViewCtrlImpl<CNtObjectsListView, CListViewCtrl, CNtObjectsListViewTraits> baseClass;
 public:
+    /*lint -save -e446 */
     DECLARE_WND_SUPERCLASS(_T("NtObjectsListView"), CListViewCtrl::GetWndClassName())
+    /*lint -restore */
 
     BEGIN_MSG_MAP(CNtObjectsListView)
         MESSAGE_HANDLER(WM_CONTEXTMENU, OnContextMenu)
@@ -859,14 +871,16 @@ public:
                 , GetImageIndexByType_(current[i])
                 , reinterpret_cast<LPARAM>(current[i])
                 );
-            widths[0] = max(GetStringWidth(current[i]->name()), widths[0]);
+            int const nameWidth = GetStringWidth(current[i]->name());
+            widths[0] = max(nameWidth, widths[0]);
             AddItem(
                 currItem
                 , 1
                 , current[i]->type()
                 );
-            widths[1] = max(GetStringWidth(current[i]->type()), widths[1]);
-            ATLTRACE2(_T("%s:%i [%s:%i] / %i:%i\n"), current[i]->name(), GetStringWidth(current[i]->name()), current[i]->type(), GetStringWidth(current[i]->type()), widths[0], widths[1]);
+            int const typeWidth = GetStringWidth(current[i]->type());
+            widths[1] = max(typeWidth, widths[1]);
+            ATLTRACE2(_T("%s:%i [%s:%i] / %i:%i\n"), current[i]->name().GetString(), GetStringWidth(current[i]->name()), current[i]->type().GetString(), GetStringWidth(current[i]->type()), widths[0], widths[1]);
             SymbolicLink* symlink = dynamic_cast<SymbolicLink*>(current[i]);
             if(symlink)
             {
@@ -875,15 +889,16 @@ public:
                     , 2
                     , symlink->target()
                     );
-                widths[2] = max(GetStringWidth(symlink->target()), widths[2]);
-                ATLTRACE2(_T("    %s:%i [%i]\n"), symlink->target(), GetStringWidth(symlink->target()), widths[2]);
+                int const targetWidth = GetStringWidth(symlink->target());
+                widths[2] = max(targetWidth, widths[2]);
+                ATLTRACE2(_T("    %s:%i [%i]\n"), symlink->target().GetString(), GetStringWidth(symlink->target()), widths[2]);
             }
         }
         CRect rect;
         ATLVERIFY(GetWindowRect(&rect));
         int const maxWidths[] = {rect.right-rect.left - 50, 150, 200};
         // Try to set an optimum column width
-        for(int i = 0; i <  _countof(widths); i++)
+        for(int i = 0; i <  static_cast<int>(_countof(widths)); i++)
         {
             if(-1 != widths[i])
             {
@@ -1168,11 +1183,11 @@ private:
         };
 
         // FIXME: later we may want to reinitialize columns when switching UI languages
-        if(GetColumnCount() < _countof(columnDefaults))
+        if(GetColumnCount() < static_cast<int>(_countof(columnDefaults)))
         {
             DeleteAllColumns_();
             ATL::CString columnName;
-            for(int idx = 0; idx < _countof(columnDefaults); idx++)
+            for(int idx = 0; idx < static_cast<int>(_countof(columnDefaults)); idx++)
             {
                 columnName.LoadString(columnDefaults[idx].resId);
                 if(idx > (GetColumnCount() - 1))
@@ -1199,6 +1214,7 @@ private:
 #   define LVS_EX_DOUBLEBUFFER     0x00010000
 #endif
 
+/*lint -esym(1509, CNtObjectsMainFrame) */
 class CNtObjectsMainFrame : 
     public CFrameWindowImpl<CNtObjectsMainFrame>,
     public CUpdateUI<CNtObjectsMainFrame>,
@@ -1221,10 +1237,12 @@ public:
     HRESULT (CALLBACK* DllGetVersion)(DLLVERSIONINFO *);
 
     CNtObjectsMainFrame()
-        : m_bFirstOnIdle(true) // to force initial refresh
+        : m_tree_initialized(0)
+        , m_bFirstOnIdle(true) // to force initial refresh
         , m_AboutMenuItem(::RegisterWindowMessage(_T("ntobjx_{2F95CC77-8F3F-4880-AA09-FDE7D65BA526}")))
         , m_lastSelected(0)
         , m_verinfo(_Module.GetModuleInstance())
+        , DllGetVersion(0)
     {
         *(FARPROC*)&DllGetVersion = ::GetProcAddress(::GetModuleHandle(_T("shell32.dll")), "DllGetVersion");
     }
@@ -1538,7 +1556,7 @@ public:
 
         if(m_lastSelected)
         {
-            ATLTRACE2(_T("last selected = %p -> %s\n"), m_lastSelected, m_lastSelected->fullname());
+            ATLTRACE2(_T("last selected = %p -> %s\n"), m_lastSelected, m_lastSelected->fullname().GetString());
             CObjectPropertySheet objprop(m_lastSelected);
             (void)objprop.DoModal(m_hWnd);
         }
@@ -1566,3 +1584,20 @@ private:
         ::SetWindowText(m_hWndStatusBar, fullName);
     }
 };
+
+#if 0
+NtOpenDirectoryObject
+NtOpenSymbolicLinkObject
+NtOpenMutant -> NtQueryMutant
+NtOpenSection
+NtOpenEvent -> NtQueryEvent
+NtOpenSemaphore -> NtQuerySemaphore
+NtOpenFile
+NtOpenKey
+NtOpenTimer
+NtOpenThread
+NtOpenProcess
+NtConnectPort
+NtQueryObject
+RtlNtStatusToDosError
+#endif
