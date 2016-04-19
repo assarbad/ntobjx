@@ -410,7 +410,7 @@ RtlGetVersion(
 
 NTSTATUS
 NTAPI
-NtQueryEvent (
+NtQueryEvent(
     __in HANDLE EventHandle,
     __in EVENT_INFORMATION_CLASS EventInformationClass,
     __out_bcount(EventInformationLength) PVOID EventInformation,
@@ -420,7 +420,7 @@ NtQueryEvent (
 
 NTSTATUS
 NTAPI
-NtQueryMutant (
+NtQueryMutant(
     __in HANDLE MutantHandle,
     __in MUTANT_INFORMATION_CLASS MutantInformationClass,
     __out_bcount(MutantInformationLength) PVOID MutantInformation,
@@ -430,7 +430,7 @@ NtQueryMutant (
 
 NTSTATUS
 NTAPI
-NtQuerySemaphore (
+NtQuerySemaphore(
     __in HANDLE SemaphoreHandle,
     __in SEMAPHORE_INFORMATION_CLASS SemaphoreInformationClass,
     __out_bcount(SemaphoreInformationLength) PVOID SemaphoreInformation,
@@ -458,7 +458,7 @@ NtOpenDirectoryObject(
 
 NTSTATUS
 NTAPI
-NtQueryDirectoryObject (
+NtQueryDirectoryObject(
     __in HANDLE DirectoryHandle,
     __out_bcount(Length) PVOID Buffer,
     __in ULONG Length,
@@ -486,7 +486,7 @@ NtQuerySymbolicLinkObject(
 
 NTSTATUS
 NTAPI
-NtOpenEvent (
+NtOpenEvent(
     __out PHANDLE EventHandle,
     __in ACCESS_MASK DesiredAccess,
     __in POBJECT_ATTRIBUTES ObjectAttributes
@@ -494,7 +494,7 @@ NtOpenEvent (
 
 NTSTATUS
 NTAPI
-NtOpenMutant (
+NtOpenMutant(
     __out PHANDLE MutantHandle,
     __in ACCESS_MASK DesiredAccess,
     __in POBJECT_ATTRIBUTES ObjectAttributes
@@ -510,7 +510,7 @@ NtOpenSection(
 
 NTSTATUS
 NTAPI
-NtOpenSemaphore (
+NtOpenSemaphore(
     __out PHANDLE SemaphoreHandle,
     __in ACCESS_MASK DesiredAccess,
     __in POBJECT_ATTRIBUTES ObjectAttributes
@@ -526,7 +526,7 @@ NtOpenEventPair(
 
 NTSTATUS
 NTAPI
-NtOpenIoCompletion (
+NtOpenIoCompletion(
     __out PHANDLE IoCompletionHandle,
     __in ACCESS_MASK DesiredAccess,
     __in POBJECT_ATTRIBUTES ObjectAttributes
@@ -612,7 +612,7 @@ RtlDowncaseUnicodeString(
 
 NTSTATUS /* VOID in pre-Vista*/
 NTAPI
-RtlGenerate8dot3Name (
+RtlGenerate8dot3Name(
     __in    PCUNICODE_STRING Name,
     __in    BOOLEAN AllowExtendedCharacters,
     __inout PGENERATE_NAME_CONTEXT Context,
@@ -628,7 +628,7 @@ RtlVolumeDeviceToDosName(
 
 NTSTATUS
 NTAPI
-NtCreateSection (
+NtCreateSection(
     __out PHANDLE SectionHandle,
     __in ACCESS_MASK DesiredAccess,
     __in_opt POBJECT_ATTRIBUTES ObjectAttributes,

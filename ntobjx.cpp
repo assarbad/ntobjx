@@ -36,6 +36,7 @@
 #include <atlctrlw.h>
 #include <atlctrlx.h>
 #include <atlsplit.h>
+#include <atlsecurity.h>
 
 #include "resource.h"
 

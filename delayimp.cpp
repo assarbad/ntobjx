@@ -55,7 +55,7 @@ static LONG WINAPI DelayLoadFilter(PEXCEPTION_POINTERS pExcPointers)
     switch(pExcPointers->ExceptionRecord->ExceptionCode)
     {
     case VcppException(ERROR_SEVERITY_ERROR, ERROR_MOD_NOT_FOUND):
-        DelayLoadError(_T("The DLL %hs could not be loaded."), pdli->szDll);
+        (void)DelayLoadError(_T("The DLL %hs could not be loaded."), pdli->szDll);
         break;
     case VcppException(ERROR_SEVERITY_ERROR, ERROR_PROC_NOT_FOUND):
         {
@@ -66,11 +66,11 @@ static LONG WINAPI DelayLoadFilter(PEXCEPTION_POINTERS pExcPointers)
             }
             if (pdli->dlp.fImportByName)
             {
-                DelayLoadError(_T("Function %hs::%hs not found."), pdli->szDll, pdli->dlp.szProcName);
+                (void)DelayLoadError(_T("Function %hs::%hs not found."), lpszDllName, pdli->dlp.szProcName);
             }
             else
             {
-                DelayLoadError(_T("Function %hs::#%u not found."), pdli->szDll, pdli->dlp.dwOrdinal);
+                (void)DelayLoadError(_T("Function %hs::#%u not found."), lpszDllName, pdli->dlp.dwOrdinal);
             }
         }
         break;
@@ -104,7 +104,9 @@ static FARPROC WINAPI NtdllDliHook(unsigned dliNotify, PDelayLoadInfo pdli)
         {
             if(HMODULE hNtDll = ::GetModuleHandleA(lpszNtDllName))
             {
+                /*lint -save -e611 */
                 return reinterpret_cast<FARPROC>(hNtDll);
+                /*lint -restore */
             }
         }
         break; /* proceed with default processing  */

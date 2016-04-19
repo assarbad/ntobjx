@@ -42,6 +42,26 @@
 #   error ntobjx.h requires atlctrlx.h to be included first
 #endif
 
+#ifndef __ATLSPLIT_H__
+#   error ntobjx.h requires atlsplit.h to be included first
+#endif
+
+#ifndef __ATLFRAME_H__
+#   error ntobjx.h requires atlframe.h to be included first
+#endif
+
+#ifndef __ATLDLGS_H__
+#   error ntobjx.h requires atldlgs.h to be included first
+#endif
+
+#ifndef __ATLCTRLS_H__
+#   error ntobjx.h requires atlctrls.h to be included first
+#endif
+
+#ifndef __ATLSECURITY_H__
+#   error ntobjx.h requires atlsecurity.h to be included first
+#endif
+
 // Handler prototypes (uncomment arguments if needed):
 //  LRESULT MessageHandler(UINT /*uMsg*/, WPARAM /*wParam*/, LPARAM /*lParam*/, BOOL& /*bHandled*/)
 //  LRESULT CommandHandler(WORD /*wNotifyCode*/, WORD /*wID*/, HWND /*hWndCtl*/, BOOL& /*bHandled*/)
@@ -292,7 +312,9 @@ public:
 
 #ifndef DDKBUILD
 #   include <Aclui.h>
-#   include <Aclapi.h>
+#   ifndef __ACCESS_CONTROL_API__
+#       include <Aclapi.h>
+#   endif
 #   pragma comment(lib, "aclui.lib")
 #endif // DDKBUILD
 
@@ -1235,6 +1257,7 @@ public:
     CVersionInfo m_verinfo;
     CSimpleArray<ATL::CString> m_visitedList;
     HRESULT (CALLBACK* DllGetVersion)(DLLVERSIONINFO *);
+    ATL::CAccessToken m_Token;
 
     CNtObjectsMainFrame()
         : m_tree_initialized(0)
@@ -1556,6 +1579,28 @@ public:
 
         if(m_lastSelected)
         {
+#           ifndef DDKBUILD
+            // First time the user wants to see the properties (and security settings), we enable two privileges
+            if(!m_Token.GetHandle())
+            {
+                if(
+                    m_Token.GetThreadToken(TOKEN_ADJUST_PRIVILEGES | TOKEN_QUERY)
+                    || m_Token.GetProcessToken(TOKEN_ADJUST_PRIVILEGES | TOKEN_QUERY)
+                    )
+                {
+                    bool bNotAllAssigned = false;
+                    ATLTRACE2(_T("Opened thread or process token: %p\n"), m_Token.GetHandle());
+                    LPCTSTR requiredPrivileges[] = { SE_SECURITY_NAME, SE_TAKE_OWNERSHIP_NAME };
+                    for(size_t i = 0; i < _countof(requiredPrivileges); i++)
+                    {
+                        if(m_Token.EnablePrivilege(requiredPrivileges[i], NULL, &bNotAllAssigned))
+                        {
+                            ATLTRACE2(_T("%s %s enabled\n"), requiredPrivileges[i], (bNotAllAssigned) ? _T("could not be") : _T("was successfully"));
+                        }
+                    }
+                }
+            }
+#           endif // DDKBUILD
             ATLTRACE2(_T("last selected = %p -> %s\n"), m_lastSelected, m_lastSelected->fullname().GetString());
             CObjectPropertySheet objprop(m_lastSelected);
             (void)objprop.DoModal(m_hWnd);
@@ -1584,20 +1629,3 @@ private:
         ::SetWindowText(m_hWndStatusBar, fullName);
     }
 };
-
-#if 0
-NtOpenDirectoryObject
-NtOpenSymbolicLinkObject
-NtOpenMutant -> NtQueryMutant
-NtOpenSection
-NtOpenEvent -> NtQueryEvent
-NtOpenSemaphore -> NtQuerySemaphore
-NtOpenFile
-NtOpenKey
-NtOpenTimer
-NtOpenThread
-NtOpenProcess
-NtConnectPort
-NtQueryObject
-RtlNtStatusToDosError
-#endif
