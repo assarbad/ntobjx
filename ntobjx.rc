@@ -198,6 +198,7 @@ BEGIN
     IDR_MAINFRAME           "ntobjx: NT Objects"
     IDS_PROGRAM_DESCRIPTION "A program to explore the dark corners of NT"
     IDS_ABOUT_MENUITEM      "About ntobjx\tF12"
+    IDS_ABOUT_DESCRIPTION   "About this program"
 END
 
 STRINGTABLE

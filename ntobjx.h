@@ -62,6 +62,8 @@
 #   error ntobjx.h requires atlsecurity.h to be included first
 #endif
 
+#define WM_NOTIFY_DIRECTORY_VSIT    (WM_USER+100)
+
 // Handler prototypes (uncomment arguments if needed):
 //  LRESULT MessageHandler(UINT /*uMsg*/, WPARAM /*wParam*/, LPARAM /*lParam*/, BOOL& /*bHandled*/)
 //  LRESULT CommandHandler(WORD /*wNotifyCode*/, WORD /*wID*/, HWND /*hWndCtl*/, BOOL& /*bHandled*/)
@@ -849,6 +851,7 @@ class CNtObjectsListView :
     public CSortListViewCtrlImpl<CNtObjectsListView, CListViewCtrl, CNtObjectsListViewTraits>
 {
     CImageList m_imagelist;
+    HWND m_hFrameWnd;
 protected:
     typedef CSortListViewCtrlImpl<CNtObjectsListView, CListViewCtrl, CNtObjectsListViewTraits> baseClass;
 public:
@@ -867,9 +870,15 @@ public:
         CHAIN_MSG_MAP(baseClass)
     END_MSG_MAP()
 
-    CNtObjectsListView()
+    CNtObjectsListView(HWND hFrameWnd = NULL)
         : baseClass()
+        , m_hFrameWnd(hFrameWnd)
     {}
+
+    inline void SetFrameWindow(HWND hFrameWnd)
+    {
+        m_hFrameWnd = hFrameWnd;
+    }
 
     void FillFromDirectory(Directory& current)
     {
@@ -930,6 +939,8 @@ public:
         }
         // Sort according to name column
         SortItems(0);
+        // Tell the parent that the directory view changed
+        (void)::SendMessage(m_hFrameWnd, WM_NOTIFY_DIRECTORY_VSIT, 0, reinterpret_cast<LPARAM>(&current));
     }
 
     LRESULT OnContextMenu(UINT /*uMsg*/, WPARAM /*wParam*/, LPARAM /*lParam*/, BOOL& /*bHandled*/)
@@ -1252,19 +1263,19 @@ public:
     CNtObjectsListView m_listview;
     LONG m_tree_initialized; // only write to this member using Interlocked*()
     bool m_bFirstOnIdle;
-    UINT_PTR const m_AboutMenuItem;
     GenericObject* m_lastSelected;
     CVersionInfo m_verinfo;
-    CSimpleArray<ATL::CString> m_visitedList;
+    CSimpleArray<Directory*> m_visitedList;
+    int m_visitedListIndex;
     HRESULT (CALLBACK* DllGetVersion)(DLLVERSIONINFO *);
     ATL::CAccessToken m_Token;
 
     CNtObjectsMainFrame()
         : m_tree_initialized(0)
         , m_bFirstOnIdle(true) // to force initial refresh
-        , m_AboutMenuItem(::RegisterWindowMessage(_T("ntobjx_{2F95CC77-8F3F-4880-AA09-FDE7D65BA526}")))
         , m_lastSelected(0)
-        , m_verinfo(_Module.GetModuleInstance())
+        , m_verinfo(ModuleHelper::GetResourceInstance())
+        , m_visitedListIndex(-1)
         , DllGetVersion(0)
     {
         *(FARPROC*)&DllGetVersion = ::GetProcAddress(::GetModuleHandle(_T("shell32.dll")), "DllGetVersion");
@@ -1291,6 +1302,8 @@ public:
         MESSAGE_HANDLER(WM_GETMINMAXINFO, OnGetMinMaxInfo)
         MESSAGE_HANDLER(WM_SYSCOMMAND, OnSysCommand)
         MESSAGE_HANDLER(WM_APPCOMMAND, OnAppCommand)
+        MESSAGE_HANDLER(WM_NOTIFY_DIRECTORY_VSIT, OnDirectoryVisit)
+        MESSAGE_HANDLER(WM_MENUSELECT, OnMenuSelect)
         COMMAND_ID_HANDLER(ID_APP_EXIT, OnFileExit)
         COMMAND_ID_HANDLER(ID_VIEW_PROPERTIES, OnViewProperties)
         COMMAND_ID_HANDLER(ID_VIEW_REFRESH, OnViewRefresh)
@@ -1310,8 +1323,8 @@ public:
 
         m_hWndClient = m_vsplit.Create(m_hWnd, rcDefault, NULL, WS_CHILD | WS_VISIBLE | WS_CLIPSIBLINGS | WS_CLIPCHILDREN);
         // Add WS_EX_CONTROLPARENT such that tab stops work
-        LONG exStyle = ::GetWindowLong(m_hWndClient, GWL_EXSTYLE);
-        ::SetWindowLong(m_hWndClient, GWL_EXSTYLE, exStyle | WS_EX_CONTROLPARENT);
+        LONG_PTR exStyle = ::GetWindowLongPtr(m_hWndClient, GWL_EXSTYLE);
+        ::SetWindowLongPtr(m_hWndClient, GWL_EXSTYLE, exStyle | WS_EX_CONTROLPARENT);
         // The splitter should be smaller than the default width
         m_vsplit.m_cxySplitBar = 3;
 
@@ -1335,6 +1348,7 @@ public:
         ATLASSERT(m_vsplit.m_hWnd == ::GetDlgItem(m_hWnd, ::GetDlgCtrlID(m_vsplit)));
         ATLASSERT(m_treeview.m_hWnd == ::GetDlgItem(m_hWndClient, ::GetDlgCtrlID(m_treeview)));
         ATLASSERT(m_listview.m_hWnd == ::GetDlgItem(m_hWndClient, ::GetDlgCtrlID(m_listview)));
+        m_listview.SetFrameWindow(m_hWnd);
 
         CMenuHandle sysmenu(GetSystemMenu(FALSE));
         if(sysmenu.IsMenu())
@@ -1343,7 +1357,7 @@ public:
             if(menuString.LoadString(IDS_ABOUT_MENUITEM))
             {
                 ATLVERIFY(sysmenu.AppendMenu(MF_SEPARATOR));
-                ATLVERIFY(sysmenu.AppendMenu(MF_STRING, m_AboutMenuItem, menuString));
+                ATLVERIFY(sysmenu.AppendMenu(MF_STRING, IDS_ABOUT_DESCRIPTION, menuString));
             }
         }
 
@@ -1443,6 +1457,10 @@ public:
         (void)InterlockedExchange(&m_tree_initialized, 0);
         if(m_treeview.EmptyAndRefill())
         {
+            // Invalidate the cached items
+            m_visitedList.RemoveAll();
+            m_visitedListIndex = -1;
+            m_lastSelected = 0;
             (void)InterlockedExchange(&m_tree_initialized, 1);
             m_listview.FillFromDirectory(m_treeview.ObjectRoot());
             SetSelected_(&m_treeview.ObjectRoot());
@@ -1460,7 +1478,7 @@ public:
     LRESULT OnSysCommand(UINT /*uMsg*/, WPARAM wParam, LPARAM /*lParam*/, BOOL& bHandled)
     {
         ATLTRACE2(_T("WM_SYSCOMMAND lParam: %lu\n"), wParam);
-        if(m_AboutMenuItem == (UINT_PTR)wParam)
+        if(IDS_ABOUT_DESCRIPTION == wParam)
             (void)OnShowAbout(0, 0, 0, bHandled);
         else
             bHandled = FALSE;
@@ -1470,62 +1488,6 @@ public:
     LRESULT OnAppCommand(UINT /*uMsg*/, WPARAM /*wParam*/, LPARAM lParam, BOOL& bHandled)
     {
         SHORT cmd  = GET_APPCOMMAND_LPARAM(lParam);
-#ifdef _DEBUG
-        WORD uDevice = GET_DEVICE_LPARAM(lParam);
-        WORD uKeys = GET_KEYSTATE_LPARAM(lParam);
-        switch(cmd)
-        {
-        case APPCOMMAND_BROWSER_BACKWARD:
-            ATLTRACE2(_T("APPCOMMAND_BROWSER_BACKWARD"));
-            break;
-        case APPCOMMAND_MEDIA_PREVIOUSTRACK:
-            ATLTRACE2(_T("APPCOMMAND_MEDIA_PREVIOUSTRACK"));
-            break;
-        case APPCOMMAND_BROWSER_FORWARD:
-            ATLTRACE2(_T("APPCOMMAND_BROWSER_FORWARD"));
-            break;
-        case APPCOMMAND_MEDIA_NEXTTRACK:
-            ATLTRACE2(_T("APPCOMMAND_MEDIA_NEXTTRACK"));
-            break;
-        }
-        switch(uDevice)
-        {
-        case FAPPCOMMAND_KEY:
-            ATLTRACE2(_T(": FAPPCOMMAND_KEY"));
-            break;
-        case FAPPCOMMAND_MOUSE:
-            ATLTRACE2(_T(": FAPPCOMMAND_MOUSE"));
-            break;
-        case FAPPCOMMAND_OEM:
-            ATLTRACE2(_T(": FAPPCOMMAND_OEM"));
-            break;
-        }
-        switch(uKeys)
-        {
-        case MK_CONTROL:
-            ATLTRACE2(_T(", MK_CONTROL"));
-            break;
-        case MK_LBUTTON:
-            ATLTRACE2(_T(", MK_LBUTTON"));
-            break;
-        case MK_MBUTTON:
-            ATLTRACE2(_T(", MK_MBUTTON"));
-            break;
-        case MK_RBUTTON:
-            ATLTRACE2(_T(", MK_RBUTTON"));
-            break;
-        case MK_SHIFT:
-            ATLTRACE2(_T(", MK_SHIFT"));
-            break;
-        case MK_XBUTTON1:
-            ATLTRACE2(_T(", MK_XBUTTON1"));
-            break;
-        case MK_XBUTTON2:
-            ATLTRACE2(_T(", MK_XBUTTON2"));
-            break;
-        }
-        ATLTRACE2(_T("\n"));
-#endif
         if(int sz = m_visitedList.GetSize())
         {
             ATLASSERT(sz > 0);
@@ -1533,14 +1495,50 @@ public:
             {
             case APPCOMMAND_BROWSER_BACKWARD:
             case APPCOMMAND_MEDIA_PREVIOUSTRACK:
+                BrowseBackward_();
                 break;
             case APPCOMMAND_BROWSER_FORWARD:
             case APPCOMMAND_MEDIA_NEXTTRACK:
+                BrowseForward_();
                 break;
             }
         }
 
         bHandled = FALSE;
+        return 0;
+    }
+
+    LRESULT OnDirectoryVisit(UINT /*uMsg*/, WPARAM /*wParam*/, LPARAM lParam, BOOL& /*bHandled*/)
+    {
+        if(Directory* dir = reinterpret_cast<Directory*>(lParam))
+        {
+            AddVisited_(dir);
+        }
+        return 0;
+    }
+
+    LRESULT OnMenuSelect(UINT /*uMsg*/, WPARAM wParam, LPARAM /*lParam*/, BOOL& bHandled)
+    {
+        WORD wID = LOWORD(wParam);
+        if((MF_SYSMENU & HIWORD(wParam)) && (IDS_ABOUT_DESCRIPTION == wID))
+        {
+            const int cchBuff = 256;
+            TCHAR szBuff[cchBuff] = { 0 };
+
+            int nRet = ::LoadString(ModuleHelper::GetResourceInstance(), wID, szBuff, cchBuff);
+            for(int i = 0; i < nRet; i++)
+            {
+                if(szBuff[i] == _T('\n'))
+                {
+                    szBuff[i] = 0;
+                    break;
+                }
+            }
+            ::SendMessage(m_hWndStatusBar, SB_SIMPLE, TRUE, 0L);
+            ::SendMessage(m_hWndStatusBar, SB_SETTEXT, (255 | SBT_NOBORDERS), (LPARAM)szBuff);
+        }
+        else
+            bHandled = FALSE;
         return 0;
     }
 
@@ -1611,11 +1609,18 @@ public:
 
 private:
 
-    void SetSelected_(GenericObject* obj)
+    void BrowseForward_()
     {
-        m_lastSelected = obj;
-        LPCWSTR fullName = (m_lastSelected) ? m_lastSelected->fullname().GetString() : _T("");
-        if(m_lastSelected)
+
+    }
+
+    void BrowseBackward_()
+    {
+    }
+
+    void AddVisited_(Directory* dir)
+    {
+        if(dir)
         {
             ATLASSERT(maxVisitedDepth > 0);
             // Should we trim the list?
@@ -1624,8 +1629,18 @@ private:
                 ATLVERIFY(m_visitedList.RemoveAt(0));
                 ATLTRACE2(_T("Trimmed visited list. New size: %i\n"), m_visitedList.GetSize());
             }
+            ATLVERIFY(m_visitedList.Add(dir));
+#ifdef _DEBUG
+            LPCWSTR fullName = (dir) ? dir->fullname().GetString() : _T("");
+            ATLTRACE2(_T("Visiting item: '%s'\n"), fullName);
+#endif // _DEBUG
         }
-        ATLVERIFY(m_visitedList.Add(fullName));
+    }
+
+    void SetSelected_(GenericObject* obj)
+    {
+        m_lastSelected = obj;
+        LPCWSTR fullName = (obj) ? obj->fullname().GetString() : _T("");
         ::SetWindowText(m_hWndStatusBar, fullName);
     }
 };
