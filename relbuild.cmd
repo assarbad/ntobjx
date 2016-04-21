@@ -9,6 +9,11 @@ echo %VCVER_FRIENDLY%
 vcbuild.exe /time /rebuild /showenv /M1 /nologo "/htmllog:$(SolutionDir)buildlog.html" "%~dp0%PRJNAME%.vs8.sln" "$ALL"
 del /f %PRJNAME%\*.idb
 call ollisign.cmd /a %PRJNAME%\*.exe "%SIGURL%" "%SIGDESC%"
+:: call :DDKBUILD
+rd /s /q "%~dp0%PRJNAME%_intermediate"
+popd & endlocal & goto :EOF
+
+:DDKBUILD
 setlocal ENABLEEXTENSIONS & pushd "%~dp0ddkbuild"
 call ddkbuild.cmd -WLH2K free . -cZ
 call ollisign.cmd /a objfre_w2k_x86\i386\*.exe "%%SIGURL%%" "%SIGDESC%"
@@ -21,5 +26,3 @@ xcopy /y objfre_wnet_amd64\amd64\*.exe "%WDKBLD%\"
 xcopy /y objfre_w2k_x86\i386\*.pdb "%WDKBLD%\"
 xcopy /y objfre_wnet_amd64\amd64\*.pdb "%WDKBLD%\"
 popd & endlocal
-rd /s /q "%~dp0%PRJNAME%_intermediate"
-popd & endlocal & goto :EOF

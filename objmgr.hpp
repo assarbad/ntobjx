@@ -27,7 +27,7 @@
 ///////////////////////////////////////////////////////////////////////////////
 
 #ifndef __OBJMGR_HPP_VER__
-#define __OBJMGR_HPP_VER__ 2016041420
+#define __OBJMGR_HPP_VER__ 2016042118
 #if (defined(_MSC_VER) && (_MSC_VER >= 1020)) || defined(__MCPP)
 #pragma once
 #endif // Check for "#pragma once" support
@@ -97,6 +97,7 @@ namespace NtObjMgr{
             setParent_();
             m_fullname = m_parent + L"\\" + m_name;
         }
+
         GenericObjectT(LPCWSTR name_, LPCWSTR tpname, LPCWSTR parent = NULL)
             : m_name(name_)
             , m_type(tpname)
@@ -233,6 +234,19 @@ namespace NtObjMgr{
         typedef GenericObjectT<T> Inherited;
         /*lint -restore */
         typedef ATL::CAtlArray<Inherited*, ATL::CPrimitiveElementTraits<Inherited*> > EntryList;
+
+        typedef int (__cdecl* comparefunc_t)(void* /*context*/, const void* /*elem1*/, const void* /*elem2*/);
+        static int __cdecl compareItem_(void* /*context*/, Inherited*& obj1, Inherited*& obj2)
+        {
+            ATLASSERT(NULL != obj1);
+            ATLASSERT(NULL != obj2);
+            if(obj1 && obj2)
+            {
+                return _tcsicmp(obj1->name().GetString(), obj2->name().GetString());
+            }
+            return 0;
+        }
+
     public:
         DirectoryT(LPCWSTR objdir = L"")
             : Inherited(objdir, L"Directory")
@@ -348,6 +362,7 @@ namespace NtObjMgr{
                         EntryList deletions;
                         deletions.Copy(m_entries); // take copy of old list
                         size_t const todelete = deletions.GetCount();
+                        qsort_s(tmplist.GetData(), tmplist.GetCount(), sizeof(EntryList::INARGTYPE), (comparefunc_t)compareItem_, NULL);
                         m_entries.Copy(tmplist); // overwrite with new list
                         m_cached = true;
                         // Delete objects from old list

@@ -53,13 +53,16 @@ IDR_MAINFRAME MENU
 BEGIN
     POPUP "&File"
     BEGIN
-        MENUITEM "E&xit",                       ID_APP_EXIT
+        MENUITEM "&Save as ...\tCtrl+S",        ID_FILE_SAVE_AS
+        MENUITEM SEPARATOR
+        MENUITEM "E&xit\tAlt+F4",               ID_APP_EXIT
     END
     POPUP "&View"
     BEGIN
         MENUITEM "&Properties\tF10",            ID_VIEW_PROPERTIES
         MENUITEM "&Refresh\tF5",                ID_VIEW_REFRESH
     END
+    MENUITEM "&About",                      ID_SHOW_ABOUT
 END
 
 IDR_POPUP_MENU1 MENU
@@ -121,6 +124,7 @@ BEGIN
     VK_F12,         ID_SHOW_ABOUT,          VIRTKEY, NOINVERT
     VK_F10,         ID_VIEW_PROPERTIES,     VIRTKEY, NOINVERT
     VK_F5,          ID_VIEW_REFRESH,        VIRTKEY, NOINVERT
+    "S",            ID_FILE_SAVE_AS,        VIRTKEY, CONTROL, NOINVERT
 END
 
 
@@ -198,6 +202,10 @@ BEGIN
     IDR_MAINFRAME           "ntobjx: NT Objects"
     IDS_PROGRAM_DESCRIPTION "A program to explore the dark corners of NT"
     IDS_ABOUT_MENUITEM      "About ntobjx\tF12"
+END
+
+STRINGTABLE
+BEGIN
     IDS_ABOUT_DESCRIPTION   "About this program"
 END
 

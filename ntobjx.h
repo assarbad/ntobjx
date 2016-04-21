@@ -62,6 +62,16 @@
 #   error ntobjx.h requires atlsecurity.h to be included first
 #endif
 
+using ATL::CAccessToken;
+using NtObjMgr::Directory;
+using NtObjMgr::GenericObject;
+using NtObjMgr::SymbolicLink;
+using NtObjMgr::objtype_t;
+using NtObjMgr::otGeneric;
+using NtObjMgr::otSymlink;
+using NtObjMgr::otDirectory;
+using WTL::CFileDialog;
+
 #define WM_NOTIFY_DIRECTORY_VSIT    (WM_USER+100)
 
 // Handler prototypes (uncomment arguments if needed):
@@ -951,7 +961,6 @@ public:
 
         if(ItemFromHitTest_(lvhtti, pt))
         {
-            using namespace NtObjMgr;
             // If we found an item, select it
             ATLVERIFY(SelectItem(lvhtti.iItem));
 
@@ -1063,7 +1072,6 @@ public:
 
         if(ItemFromHitTest_(lvhtti, pt))
         {
-            using namespace NtObjMgr;
             // If we found an item, select it
             ATLVERIFY(SelectItem(lvhtti.iItem));
             OpenPropertiesOrDirectory_(lvhtti.iItem);
@@ -1091,7 +1099,6 @@ public:
     {
         if(!iSortCol)
         {
-            using namespace NtObjMgr;
             GenericObject* obj1 = reinterpret_cast<GenericObject*>(pItem1->dwItemData);
             GenericObject* obj2 = reinterpret_cast<GenericObject*>(pItem2->dwItemData);
             bool isDir1 = (otDirectory == obj1->objtype());
@@ -1112,8 +1119,6 @@ private:
 
     void OpenPropertiesOrDirectory_(int idx)
     {
-        using namespace NtObjMgr;
-
         LVITEM item = {0};
         item.iItem = idx;
         item.mask = LVIF_PARAM;
@@ -1268,7 +1273,7 @@ public:
     CSimpleArray<Directory*> m_visitedList;
     int m_visitedListIndex;
     HRESULT (CALLBACK* DllGetVersion)(DLLVERSIONINFO *);
-    ATL::CAccessToken m_Token;
+    CAccessToken m_Token;
 
     CNtObjectsMainFrame()
         : m_tree_initialized(0)
@@ -1308,6 +1313,7 @@ public:
         COMMAND_ID_HANDLER(ID_VIEW_PROPERTIES, OnViewProperties)
         COMMAND_ID_HANDLER(ID_VIEW_REFRESH, OnViewRefresh)
         COMMAND_ID_HANDLER(ID_SHOW_ABOUT, OnShowAbout)
+        COMMAND_ID_HANDLER(ID_FILE_SAVE_AS, OnSaveAs)
         NOTIFY_CODE_HANDLER(LVN_ITEMCHANGED, OnLVItemChanged)
         NOTIFY_CODE_HANDLER(TVN_SELCHANGED, OnTVSelChanged)
         CHAIN_MSG_MAP(CUpdateUI<CNtObjectsMainFrame>)
@@ -1475,6 +1481,21 @@ public:
         return 0;
     }
 
+    LRESULT OnSaveAs(WORD /*wNotifyCode*/, WORD /*wID*/, HWND /*hWndCtl*/, BOOL& /*bHandled*/)
+    {
+        LPCTSTR lpmszFilter = _T("Text files\0*.txt\0All files\0*.*\0\0");
+        LPCTSTR lpszDefExt = _T("txt");
+        LPCTSTR lpszFileName = _T("ntobjx.txt");
+        DWORD const dwFlags = OFN_HIDEREADONLY | OFN_OVERWRITEPROMPT;
+        CFileDialog dlg(FALSE, lpszDefExt, lpszFileName, dwFlags, lpmszFilter);
+        if(IDOK == dlg.DoModal())
+        {
+            ATLTRACE2(_T("The picked file is: %s\n"), dlg.m_szFileName);
+            SaveAs_(dlg.m_szFileName, m_treeview.ObjectRoot());
+        }
+        return 0;
+    }
+
     LRESULT OnSysCommand(UINT /*uMsg*/, WPARAM wParam, LPARAM /*lParam*/, BOOL& bHandled)
     {
         ATLTRACE2(_T("WM_SYSCOMMAND lParam: %lu\n"), wParam);
@@ -1495,11 +1516,13 @@ public:
             {
             case APPCOMMAND_BROWSER_BACKWARD:
             case APPCOMMAND_MEDIA_PREVIOUSTRACK:
-                BrowseBackward_();
+                ATLTRACE2(_T("Navigate backward\n"));
+                Navigate_(false);
                 break;
             case APPCOMMAND_BROWSER_FORWARD:
             case APPCOMMAND_MEDIA_NEXTTRACK:
-                BrowseForward_();
+                ATLTRACE2(_T("Navigate forward\n"));
+                Navigate_(true);
                 break;
             }
         }
@@ -1609,13 +1632,9 @@ public:
 
 private:
 
-    void BrowseForward_()
+    void Navigate_(bool /*forward*/)
     {
 
-    }
-
-    void BrowseBackward_()
-    {
     }
 
     void AddVisited_(Directory* dir)
@@ -1642,5 +1661,45 @@ private:
         m_lastSelected = obj;
         LPCWSTR fullName = (obj) ? obj->fullname().GetString() : _T("");
         ::SetWindowText(m_hWndStatusBar, fullName);
+    }
+
+    void OutputDirectory_(FILE* f, Directory& current, ATL::CString Prefix = _T(""))
+    {
+        if(0 == Prefix.GetLength())
+        {
+            _ftprintf(f, _T("\\\n"));
+            Prefix = _T("\t");
+        }
+        for(size_t i = 0; i < current.size(); i++)
+        {
+            GenericObject* entry = current[i];
+            SymbolicLink const* symlink = dynamic_cast<SymbolicLink const*>(entry);
+            Directory* directory = dynamic_cast<Directory*>(entry);
+
+            if(directory)
+            {
+                _ftprintf(f, _T("%s\\%s [%s]\n"), Prefix.GetString(), directory->name().GetString(), directory->type().GetString());
+                ATL::CString newPrefix(Prefix + _T("\t"));
+                OutputDirectory_(f, *directory, newPrefix);
+            }
+            else if(symlink)
+            {
+                _ftprintf(f, _T("%s%s [%s] -> %s\n"), Prefix.GetString(), symlink->name().GetString(), symlink->type().GetString(), symlink->target().GetString());
+            }
+            else
+            {
+                _ftprintf(f, _T("%s%s [%s]\n"), Prefix.GetString(), entry->name().GetString(), entry->type().GetString());
+            }
+        }
+    }
+
+    void SaveAs_(LPCTSTR lpszFileName, Directory& objroot)
+    {
+        FILE* f = NULL;
+        if(0 == _tfopen_s(&f, lpszFileName, _T("w+, ccs=UTF-8")))
+        {
+            OutputDirectory_(f, objroot);
+            fclose(f);
+        }
     }
 };
