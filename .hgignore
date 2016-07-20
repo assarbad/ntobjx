@@ -26,3 +26,4 @@ ntobjx.vs*.sln
 ntobjx.vs*.vcxproj
 ntobjx.vs*.vcxproj.filters
 ntobjx.vs*.vcproj
+*.VC.db

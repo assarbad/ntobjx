@@ -27,6 +27,7 @@
 #endif
 
 #define _ATL_USE_CSTRING
+#define _WTL_NO_CSTRING
 
 // This activates a slight modification in atlctrlx.h which prevents the link
 // color being read from the IE registry settings

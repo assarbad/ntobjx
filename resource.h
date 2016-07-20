@@ -32,14 +32,14 @@
 #define IDS_PROPERTIES                  32784
 #define ID_POPUPMENU_OPENDIRECTORY      32785
 #define ID_POPUPMENU_COPYURL            32786
-
+#define ID_VIEW_FIND                    32787
 
 // Next default values for new objects
 // 
 #ifdef APSTUDIO_INVOKED
 #ifndef APSTUDIO_READONLY_SYMBOLS
 #define _APS_NEXT_RESOURCE_VALUE        208
-#define _APS_NEXT_COMMAND_VALUE         32787
+#define _APS_NEXT_COMMAND_VALUE         32788
 #define _APS_NEXT_CONTROL_VALUE         1013
 #define _APS_NEXT_SYMED_VALUE           108
 #endif

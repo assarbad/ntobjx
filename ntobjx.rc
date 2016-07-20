@@ -8,6 +8,7 @@
 // Generated from the TEXTINCLUDE 2 resource.
 //
 #include "atlres.h"
+#include <dlgs.h>
 
 /////////////////////////////////////////////////////////////////////////////
 #undef APSTUDIO_READONLY_SYMBOLS
@@ -59,6 +60,8 @@ BEGIN
     END
     POPUP "&View"
     BEGIN
+        MENUITEM "&Find\tCtrl+F",               ID_VIEW_FIND
+        MENUITEM SEPARATOR
         MENUITEM "&Properties\tF10",            ID_VIEW_PROPERTIES
         MENUITEM "&Refresh\tF5",                ID_VIEW_REFRESH
     END
@@ -121,10 +124,11 @@ IDR_MAINFRAME           ICON                    "res\\ntobjx.ico"
 
 IDR_MAINFRAME ACCELERATORS
 BEGIN
+    "S",            ID_FILE_SAVE_AS,        VIRTKEY, CONTROL, NOINVERT
     VK_F12,         ID_SHOW_ABOUT,          VIRTKEY, NOINVERT
     VK_F10,         ID_VIEW_PROPERTIES,     VIRTKEY, NOINVERT
     VK_F5,          ID_VIEW_REFRESH,        VIRTKEY, NOINVERT
-    "S",            ID_FILE_SAVE_AS,        VIRTKEY, CONTROL, NOINVERT
+    "F",            ID_VIEW_FIND,           VIRTKEY, CONTROL, NOINVERT
 END
 
 
@@ -164,6 +168,24 @@ BEGIN
     EDITTEXT        IDC_EDIT_TYPE,48,54,218,12,ES_READONLY | NOT WS_BORDER,WS_EX_STATICEDGE
 END
 
+FINDDLGORD DIALOGEX 30, 73, 236, 62
+STYLE DS_SETFONT | DS_FIXEDSYS | WS_CHILD | WS_DISABLED | WS_CAPTION
+// WS_BORDER | WS_CAPTION | DS_MODALFRAME | WS_POPUP | WS_SYSMENU | DS_3DLOOK | DS_CONTEXTHELP
+CAPTION "Find object"
+FONT 8, "MS Shell Dlg"
+BEGIN
+    LTEXT           "Fi&nd what:", -1, 4, 8, 42, 8
+    EDITTEXT        edt1, 47, 7, 128, 12, WS_GROUP | WS_TABSTOP | ES_AUTOHSCROLL
+
+    AUTOCHECKBOX    "Match &case", chx2, 4, 42, 64, 12
+
+    GROUPBOX        "Direction", grp1, 107, 26, 68, 28, WS_GROUP
+    AUTORADIOBUTTON "&Up", rad1, 111, 38, 25, 12, WS_GROUP
+    AUTORADIOBUTTON "&Down", rad2, 138, 38, 35, 12
+
+    DEFPUSHBUTTON   "&Find Next", IDOK, 182, 5, 50, 14, WS_GROUP | WS_TABSTOP
+    PUSHBUTTON      "Cancel", IDCANCEL, 182, 23, 50, 14, WS_TABSTOP
+END
 
 /////////////////////////////////////////////////////////////////////////////
 //
@@ -235,6 +257,7 @@ END
 STRINGTABLE
 BEGIN
     IDS_PROPERTIES          "Properties of "
+    ID_VIEW_FIND            "Find an object by substring"
 END
 
 STRINGTABLE
@@ -257,6 +280,11 @@ END
 STRINGTABLE
 BEGIN
     ATL_IDS_IDLEMESSAGE     "Ready"
+END
+
+STRINGTABLE
+BEGIN
+    ID_FILE_SAVE_AS         "Save object tree as flat (UTF-8) text file"
 END
 
 #endif    // English (United States) resources

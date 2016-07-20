@@ -63,6 +63,8 @@
 #endif
 
 using ATL::CAccessToken;
+using ATL::CAtlMap;
+using ATL::CString;
 using NtObjMgr::Directory;
 using NtObjMgr::GenericObject;
 using NtObjMgr::SymbolicLink;
@@ -72,7 +74,8 @@ using NtObjMgr::otSymlink;
 using NtObjMgr::otDirectory;
 using WTL::CFileDialog;
 
-#define WM_NOTIFY_DIRECTORY_VSIT    (WM_USER+100)
+#define WM_VISIT_DIRECTORY    (WM_USER+100)
+#define WM_SET_ACTIVE_OBJECT  (WM_USER+101)
 
 // Handler prototypes (uncomment arguments if needed):
 //  LRESULT MessageHandler(UINT /*uMsg*/, WPARAM /*wParam*/, LPARAM /*lParam*/, BOOL& /*bHandled*/)
@@ -88,7 +91,7 @@ namespace
     // Requires open clipboard and doesn't close it
     BOOL SetClipboardString(LPCTSTR lpsz)
     {
-        ATL::CString s(lpsz);
+        CString s(lpsz);
         SIZE_T allocLength = (s.GetLength() + 2) * sizeof(TCHAR);
         ATLTRACE2(_T("Buffer size: %u\n"), allocLength);
         HGLOBAL hMem = ::GlobalAlloc(GMEM_MOVEABLE | GMEM_ZEROINIT, allocLength);
@@ -117,7 +120,7 @@ namespace
     {
         if(::OpenClipboard(hWndSource))
         {
-            ATL::CString s;
+            CString s;
             switch(idCmd)
             {
             case ID_POPUPMENU_COPYNAME:
@@ -132,8 +135,8 @@ namespace
                 {
 
 #   if defined(_UNICODE) || defined(UNICODE)
-                    ATL::CString fullName(obj->fullname());
-                    ATL::CString escapedName;
+                    CString fullName(obj->fullname());
+                    CString escapedName;
                     LPTSTR str = fullName.LockBuffer();
                     escapedName.Preallocate(fullName.GetAllocLength());
                     for(int i = 0; i < fullName.GetLength(); i++)
@@ -272,7 +275,7 @@ public:
 
     LPCTSTR operator[](LPCTSTR lpszKey) const
     {
-        ATL::CString fullName;
+        CString fullName;
         fullName.Format(_T("\\StringFileInfo\\%04X%04X\\%s"), LOWORD(m_useTranslation), HIWORD(m_useTranslation), lpszKey);
         ATLTRACE2(_T("Full name: %s\n"), fullName.GetString());
         UINT uLen = 0;
@@ -581,10 +584,10 @@ public:
     {
         CenterWindow(GetParent());
 
-        ATL::CString website(m_verinfo[_T("Website")]);
-        ATL::CString repo(m_verinfo[_T("Mercurial repository")]);
-        ATL::CString revision(m_verinfo[_T("Mercurial revision")]);
-        ATL::CString revisionurl(m_verinfo[_T("Mercurial revision URL")]);
+        CString website(m_verinfo[_T("Website")]);
+        CString repo(m_verinfo[_T("Mercurial repository")]);
+        CString revision(m_verinfo[_T("Mercurial revision")]);
+        CString revisionurl(m_verinfo[_T("Mercurial revision URL")]);
 
         ATLVERIFY(m_website.SetHyperLink(website));
         if(int slash = website.ReverseFind(_T('/')))
@@ -609,7 +612,7 @@ public:
         ATLVERIFY(SetDlgItemText(IDC_STATIC_DESCRIPTION, m_verinfo[_T("FileDescription")]));
         ATLVERIFY(SetDlgItemText(IDC_STATIC_PROGNAME, m_verinfo[_T("ProductName")]));
 
-        ATL::CString caption(_T("About "));
+        CString caption(_T("About "));
         caption.Append(m_verinfo[_T("ProductName")]);
         caption.Append(_T(" "));
         caption.Append(m_verinfo[_T("FileVersion")]);
@@ -638,6 +641,8 @@ class CNtObjectsTreeView :
     bool m_bInitialized;
     Directory m_objroot;
     CImageList m_imagelist;
+    HWND m_hFrameWnd;
+    CAtlMap<Directory*, HTREEITEM> m_reverseLookup;
 protected:
     typedef CWindowImpl<CNtObjectsTreeView, CTreeViewCtrlEx, CNtObjectsTreeViewTraits> baseClass;
 public:
@@ -646,25 +651,22 @@ public:
     /*lint -restore */
 
     BEGIN_MSG_MAP(CNtObjectsTreeView)
-        //MESSAGE_HANDLER(WM_SETFOCUS, OnSetFocus)
         MESSAGE_HANDLER(WM_CONTEXTMENU, OnContextMenu)
         NOTIFY_CODE_HANDLER(TVN_ITEMEXPANDING, OnTVItemExpanding)
         NOTIFY_CODE_HANDLER(TVN_GETINFOTIP, OnGetInfoTip)
+        NOTIFY_CODE_HANDLER(TVN_SELCHANGED, OnTVSelChanged)
         DEFAULT_REFLECTION_HANDLER()
     END_MSG_MAP()
 
     CNtObjectsTreeView()
         : m_bInitialized(false)
+        , m_hFrameWnd(NULL)
     {}
 
-#if 0
-    LRESULT OnSetFocus(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL& /*bHandled*/)
+    inline void SetFrameWindow(HWND hFrameWnd)
     {
-        LRESULT ret = DefWindowProc(uMsg, wParam, lParam);
-        // TODO: does the listview require a refresh?
-        return ret;
+        m_hFrameWnd = hFrameWnd;
     }
-#endif // 0
 
     LRESULT OnContextMenu(UINT /*uMsg*/, WPARAM /*wParam*/, LPARAM /*lParam*/, BOOL& /*bHandled*/)
     {
@@ -757,7 +759,7 @@ public:
             LPCTSTR comment = findComment(dir->fullname());
             if(comment)
             {
-                ATL::CString tip;
+                CString tip;
                 tip.Preallocate(pnmtv->cchTextMax);
                 // Name of the Directory object
                 tip.Append(dir->fullname());
@@ -772,6 +774,21 @@ public:
         return 0;
     }
 
+    LRESULT OnTVSelChanged(int /*idCtrl*/, LPNMHDR pnmh, BOOL& bHandled)
+    {
+        LPNMTREEVIEW pnmtv = reinterpret_cast<LPNMTREEVIEW>(pnmh);
+        ATLASSERT(NULL != pnmtv);
+        bHandled = FALSE;
+        Directory* dir = reinterpret_cast<Directory*>(pnmtv->itemNew.lParam);
+        if(m_bInitialized && dir)
+        {
+            // Tell the frame to update the listview with the new Directory
+            (void)::SendMessage(m_hFrameWnd, WM_VISIT_DIRECTORY, 0, reinterpret_cast<LPARAM>(dir));
+            bHandled = TRUE;
+        }
+        return 0;
+    }
+
     /*lint -save -e1536 */
     Directory& ObjectRoot()
     {
@@ -781,13 +798,13 @@ public:
 
     bool EmptyAndRefill()
     {
+        CSuppressRedraw suppressRedraw(m_hWnd);
         if(m_objroot.refresh())
         {
             if(::IsWindow(m_hWnd) && m_imagelist.IsNull())
             {
                 PrepareImageList_();
             }
-            CSuppressRedraw suppressRedraw(m_hWnd);
             if(DeleteAllItems())
             {
                 // Recursively fill the tree
@@ -795,7 +812,6 @@ public:
                 // Sort the tree
                 SortTreeItemChildren_(GetRootItem());
                 (void)Expand(GetRootItem());
-                (void)SelectItem(GetRootItem());
                 // Signal that the tree has been initialized
                 m_bInitialized=true;
                 return m_bInitialized;
@@ -806,8 +822,36 @@ public:
         return m_bInitialized;
     }
 
-private:
+    inline void SelectRoot()
+    {
+        (void)SelectItem(GetRootItem());
+    }
 
+    inline HTREEITEM LookupTreeItem(Directory* dir)
+    {
+        HTREEITEM ret = NULL;
+        if(m_reverseLookup.Lookup(dir, ret))
+        {
+            return ret;
+        }
+        return NULL;
+    }
+
+    void SelectIfNotSelected(Directory* dir)
+    {
+/*
+        CTreeItem ti = LookupTreeItem(dir);
+        if(!ti.IsNull())
+        {
+            if(0 == (TVIS_SELECTED & ti.GetState(TVIS_SELECTED)))
+            {
+                ti.Select();
+            }
+        }
+*/
+    }
+
+private:
     static int CALLBACK TreeViewCompareProc_(LPARAM lparam1, LPARAM lparam2, LPARAM /*lparamSort*/)
     {
         Directory* dir1 = reinterpret_cast<Directory*>(lparam1);
@@ -842,7 +886,9 @@ private:
     {
         if(!parent)
         {
+            m_reverseLookup.RemoveAll();
             parent = InsertItem(TVIF_TEXT | TVIF_SELECTEDIMAGE | TVIF_IMAGE | TVIF_PARAM, current.fullname(), 0, 0, 0, 0, reinterpret_cast<LPARAM>(&m_objroot), TVI_ROOT, TVI_LAST);
+            m_reverseLookup[&m_objroot] = parent;
         }
         for(size_t i = 0; i < current.size(); i++)
         {
@@ -851,6 +897,7 @@ private:
             {
                 const int imgidx = entry->size() ? 1 : 2;
                 HTREEITEM curritem = InsertItem(TVIF_TEXT | TVIF_SELECTEDIMAGE | TVIF_IMAGE | TVIF_PARAM, entry->name(), imgidx, imgidx, 0, 0, reinterpret_cast<LPARAM>(entry), parent, TVI_LAST);
+                m_reverseLookup[entry] = curritem;
                 Fill_(curritem, *entry);
             }
         }
@@ -876,6 +923,7 @@ public:
         MESSAGE_HANDLER(WM_CHAR, OnChar)
         NOTIFY_CODE_HANDLER(HDN_ITEMCLICKA, OnHeaderItemClick)
         NOTIFY_CODE_HANDLER(HDN_ITEMCLICKW, OnHeaderItemClick)
+        NOTIFY_CODE_HANDLER(LVN_ITEMCHANGED, OnLVItemChanged)
         DEFAULT_REFLECTION_HANDLER()
         CHAIN_MSG_MAP(baseClass)
     END_MSG_MAP()
@@ -949,8 +997,6 @@ public:
         }
         // Sort according to name column
         SortItems(0);
-        // Tell the parent that the directory view changed
-        (void)::SendMessage(m_hFrameWnd, WM_NOTIFY_DIRECTORY_VSIT, 0, reinterpret_cast<LPARAM>(&current));
     }
 
     LRESULT OnContextMenu(UINT /*uMsg*/, WPARAM /*wParam*/, LPARAM /*lParam*/, BOOL& /*bHandled*/)
@@ -1024,7 +1070,8 @@ public:
                 case ID_POPUPMENU_OPENDIRECTORY:
                     if(Directory* dir = dynamic_cast<Directory*>(itemobj))
                     {
-                        FillFromDirectory(*dir);
+                        // Tell the frame to update the listview with the new Directory
+                        (void)::SendMessage(m_hFrameWnd, WM_VISIT_DIRECTORY, 0, reinterpret_cast<LPARAM>(dir));
                     }
                     break;
                 default:
@@ -1094,6 +1141,21 @@ public:
         return 0;
     }
 
+    LRESULT OnLVItemChanged(int /*idCtrl*/, LPNMHDR pnmh, BOOL& bHandled)
+    {
+        LPNMLISTVIEW pnmlv = reinterpret_cast<LPNMLISTVIEW>(pnmh);
+        ATLASSERT(NULL != pnmlv);
+        bHandled = FALSE;
+        if(pnmlv && (pnmlv->uChanged & LVIF_STATE) && (pnmlv->uNewState & LVIS_SELECTED))
+        {
+            GenericObject* obj = reinterpret_cast<GenericObject*>(pnmlv->lParam);
+            // Tell the frame that this object is now to be considered active
+            (void)::SendMessage(m_hFrameWnd, WM_SET_ACTIVE_OBJECT, 0, reinterpret_cast<LPARAM>(obj));
+            bHandled = TRUE;
+        }
+        return 0;
+    }
+
     // If item1 > item2 return 1, if item1 < item2 return -1, else return 0.
     int CompareItemsCustom(LVCompareParam* pItem1, LVCompareParam* pItem2, int iSortCol)
     {
@@ -1130,9 +1192,12 @@ private:
             {
                 if(dir->size())
                 {
-                    FillFromDirectory(*dir);
+                    // Tell the frame to update the listview with the new Directory
+                    (void)::SendMessage(m_hFrameWnd, WM_VISIT_DIRECTORY, 0, reinterpret_cast<LPARAM>(dir));
                     return;
                 }
+                // If it's empty, we'll show the properties instead, the user may still navigate
+                // into the empty Directory using the treeview
             }
         }
         ::SendMessage(GetParent(), WM_COMMAND, MAKEWPARAM(ID_VIEW_PROPERTIES, 0), reinterpret_cast<LPARAM>(m_hWnd));
@@ -1224,7 +1289,7 @@ private:
         if(GetColumnCount() < static_cast<int>(_countof(columnDefaults)))
         {
             DeleteAllColumns_();
-            ATL::CString columnName;
+            CString columnName;
             for(int idx = 0; idx < static_cast<int>(_countof(columnDefaults)); idx++)
             {
                 columnName.LoadString(columnDefaults[idx].resId);
@@ -1248,6 +1313,61 @@ private:
     }
 };
 
+class CNtObjectsFindDialog : public CFindReplaceDialogImpl<CNtObjectsFindDialog>
+{
+protected:
+    typedef CFindReplaceDialogImpl<CNtObjectsFindDialog> baseClass;
+    LPFRHOOKPROC m_oldHookProc;
+public:
+    BEGIN_MSG_MAP(CNtObjectsFindDialog)
+        MESSAGE_HANDLER(WM_INITDIALOG, OnInitDialog)
+    END_MSG_MAP()
+
+    CNtObjectsFindDialog()
+        : baseClass()
+        , m_oldHookProc(m_fr.lpfnHook)
+    {
+        m_fr.lpfnHook = (LPFRHOOKPROC)NtObjectHookProc;
+    }
+
+    static UINT_PTR APIENTRY NtObjectHookProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
+    {
+        CNtObjectsFindDialog* this_ = reinterpret_cast<CNtObjectsFindDialog*>(ModuleHelper::ExtractCreateWndData());
+        switch(uMsg)
+        {
+        case WM_INITDIALOG:
+            return this_->m_oldHookProc(hWnd, uMsg, wParam, lParam);
+        case WM_GETDLGCODE:
+            ATLTRACE2(_T("WM_GETDLGCODE\n"));
+            return DLGC_WANTALLKEYS | ::DefWindowProc(hWnd, uMsg, wParam, lParam);
+/*
+        case WM_CHAR:
+            switch(wParam)
+            {
+            case VK_RETURN:
+                ATLTRACE2(_T("VK_RETURN\n"));
+                break;
+            case VK_TAB:
+                ATLTRACE2(_T("VK_TAB\n"));
+                break;
+            }
+            ATLTRACE2(_T("WM_CHAR %u\n"), wParam);
+            return ::DefWindowProc(hWnd, uMsg, wParam, lParam);
+*/
+        default:
+            return ::DefWindowProc(hWnd, uMsg, wParam, lParam);
+        }
+    }
+
+    LRESULT OnInitDialog(UINT /*uMsg*/, WPARAM /*wParam*/, LPARAM /*lParam*/, BOOL& bHandled)
+    {
+        ATLTRACE2(_T("Setting IDOK as default button\n"));
+        SendDlgItemMessage(IDOK, BM_SETSTYLE, BS_DEFPUSHBUTTON, TRUE);
+        bHandled = TRUE;
+        return 0;
+    }
+};
+
 #ifndef LVS_EX_DOUBLEBUFFER
 #   define LVS_EX_DOUBLEBUFFER     0x00010000
 #endif
@@ -1266,9 +1386,10 @@ public:
     CSplitterWindow m_vsplit;
     CNtObjectsTreeView m_treeview;
     CNtObjectsListView m_listview;
-    LONG m_tree_initialized; // only write to this member using Interlocked*()
+    LONG m_objroot_initialized; // only write to this member using Interlocked*()
     bool m_bFirstOnIdle;
-    GenericObject* m_lastSelected;
+    bool m_bIsFindDialogOpen;
+    GenericObject* m_activeObject;
     CVersionInfo m_verinfo;
     CSimpleArray<Directory*> m_visitedList;
     int m_visitedListIndex;
@@ -1276,9 +1397,10 @@ public:
     CAccessToken m_Token;
 
     CNtObjectsMainFrame()
-        : m_tree_initialized(0)
+        : m_objroot_initialized(0)
         , m_bFirstOnIdle(true) // to force initial refresh
-        , m_lastSelected(0)
+        , m_bIsFindDialogOpen(false)
+        , m_activeObject(0)
         , m_verinfo(ModuleHelper::GetResourceInstance())
         , m_visitedListIndex(-1)
         , DllGetVersion(0)
@@ -1307,22 +1429,23 @@ public:
         MESSAGE_HANDLER(WM_GETMINMAXINFO, OnGetMinMaxInfo)
         MESSAGE_HANDLER(WM_SYSCOMMAND, OnSysCommand)
         MESSAGE_HANDLER(WM_APPCOMMAND, OnAppCommand)
-        MESSAGE_HANDLER(WM_NOTIFY_DIRECTORY_VSIT, OnDirectoryVisit)
+        MESSAGE_HANDLER(WM_VISIT_DIRECTORY, OnVisitDirectory)
+        MESSAGE_HANDLER(WM_SET_ACTIVE_OBJECT, OnSetActiveObject)
         MESSAGE_HANDLER(WM_MENUSELECT, OnMenuSelect)
+        MESSAGE_HANDLER(CNtObjectsFindDialog::GetFindReplaceMsg(), OnFindReplace)
         COMMAND_ID_HANDLER(ID_APP_EXIT, OnFileExit)
         COMMAND_ID_HANDLER(ID_VIEW_PROPERTIES, OnViewProperties)
         COMMAND_ID_HANDLER(ID_VIEW_REFRESH, OnViewRefresh)
         COMMAND_ID_HANDLER(ID_SHOW_ABOUT, OnShowAbout)
         COMMAND_ID_HANDLER(ID_FILE_SAVE_AS, OnSaveAs)
-        NOTIFY_CODE_HANDLER(LVN_ITEMCHANGED, OnLVItemChanged)
-        NOTIFY_CODE_HANDLER(TVN_SELCHANGED, OnTVSelChanged)
+        COMMAND_ID_HANDLER(ID_VIEW_FIND, OnFindObject)
         CHAIN_MSG_MAP(CUpdateUI<CNtObjectsMainFrame>)
         CHAIN_MSG_MAP(CFrameWindowImpl<CNtObjectsMainFrame>)
     END_MSG_MAP()
 
     LRESULT OnCreate(UINT /*uMsg*/, WPARAM /*wParam*/, LPARAM /*lParam*/, BOOL& /*bHandled*/)
     {
-        m_tree_initialized = 0;
+        m_objroot_initialized = 0;
 
         ATLVERIFY(CreateSimpleStatusBar());
         m_status.SubclassWindow(m_hWndStatusBar);
@@ -1354,12 +1477,13 @@ public:
         ATLASSERT(m_vsplit.m_hWnd == ::GetDlgItem(m_hWnd, ::GetDlgCtrlID(m_vsplit)));
         ATLASSERT(m_treeview.m_hWnd == ::GetDlgItem(m_hWndClient, ::GetDlgCtrlID(m_treeview)));
         ATLASSERT(m_listview.m_hWnd == ::GetDlgItem(m_hWndClient, ::GetDlgCtrlID(m_listview)));
+        m_treeview.SetFrameWindow(m_hWnd);
         m_listview.SetFrameWindow(m_hWnd);
 
         CMenuHandle sysmenu(GetSystemMenu(FALSE));
         if(sysmenu.IsMenu())
         {
-            ATL::CString menuString;
+            CString menuString;
             if(menuString.LoadString(IDS_ABOUT_MENUITEM))
             {
                 ATLVERIFY(sysmenu.AppendMenu(MF_SEPARATOR));
@@ -1372,13 +1496,13 @@ public:
         m_vsplit.SetSplitterPosPct(20);
         m_vsplit.m_cxyMin = 180; //  minimum size of the treeview
 
-        ATL::CString oldDlgTitle;
+        CString oldDlgTitle;
         BOOL b = GetWindowText(oldDlgTitle.GetBufferSetLength(MAX_PATH), MAX_PATH);
         ATLTRACE2(_T("%u -> GetWindowText\n"), b);
         if(b)
         {
             ATLTRACE2(_T("Old title: %s\n"), oldDlgTitle.GetString());
-            ATL::CString newDlgTitle;
+            CString newDlgTitle;
             newDlgTitle.Format(_T("%s: version %s, rev: %s"), oldDlgTitle.GetString(), m_verinfo[_T("ProductVersion")], m_verinfo[_T("Mercurial revision")]);
             ATLTRACE2(_T("New title: %s\n"), newDlgTitle.GetString());
             ATLVERIFY(SetWindowText(newDlgTitle.GetString()));
@@ -1428,48 +1552,18 @@ public:
         return 0;
     }
 
-    LRESULT OnLVItemChanged(int /*idCtrl*/, LPNMHDR pnmh, BOOL& bHandled)
-    {
-        LPNMLISTVIEW pnmlv = reinterpret_cast<LPNMLISTVIEW>(pnmh);
-        ATLASSERT(NULL != pnmlv);
-        bHandled = FALSE;
-        if(pnmlv && (pnmlv->uChanged & LVIF_STATE) && (pnmlv->uNewState & LVIS_SELECTED))
-        {
-            GenericObject* obj = reinterpret_cast<GenericObject*>(pnmlv->lParam);
-            SetSelected_(obj);
-            bHandled = TRUE;
-        }
-        return 0;
-    }
-
-    LRESULT OnTVSelChanged(int /*idCtrl*/, LPNMHDR pnmh, BOOL& bHandled)
-    {
-        LPNMTREEVIEW pnmtv = reinterpret_cast<LPNMTREEVIEW>(pnmh);
-        ATLASSERT(NULL != pnmtv);
-        bHandled = FALSE;
-        Directory* dir = reinterpret_cast<Directory*>(pnmtv->itemNew.lParam);
-        if(m_tree_initialized && dir)
-        {
-            m_listview.FillFromDirectory(*dir);
-            SetSelected_(dir);
-            bHandled = TRUE;
-        }
-        return 0;
-    }
-
     LRESULT OnViewRefresh(WORD /*wNotifyCode*/, WORD /*wID*/, HWND /*hWndCtl*/, BOOL& /*bHandled*/)
     {
         CWaitCursor wc;
-        (void)InterlockedExchange(&m_tree_initialized, 0);
+        (void)InterlockedExchange(&m_objroot_initialized, 0);
         if(m_treeview.EmptyAndRefill())
         {
             // Invalidate the cached items
             m_visitedList.RemoveAll();
             m_visitedListIndex = -1;
-            m_lastSelected = 0;
-            (void)InterlockedExchange(&m_tree_initialized, 1);
-            m_listview.FillFromDirectory(m_treeview.ObjectRoot());
-            SetSelected_(&m_treeview.ObjectRoot());
+            (void)InterlockedExchange(&m_objroot_initialized, 1);
+            // The following triggers TVN_SELCHANGED which in turn fills the listview
+            m_treeview.SelectRoot();
         }
         return 0;
     }
@@ -1493,6 +1587,40 @@ public:
             ATLTRACE2(_T("The picked file is: %s\n"), dlg.m_szFileName);
             SaveAs_(dlg.m_szFileName, m_treeview.ObjectRoot());
         }
+        return 0;
+    }
+
+    LRESULT OnFindObject(WORD /*wNotifyCode*/, WORD /*wID*/, HWND /*hWndCtl*/, BOOL& /*bHandled*/)
+    {
+        if(m_bIsFindDialogOpen)
+        {
+            ATLTRACE2(_T("Find dialog is already open\n"));
+            return 0;
+        }
+        m_bIsFindDialogOpen = true;
+
+        // Prepare the find dialog
+        CNtObjectsFindDialog* pFindDlg = new CNtObjectsFindDialog;
+        ATLVERIFY(NULL != pFindDlg);
+        ATLTRACE2(_T("About to create and show find dialog\n"));
+        pFindDlg->Create(TRUE, NULL, NULL, FR_NOWHOLEWORD | FR_DOWN);
+        pFindDlg->ShowWindow(SW_SHOW);
+        return 0;
+    }
+
+    LRESULT OnFindReplace(UINT /*uMsg*/, WPARAM /*wParam*/, LPARAM lParam, BOOL& bHandled)
+    {
+        bHandled = TRUE;
+        CNtObjectsFindDialog* pFindDlg = CNtObjectsFindDialog::GetNotifier(lParam);
+        ATLVERIFY(NULL != pFindDlg);
+        if(pFindDlg->IsTerminating())
+        {
+            m_bIsFindDialogOpen = false;
+            ATLTRACE2(_T("Find dialog is quitting\n"));
+            return 0;
+        }
+        CString const sNeedle(pFindDlg->GetFindString());
+        ATLTRACE2(_T("Needle to find in haystack: %s\n"), sNeedle);
         return 0;
     }
 
@@ -1531,11 +1659,23 @@ public:
         return 0;
     }
 
-    LRESULT OnDirectoryVisit(UINT /*uMsg*/, WPARAM /*wParam*/, LPARAM lParam, BOOL& /*bHandled*/)
+    LRESULT OnVisitDirectory(UINT /*uMsg*/, WPARAM /*wParam*/, LPARAM lParam, BOOL& /*bHandled*/)
     {
         if(Directory* dir = reinterpret_cast<Directory*>(lParam))
         {
-            AddVisited_(dir);
+            VisitDirectory_(dir);
+            m_activeObject = dir;
+            SetStatusBarItem_(dir);
+        }
+        return 0;
+    }
+
+    LRESULT OnSetActiveObject(UINT /*uMsg*/, WPARAM /*wParam*/, LPARAM lParam, BOOL& /*bHandled*/)
+    {
+        if(GenericObject* obj = reinterpret_cast<GenericObject*>(lParam))
+        {
+            m_activeObject = obj;
+            SetStatusBarItem_(obj);
         }
         return 0;
     }
@@ -1580,9 +1720,9 @@ public:
 #endif
         ATLTRACE2(_T("hWndCtl = %p; wNotifyCode = %u (%04X); wID = %u (%04X)\n"), hWndCtl, wNotifyCode, wNotifyCode, wID, wID);
 #ifdef _DEBUG
-        if(m_lastSelected)
+        if(m_activeObject)
         {
-            ATLTRACE2(_T("Last selected item: %s\n"), m_lastSelected->fullname().GetString());
+            ATLTRACE2(_T("Last selected item: %s\n"), m_activeObject->fullname().GetString());
         }
         if(hWndCtl == m_listview.m_hWnd)
         {
@@ -1598,7 +1738,7 @@ public:
         }
 #endif
 
-        if(m_lastSelected)
+        if(m_activeObject)
         {
 #           ifndef DDKBUILD
             // First time the user wants to see the properties (and security settings), we enable two privileges
@@ -1622,8 +1762,8 @@ public:
                 }
             }
 #           endif // DDKBUILD
-            ATLTRACE2(_T("last selected = %p -> %s\n"), m_lastSelected, m_lastSelected->fullname().GetString());
-            CObjectPropertySheet objprop(m_lastSelected);
+            ATLTRACE2(_T("last selected = %p -> %s\n"), m_activeObject, m_activeObject->fullname().GetString());
+            CObjectPropertySheet objprop(m_activeObject);
             (void)objprop.DoModal(m_hWnd);
         }
 
@@ -1637,7 +1777,19 @@ private:
 
     }
 
-    void AddVisited_(Directory* dir)
+    void VisitDirectory_(Directory* dir)
+    {
+#ifdef _DEBUG
+        LPCWSTR fullName = (dir) ? dir->fullname().GetString() : _T("");
+        ATLTRACE2(_T("Visiting Directory: '%s'\n"), fullName);
+#endif // _DEBUG
+        m_treeview.SelectIfNotSelected(dir);
+        m_listview.FillFromDirectory(*dir);
+        // Keep a list of visited directories
+        AddToVisitedList_(dir);
+    }
+
+    void AddToVisitedList_(Directory* dir)
     {
         if(dir)
         {
@@ -1649,21 +1801,16 @@ private:
                 ATLTRACE2(_T("Trimmed visited list. New size: %i\n"), m_visitedList.GetSize());
             }
             ATLVERIFY(m_visitedList.Add(dir));
-#ifdef _DEBUG
-            LPCWSTR fullName = (dir) ? dir->fullname().GetString() : _T("");
-            ATLTRACE2(_T("Visiting item: '%s'\n"), fullName);
-#endif // _DEBUG
         }
     }
 
-    void SetSelected_(GenericObject* obj)
+    void SetStatusBarItem_(GenericObject* obj)
     {
-        m_lastSelected = obj;
-        LPCWSTR fullName = (obj) ? obj->fullname().GetString() : _T("");
+        LPCWSTR fullName = (obj) ? obj->fullname().GetString() : NULL;
         ::SetWindowText(m_hWndStatusBar, fullName);
     }
 
-    void OutputDirectory_(FILE* f, Directory& current, ATL::CString Prefix = _T(""))
+    void OutputDirectory_(FILE* f, Directory& current, CString Prefix = _T(""))
     {
         if(0 == Prefix.GetLength())
         {
@@ -1679,7 +1826,7 @@ private:
             if(directory)
             {
                 _ftprintf(f, _T("%s\\%s [%s]\n"), Prefix.GetString(), directory->name().GetString(), directory->type().GetString());
-                ATL::CString newPrefix(Prefix + _T("\t"));
+                CString newPrefix(Prefix + _T("\t"));
                 OutputDirectory_(f, *directory, newPrefix);
             }
             else if(symlink)
