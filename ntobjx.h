@@ -837,7 +837,7 @@ public:
         return NULL;
     }
 
-    void SelectIfNotSelected(Directory* dir)
+    void SelectIfNotSelected(Directory* /*dir*/)
     {
 /*
         CTreeItem ti = LookupTreeItem(dir);
@@ -1313,61 +1313,6 @@ private:
     }
 };
 
-class CNtObjectsFindDialog : public CFindReplaceDialogImpl<CNtObjectsFindDialog>
-{
-protected:
-    typedef CFindReplaceDialogImpl<CNtObjectsFindDialog> baseClass;
-    LPFRHOOKPROC m_oldHookProc;
-public:
-    BEGIN_MSG_MAP(CNtObjectsFindDialog)
-        MESSAGE_HANDLER(WM_INITDIALOG, OnInitDialog)
-    END_MSG_MAP()
-
-    CNtObjectsFindDialog()
-        : baseClass()
-        , m_oldHookProc(m_fr.lpfnHook)
-    {
-        m_fr.lpfnHook = (LPFRHOOKPROC)NtObjectHookProc;
-    }
-
-    static UINT_PTR APIENTRY NtObjectHookProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
-    {
-        CNtObjectsFindDialog* this_ = reinterpret_cast<CNtObjectsFindDialog*>(ModuleHelper::ExtractCreateWndData());
-        switch(uMsg)
-        {
-        case WM_INITDIALOG:
-            return this_->m_oldHookProc(hWnd, uMsg, wParam, lParam);
-        case WM_GETDLGCODE:
-            ATLTRACE2(_T("WM_GETDLGCODE\n"));
-            return DLGC_WANTALLKEYS | ::DefWindowProc(hWnd, uMsg, wParam, lParam);
-/*
-        case WM_CHAR:
-            switch(wParam)
-            {
-            case VK_RETURN:
-                ATLTRACE2(_T("VK_RETURN\n"));
-                break;
-            case VK_TAB:
-                ATLTRACE2(_T("VK_TAB\n"));
-                break;
-            }
-            ATLTRACE2(_T("WM_CHAR %u\n"), wParam);
-            return ::DefWindowProc(hWnd, uMsg, wParam, lParam);
-*/
-        default:
-            return ::DefWindowProc(hWnd, uMsg, wParam, lParam);
-        }
-    }
-
-    LRESULT OnInitDialog(UINT /*uMsg*/, WPARAM /*wParam*/, LPARAM /*lParam*/, BOOL& bHandled)
-    {
-        ATLTRACE2(_T("Setting IDOK as default button\n"));
-        SendDlgItemMessage(IDOK, BM_SETSTYLE, BS_DEFPUSHBUTTON, TRUE);
-        bHandled = TRUE;
-        return 0;
-    }
-};
-
 #ifndef LVS_EX_DOUBLEBUFFER
 #   define LVS_EX_DOUBLEBUFFER     0x00010000
 #endif
@@ -1432,7 +1377,6 @@ public:
         MESSAGE_HANDLER(WM_VISIT_DIRECTORY, OnVisitDirectory)
         MESSAGE_HANDLER(WM_SET_ACTIVE_OBJECT, OnSetActiveObject)
         MESSAGE_HANDLER(WM_MENUSELECT, OnMenuSelect)
-        MESSAGE_HANDLER(CNtObjectsFindDialog::GetFindReplaceMsg(), OnFindReplace)
         COMMAND_ID_HANDLER(ID_APP_EXIT, OnFileExit)
         COMMAND_ID_HANDLER(ID_VIEW_PROPERTIES, OnViewProperties)
         COMMAND_ID_HANDLER(ID_VIEW_REFRESH, OnViewRefresh)
@@ -1600,27 +1544,6 @@ public:
         m_bIsFindDialogOpen = true;
 
         // Prepare the find dialog
-        CNtObjectsFindDialog* pFindDlg = new CNtObjectsFindDialog;
-        ATLVERIFY(NULL != pFindDlg);
-        ATLTRACE2(_T("About to create and show find dialog\n"));
-        pFindDlg->Create(TRUE, NULL, NULL, FR_NOWHOLEWORD | FR_DOWN);
-        pFindDlg->ShowWindow(SW_SHOW);
-        return 0;
-    }
-
-    LRESULT OnFindReplace(UINT /*uMsg*/, WPARAM /*wParam*/, LPARAM lParam, BOOL& bHandled)
-    {
-        bHandled = TRUE;
-        CNtObjectsFindDialog* pFindDlg = CNtObjectsFindDialog::GetNotifier(lParam);
-        ATLVERIFY(NULL != pFindDlg);
-        if(pFindDlg->IsTerminating())
-        {
-            m_bIsFindDialogOpen = false;
-            ATLTRACE2(_T("Find dialog is quitting\n"));
-            return 0;
-        }
-        CString const sNeedle(pFindDlg->GetFindString());
-        ATLTRACE2(_T("Needle to find in haystack: %s\n"), sNeedle);
         return 0;
     }
 

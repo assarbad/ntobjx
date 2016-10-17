@@ -5,11 +5,11 @@
 #define IDR_MAINFRAME                   1
 #define IDS_PROGRAM_DESCRIPTION         2
 #define IDS_ABOUT_MENUITEM              3
-#define IDS_ABOUT_DESCRIPTION           (WM_USER+1)
 #define IDD_PROPERTIES                  107
 #define IDR_POPUP_MENU1                 202
 #define IDD_ABOUT                       205
 #define IDR_POPUP_HYPERLINK1            207
+#define IDD_FIND_OBJECT                 209
 #define IDC_STATIC_PROGNAME             1000
 #define IDC_STATIC_COPYRIGHT            1001
 #define IDC_STATIC_DESCRIPTION          1002
@@ -19,6 +19,9 @@
 #define IDC_EDIT_NAME                   1010
 #define IDC_EDIT_FULLNAME               1011
 #define IDC_EDIT_TYPE                   1012
+#define IDC_EDIT1                       1014
+#define IDC_EDIT_FINDTEXT               1014
+#define IDS_ABOUT_DESCRIPTION           1025
 #define ID_VIEW_PROPERTIES              32774
 #define ID_POPUPMENU_COPYNAME           32775
 #define ID_POPUPMENU_COPYFULLPATH       32776
@@ -38,9 +41,9 @@
 // 
 #ifdef APSTUDIO_INVOKED
 #ifndef APSTUDIO_READONLY_SYMBOLS
-#define _APS_NEXT_RESOURCE_VALUE        208
+#define _APS_NEXT_RESOURCE_VALUE        211
 #define _APS_NEXT_COMMAND_VALUE         32788
-#define _APS_NEXT_CONTROL_VALUE         1013
+#define _APS_NEXT_CONTROL_VALUE         1015
 #define _APS_NEXT_SYMED_VALUE           108
 #endif
 #endif

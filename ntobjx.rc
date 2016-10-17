@@ -8,7 +8,6 @@
 // Generated from the TEXTINCLUDE 2 resource.
 //
 #include "atlres.h"
-#include <dlgs.h>
 
 /////////////////////////////////////////////////////////////////////////////
 #undef APSTUDIO_READONLY_SYMBOLS
@@ -168,24 +167,16 @@ BEGIN
     EDITTEXT        IDC_EDIT_TYPE,48,54,218,12,ES_READONLY | NOT WS_BORDER,WS_EX_STATICEDGE
 END
 
-FINDDLGORD DIALOGEX 30, 73, 236, 62
-STYLE DS_SETFONT | DS_FIXEDSYS | WS_CHILD | WS_DISABLED | WS_CAPTION
-// WS_BORDER | WS_CAPTION | DS_MODALFRAME | WS_POPUP | WS_SYSMENU | DS_3DLOOK | DS_CONTEXTHELP
-CAPTION "Find object"
-FONT 8, "MS Shell Dlg"
+IDD_FIND_OBJECT DIALOGEX 0, 0, 239, 30
+STYLE DS_SETFONT | DS_MODALFRAME | DS_FIXEDSYS | WS_POPUP | WS_CAPTION | WS_SYSMENU
+CAPTION "Find Object"
+FONT 8, "MS Shell Dlg", 400, 0, 0x1
 BEGIN
-    LTEXT           "Fi&nd what:", -1, 4, 8, 42, 8
-    EDITTEXT        edt1, 47, 7, 128, 12, WS_GROUP | WS_TABSTOP | ES_AUTOHSCROLL
-
-    AUTOCHECKBOX    "Match &case", chx2, 4, 42, 64, 12
-
-    GROUPBOX        "Direction", grp1, 107, 26, 68, 28, WS_GROUP
-    AUTORADIOBUTTON "&Up", rad1, 111, 38, 25, 12, WS_GROUP
-    AUTORADIOBUTTON "&Down", rad2, 138, 38, 35, 12
-
-    DEFPUSHBUTTON   "&Find Next", IDOK, 182, 5, 50, 14, WS_GROUP | WS_TABSTOP
-    PUSHBUTTON      "Cancel", IDCANCEL, 182, 23, 50, 14, WS_TABSTOP
+    DEFPUSHBUTTON   "OK",IDOK,180,8,50,14
+    EDITTEXT        IDC_EDIT_FINDTEXT,50,8,127,14,ES_AUTOHSCROLL
+    LTEXT           "Text to find:",IDC_STATIC,7,11,41,8
 END
+
 
 /////////////////////////////////////////////////////////////////////////////
 //
@@ -210,8 +201,27 @@ BEGIN
         TOPMARGIN, 7
         BOTTOMMARGIN, 200
     END
+
+    IDD_FIND_OBJECT, DIALOG
+    BEGIN
+        LEFTMARGIN, 7
+        RIGHTMARGIN, 232
+        TOPMARGIN, 7
+        BOTTOMMARGIN, 23
+    END
 END
 #endif    // APSTUDIO_INVOKED
+
+
+/////////////////////////////////////////////////////////////////////////////
+//
+// AFX_DIALOG_LAYOUT
+//
+
+IDD_FIND_OBJECT AFX_DIALOG_LAYOUT
+BEGIN
+    0
+END
 
 
 /////////////////////////////////////////////////////////////////////////////
