@@ -237,6 +237,20 @@ typedef enum _SECTION_INHERIT {
                             SECTION_MAP_EXECUTE |    \
                             SECTION_EXTEND_SIZE)
 
+typedef struct _OBJECT_BASIC_INFORMATION {
+    ULONG Attributes;
+    ACCESS_MASK DesiredAccess;
+    ULONG HandleCount;
+    ULONG ReferenceCount;
+    ULONG PagedPoolUsage;
+    ULONG NonPagedPoolUsage;
+    ULONG Reserved[3];
+    ULONG NameInformationLength;
+    ULONG TypeInformationLength;
+    ULONG SecurityDescriptorLength;
+    LARGE_INTEGER CreationTime;
+} OBJECT_BASIC_INFORMATION, *POBJECT_BASIC_INFORMATION;
+
 typedef struct _OBJECT_DIRECTORY_INFORMATION {
     UNICODE_STRING Name;
     UNICODE_STRING TypeName;

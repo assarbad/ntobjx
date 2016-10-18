@@ -30,6 +30,7 @@
 ///
 ///////////////////////////////////////////////////////////////////////////////
 
+#define DELAYIMP_INSECURE_WRITABLE_HOOKS
 #if defined(_CONSOLE) || defined(_CONSOLE_APP)
 #   include <Windows.h>
 #   include <tchar.h>

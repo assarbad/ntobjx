@@ -118,18 +118,6 @@ solution (iif(release, slnname, "ntobjx"))
         linkoptions     {"\"/libpath:$(IntDir)\"", "/pdbaltpath:%_PDB%", "/delay:nobind","/delayload:ntdll-delayed.dll","/delayload:version.dll"}
         defines         {"WIN32", "_WINDOWS", "STRICT"}
 
-        --[[
-        if release then
-            postbuildcommands
-            {
-                "ollisign.cmd /a \"$(TargetPath)\""
-            }
-            if os.isfile("common/hgtip.h") then
-                defines ("HAVE_HGTIP")
-            end
-            flags       {"NoRTTI"}
-        end --]]
-
         files
         {
             "wtl/Include/*.h",
@@ -145,7 +133,7 @@ solution (iif(release, slnname, "ntobjx"))
         excludes
         {
             "ntobjx_c.cpp",
-            "hgid.h",
+            "hgid.h", "ntobjx.txt",
         }
 
         vpaths
@@ -241,7 +229,7 @@ solution (iif(release, slnname, "ntobjx"))
                 "ntobjx.cpp",
                 "hgid.h",
                 "fake_commodule.hpp",
-                "stdafx.*",
+                "stdafx.*", "ntobjx.txt",
             }
 
             vpaths
