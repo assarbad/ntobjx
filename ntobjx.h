@@ -72,6 +72,7 @@ using NtObjMgr::objtype_t;
 using NtObjMgr::otGeneric;
 using NtObjMgr::otSymlink;
 using NtObjMgr::otDirectory;
+using NtObjMgr::ObjectHandle;
 using WTL::CFileDialog;
 
 #define WM_VISIT_DIRECTORY    (WM_USER+100)
@@ -381,9 +382,11 @@ class CObjectPropertySheet :
         public ISecurityInformation
     {
         GenericObject*  m_obj;
+        ObjectHandle    m_objHdl;
     public:
         CSecurityInformation(GenericObject* obj)
             : m_obj(obj)
+            , m_objHdl(obj)
         {
         }
 
@@ -419,7 +422,7 @@ class CObjectPropertySheet :
 
         STDMETHOD(GetSecurity)(SECURITY_INFORMATION si, PSECURITY_DESCRIPTOR *ppSecurityDescriptor, BOOL /*fDefault*/)
         {
-            // FIXME: open object m_obj
+            // FIXME|TODO: open object m_obj
             DWORD dwResult = ::GetSecurityInfo(INVALID_HANDLE_VALUE, SE_KERNEL_OBJECT, si, NULL, NULL, NULL, NULL, ppSecurityDescriptor);
             return (ERROR_SUCCESS == dwResult) ? S_OK : HRESULT_FROM_WIN32(GetLastError());
         }
@@ -1285,7 +1288,7 @@ private:
             {ID_COLNAME_OBJLNKTGT},
         };
 
-        // FIXME: later we may want to reinitialize columns when switching UI languages
+        // FIXME|TODO: later we may want to reinitialize columns when switching UI languages
         if(GetColumnCount() < static_cast<int>(_countof(columnDefaults)))
         {
             DeleteAllColumns_();

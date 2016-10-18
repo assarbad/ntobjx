@@ -524,6 +524,14 @@ NtOpenSection(
 
 NTSTATUS
 NTAPI
+NtOpenTimer(
+    __out PHANDLE TimerHandle,
+    __in ACCESS_MASK DesiredAccess,
+    __in POBJECT_ATTRIBUTES ObjectAttributes
+);
+
+NTSTATUS
+NTAPI
 NtOpenSemaphore(
     __out PHANDLE SemaphoreHandle,
     __in ACCESS_MASK DesiredAccess,
@@ -696,6 +704,7 @@ NtUnmapViewOfSection(
 #define ZwOpenMutant NtOpenMutant
 #define ZwOpenSection NtOpenSection
 #define ZwOpenSemaphore NtOpenSemaphore
+#define ZwOpenTimer NtOpenTimer
 #define ZwOpenEventPair NtOpenEventPair
 #define ZwOpenIoCompletion NtOpenIoCompletion
 #define ZwOpenKey NtOpenKey

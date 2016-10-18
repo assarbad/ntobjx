@@ -35,6 +35,7 @@
 #include "ntnative.h"
 #include <atlstr.h>
 #include <atlcoll.h>
+#include "objtypes.h"
 
 namespace NtObjMgr{
 
@@ -402,6 +403,103 @@ namespace NtObjMgr{
     };
 
     typedef DirectoryT<ATL::CString> Directory;
+
+    template<typename T> class ObjectHandleT
+    {
+        GenericObjectT<T>* m_obj;
+        HANDLE m_hObject;
+    public:
+        ObjectHandleT(GenericObjectT<T>* obj)
+            : m_obj(obj)
+            , m_hObject(OpenByObjectType_(obj))
+        {
+            // Read the object info:
+            // NtQueryObject(hObject, 0, ObjectBasicInformation, )
+            // Perhaps also read object-type-specific info for the known ones?
+        }
+
+        virtual ~ObjectHandleT()
+        {
+            if(INVALID_HANDLE_VALUE != m_hObject)
+            {
+                ::NtClose(m_hObject);
+            }
+        }
+
+        operator HANDLE&()
+        {
+            return m_hObject;
+        }
+
+    private:
+        typedef NTSTATUS (NTAPI *openobj_fct_t)(PHANDLE, ACCESS_MASK, POBJECT_ATTRIBUTES);
+
+        static NTSTATUS NTAPI OpenAsFile_(__out PHANDLE Handle, __in ACCESS_MASK DesiredAccess, __in POBJECT_ATTRIBUTES ObjectAttributes)
+        {
+            UNREFERENCED_PARAMETER(Handle);
+            UNREFERENCED_PARAMETER(DesiredAccess);
+            UNREFERENCED_PARAMETER(ObjectAttributes);
+            return STATUS_NOT_IMPLEMENTED;
+        }
+
+        static HANDLE OpenByObjectType_(GenericObjectT<T>* obj)
+        {
+            static struct { LPCTSTR tpname; openobj_fct_t openFct; } openFunctions[] =
+            {
+                { _T(OBJTYPESTR_DIRECTORY), NtOpenDirectoryObject },
+                { _T(OBJTYPESTR_EVENT), NtOpenEvent },
+                { _T(OBJTYPESTR_EVENTPAIR), NtOpenEventPair },
+                { _T(OBJTYPESTR_IOCOMPLETION), NtOpenIoCompletion },
+                { _T(OBJTYPESTR_KEY), NtOpenKey },
+                { _T(OBJTYPESTR_MUTANT), NtOpenMutant },
+                { _T(OBJTYPESTR_SECTION), NtOpenSection },
+                { _T(OBJTYPESTR_SEMAPHORE), NtOpenSemaphore },
+                { _T(OBJTYPESTR_SYMBOLICLINK), NtOpenSymbolicLinkObject },
+                { _T(OBJTYPESTR_TIMER), NtOpenTimer },
+                { _T(OBJTYPESTR_DEVICE), OpenAsFile_ },
+            };
+
+            if(!obj)
+            {
+                return INVALID_HANDLE_VALUE;
+            }
+
+            HANDLE hObject = INVALID_HANDLE_VALUE;
+            OBJECT_ATTRIBUTES oa;
+            UNICODE_STRING objname;
+            NTSTATUS status;
+            ACCESS_MASK DesiredAccess = GENERIC_READ | READ_CONTROL;
+            LPCTSTR lpszFullName = obj->fullname().GetString();
+            ATLASSERT(lpszFullName != NULL);
+
+            ::RtlInitUnicodeString(&objname, lpszFullName);
+            InitializeObjectAttributes(&oa, &objname, 0, NULL, NULL);
+
+            LPCTSTR lpszTypeName = obj->type().GetString();
+            ATLASSERT(lpszTypeName != NULL);
+            for(size_t i = 0; i < _countof(openFunctions); i++)
+            {
+                if (0 == _tcsnicmp(lpszTypeName, openFunctions->tpname, _tcslen(openFunctions->tpname)))
+                {
+                    status = openFunctions->openFct(&hObject, DesiredAccess, &oa);
+                    // Use RtlNtStatusToDosError to translate code??
+                    if (NT_SUCCESS(status))
+                    {
+                        return hObject;
+                    }
+                    if (STATUS_OBJECT_TYPE_MISMATCH == status)
+                    {
+                        // TODO: attempt to use CreateFile Win32 API?
+                        // e.g. HANDLE hObject = CreateFile(L"\\\\.\\"..., GENERIC_READ, FILE_SHARE_READ, NULL, CREATE_ALWAYS | CREATE_NEW, 0, NULL)
+                    }
+                    return INVALID_HANDLE_VALUE;
+                }
+            }
+            return INVALID_HANDLE_VALUE;
+        }
+    };
+
+    typedef ObjectHandleT<ATL::CString> ObjectHandle;
 } /* namespace */
 
 #endif // __OBJMGR_HPP_VER__

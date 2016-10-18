@@ -41,6 +41,7 @@ EXPORTS
     NtOpenMutant
     NtOpenSection
     NtOpenSemaphore
+    NtOpenTimer
     NtOpenEventPair
     NtOpenIoCompletion
     NtOpenKey

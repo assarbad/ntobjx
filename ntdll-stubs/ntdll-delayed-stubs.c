@@ -276,6 +276,14 @@ NtQuerySection(
 
 NTSTATUS
 NTAPI
+NtOpenTimer(
+    __out PHANDLE TimerHandle,
+    __in ACCESS_MASK DesiredAccess,
+    __in POBJECT_ATTRIBUTES ObjectAttributes
+) { return 0; }
+
+NTSTATUS
+NTAPI
 NtOpenDirectoryObject(
     __out PHANDLE DirectoryHandle,
     __in ACCESS_MASK DesiredAccess,
