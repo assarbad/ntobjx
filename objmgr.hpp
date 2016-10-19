@@ -426,7 +426,7 @@ namespace NtObjMgr{
             }
         }
 
-        operator HANDLE&()
+        HANDLE getHandle()
         {
             return m_hObject;
         }
@@ -461,6 +461,7 @@ namespace NtObjMgr{
 
             if(!obj)
             {
+                ATLTRACE2(_T("Passed GenericObjectT<T>* was NULL.\n"));
                 return INVALID_HANDLE_VALUE;
             }
 
@@ -477,24 +478,40 @@ namespace NtObjMgr{
 
             LPCTSTR lpszTypeName = obj->type().GetString();
             ATLASSERT(lpszTypeName != NULL);
-            for(size_t i = 0; i < _countof(openFunctions); i++)
+            ATLTRACE2(_T("Trying to open %s as type %s.\n"), lpszFullName, lpszTypeName);
+            for (size_t i = 0; i < _countof(openFunctions); i++)
             {
-                if (0 == _tcsnicmp(lpszTypeName, openFunctions->tpname, _tcslen(openFunctions->tpname)))
+                if (0 == _tcsnicmp(lpszTypeName, openFunctions[i].tpname, _tcslen(openFunctions[i].tpname)))
                 {
-                    status = openFunctions->openFct(&hObject, DesiredAccess, &oa);
-                    // Use RtlNtStatusToDosError to translate code??
+                    ATLTRACE2(_T("Found open function %p for %s.\n"), openFunctions[i].openFct, lpszTypeName);
+                    status = openFunctions[i].openFct(&hObject, DesiredAccess, &oa);
                     if (NT_SUCCESS(status))
                     {
+                        ATLTRACE2(_T("Success. Returning handle %p.\n"), hObject);
                         return hObject;
                     }
-                    if (STATUS_OBJECT_TYPE_MISMATCH == status)
+                    switch (status)
                     {
+                    case STATUS_ACCESS_DENIED:
+                        ATLTRACE2(_T("Access denied.\n"));
+                        break;
+                    case STATUS_NOT_IMPLEMENTED:
+                        ATLTRACE2(_T("This open method is not implemented (yet?).\n"));
+                        break;
+                    case STATUS_OBJECT_TYPE_MISMATCH:
+                        ATLTRACE2(_T("Object type mismatch for this open method.\n"));
+                        // Use RtlNtStatusToDosError to translate code??
                         // TODO: attempt to use CreateFile Win32 API?
                         // e.g. HANDLE hObject = CreateFile(L"\\\\.\\"..., GENERIC_READ, FILE_SHARE_READ, NULL, CREATE_ALWAYS | CREATE_NEW, 0, NULL)
+                        break;
+                    default:
+                        ATLTRACE2(_T("Something went wrong: %08X. Returning INVALID_HANDLE_VALUE.\n"), status);
+                        break;
                     }
                     return INVALID_HANDLE_VALUE;
                 }
             }
+            ATLTRACE2(_T("Left for-loop. Not good, should have found some way to open %s by now.\n"), lpszFullName);
             return INVALID_HANDLE_VALUE;
         }
     };

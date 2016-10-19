@@ -422,8 +422,9 @@ class CObjectPropertySheet :
 
         STDMETHOD(GetSecurity)(SECURITY_INFORMATION si, PSECURITY_DESCRIPTOR *ppSecurityDescriptor, BOOL /*fDefault*/)
         {
-            // FIXME|TODO: open object m_obj
-            DWORD dwResult = ::GetSecurityInfo(INVALID_HANDLE_VALUE, SE_KERNEL_OBJECT, si, NULL, NULL, NULL, NULL, ppSecurityDescriptor);
+            HANDLE hObj = m_objHdl.getHandle();
+            ATLASSERT(hObj != INVALID_HANDLE_VALUE);
+            DWORD dwResult = ::GetSecurityInfo(hObj, SE_KERNEL_OBJECT, si, NULL, NULL, NULL, NULL, ppSecurityDescriptor);
             return (ERROR_SUCCESS == dwResult) ? S_OK : HRESULT_FROM_WIN32(GetLastError());
         }
 
