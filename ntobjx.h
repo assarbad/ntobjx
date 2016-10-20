@@ -1664,7 +1664,7 @@ public:
     LRESULT OnShowAbout(WORD /*wNotifyCode*/, WORD /*wID*/, HWND /*hWndCtl*/, BOOL& /*bHandled*/)
     {
         CAboutDlg dlg(m_verinfo);
-        dlg.DoModal();
+        dlg.DoModal(m_hWnd);
         return 0;
     }
 
@@ -1675,7 +1675,7 @@ public:
         LPCTSTR lpszFileName = _T("ntobjx.txt");
         DWORD const dwFlags = OFN_HIDEREADONLY | OFN_OVERWRITEPROMPT;
         CFileDialog dlg(FALSE, lpszDefExt, lpszFileName, dwFlags, lpmszFilter);
-        if(IDOK == dlg.DoModal())
+        if(IDOK == dlg.DoModal(m_hWnd))
         {
             ATLTRACE2(_T("The picked file is: %s\n"), dlg.m_szFileName);
             SaveAs_(dlg.m_szFileName, m_treeview.ObjectRoot());
