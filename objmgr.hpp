@@ -27,7 +27,7 @@
 ///////////////////////////////////////////////////////////////////////////////
 
 #ifndef __OBJMGR_HPP_VER__
-#define __OBJMGR_HPP_VER__ 2016042118
+#define __OBJMGR_HPP_VER__ 2016102020
 #if (defined(_MSC_VER) && (_MSC_VER >= 1020)) || defined(__MCPP)
 #pragma once
 #endif // Check for "#pragma once" support
@@ -406,16 +406,28 @@ namespace NtObjMgr{
 
     template<typename T> class ObjectHandleT
     {
+        typedef NTSTATUS(NTAPI *openobj_fct_t)(PHANDLE, ACCESS_MASK, POBJECT_ATTRIBUTES);
+
+#if 0
+        ACCESS_MASK m_accessMask;
+#endif // 0
+        NTSTATUS m_openStatus;
+        NTSTATUS m_queryStatus;
+        bool m_bHasObjectInfo;
         GenericObjectT<T>* m_obj;
+        openobj_fct_t m_openObjectFunction; // cached for reopen
+        OBJECT_BASIC_INFORMATION m_obi;
         HANDLE m_hObject;
     public:
-        ObjectHandleT(GenericObjectT<T>* obj)
-            : m_obj(obj)
-            , m_hObject(OpenByObjectType_(obj))
+        ObjectHandleT(GenericObjectT<T>* obj, ACCESS_MASK DesiredAccess = READ_CONTROL)
+            // m_accessMask(DesiredAccess)
+            : m_openStatus(STATUS_SUCCESS)
+            , m_queryStatus(STATUS_SUCCESS)
+            , m_bHasObjectInfo(false)
+            , m_obj(obj)
+            , m_openObjectFunction(m_obj ? PickOpenObjectFunction_(m_obj->type().GetString()) : NULL)
+            , m_hObject(OpenByObjectType_(m_obj, m_openObjectFunction, m_openStatus, m_queryStatus, m_bHasObjectInfo, m_obi , DesiredAccess))
         {
-            // Read the object info:
-            // NtQueryObject(hObject, 0, ObjectBasicInformation, )
-            // Perhaps also read object-type-specific info for the known ones?
         }
 
         virtual ~ObjectHandleT()
@@ -426,24 +438,60 @@ namespace NtObjMgr{
             }
         }
 
-        HANDLE getHandle()
+        inline HANDLE getHandle()
         {
             return m_hObject;
         }
 
-    private:
-        typedef NTSTATUS (NTAPI *openobj_fct_t)(PHANDLE, ACCESS_MASK, POBJECT_ATTRIBUTES);
-
-        static NTSTATUS NTAPI OpenAsFile_(__out PHANDLE Handle, __in ACCESS_MASK DesiredAccess, __in POBJECT_ATTRIBUTES ObjectAttributes)
+        inline ACCESS_MASK getEffectiveAccessMask() const
         {
-            UNREFERENCED_PARAMETER(Handle);
-            UNREFERENCED_PARAMETER(DesiredAccess);
-            UNREFERENCED_PARAMETER(ObjectAttributes);
-            return STATUS_NOT_IMPLEMENTED;
+            return m_accessMask;
         }
 
-        static HANDLE OpenByObjectType_(GenericObjectT<T>* obj)
+        inline NTSTATUS getOpenStatus() const
         {
+            return m_openStatus;
+        }
+
+        inline NTSTATUS getQueryStatus() const
+        {
+            return m_openStatus;
+        }
+
+        inline bool hasObjectInfo() const
+        {
+            return m_bHasObjectInfo;
+        }
+
+        inline OBJECT_BASIC_INFORMATION const& getObjectInfo() const
+        {
+            return m_obi;
+        }
+
+        inline operator bool() const
+        {
+            return !this->operator!();
+        }
+
+        inline bool operator!() const
+        {
+            return (m_hObject == INVALID_HANDLE_VALUE) || (m_hObject == NULL);
+        }
+
+    private:
+        static NTSTATUS NTAPI OpenObjectAsFile_(__out PHANDLE Handle, __in ACCESS_MASK DesiredAccess, __in POBJECT_ATTRIBUTES ObjectAttributes)
+        {
+            IO_STATUS_BLOCK iostat;
+            return NtOpenFile(Handle, DesiredAccess, ObjectAttributes, &iostat, FILE_SHARE_READ | FILE_SHARE_WRITE | FILE_SHARE_DELETE, 0);
+        }
+
+        static openobj_fct_t PickOpenObjectFunction_(LPCTSTR lpszTypeName)
+        {
+            if (!lpszTypeName)
+            {
+                return NULL;
+            }
+
             static struct { LPCTSTR tpname; openobj_fct_t openFct; } openFunctions[] =
             {
                 { _T(OBJTYPESTR_DIRECTORY), NtOpenDirectoryObject },
@@ -456,8 +504,27 @@ namespace NtObjMgr{
                 { _T(OBJTYPESTR_SEMAPHORE), NtOpenSemaphore },
                 { _T(OBJTYPESTR_SYMBOLICLINK), NtOpenSymbolicLinkObject },
                 { _T(OBJTYPESTR_TIMER), NtOpenTimer },
-                { _T(OBJTYPESTR_DEVICE), OpenAsFile_ },
+                { _T(OBJTYPESTR_DEVICE), OpenObjectAsFile_ },
             };
+            openobj_fct_t OpenObjectFct = OpenObjectAsFile_; // default
+
+            // Find appropriate object-specific function
+            for (size_t i = 0; i < _countof(openFunctions); i++)
+            {
+                if (0 == _tcsnicmp(lpszTypeName, openFunctions[i].tpname, _tcslen(openFunctions[i].tpname)))
+                {
+                    ATLTRACE2(_T("Found open function %p for %s.\n"), openFunctions[i].openFct, lpszTypeName);
+                    OpenObjectFct = openFunctions[i].openFct;
+                    break;
+                }
+            }
+
+            return OpenObjectFct;
+        }
+
+        static HANDLE OpenByObjectType_(GenericObjectT<T>* obj, openobj_fct_t OpenObjectFunc, NTSTATUS& openStatus, NTSTATUS& queryStatus, bool& hasObjInfo, OBJECT_BASIC_INFORMATION& obi, ACCESS_MASK DesiredAccess = READ_CONTROL)
+        {
+            memset(&obi, 0, sizeof(obi));
 
             if(!obj)
             {
@@ -468,8 +535,6 @@ namespace NtObjMgr{
             HANDLE hObject = INVALID_HANDLE_VALUE;
             OBJECT_ATTRIBUTES oa;
             UNICODE_STRING objname;
-            NTSTATUS status;
-            ACCESS_MASK DesiredAccess = GENERIC_READ | READ_CONTROL;
             LPCTSTR lpszFullName = obj->fullname().GetString();
             ATLASSERT(lpszFullName != NULL);
 
@@ -477,41 +542,45 @@ namespace NtObjMgr{
             InitializeObjectAttributes(&oa, &objname, 0, NULL, NULL);
 
             LPCTSTR lpszTypeName = obj->type().GetString();
+#ifndef _DEBUG
+            UNREFERENCED_PARAMETER(lpszTypeName);
+#endif // !_DEBUG
+
             ATLASSERT(lpszTypeName != NULL);
+
             ATLTRACE2(_T("Trying to open %s as type %s.\n"), lpszFullName, lpszTypeName);
-            for (size_t i = 0; i < _countof(openFunctions); i++)
+            openStatus = OpenObjectFunc(&hObject, DesiredAccess, &oa);
+            if (NT_SUCCESS(openStatus))
             {
-                if (0 == _tcsnicmp(lpszTypeName, openFunctions[i].tpname, _tcslen(openFunctions[i].tpname)))
+                ATLTRACE2(_T("Success. Returning handle %p.\n"), hObject);
+                ULONG retLen = 0;
+                queryStatus = NtQueryObject(hObject, ObjectBasicInformation, &obi, static_cast<ULONG>(sizeof(obi)), &retLen);
+                if (NT_SUCCESS(queryStatus))
                 {
-                    ATLTRACE2(_T("Found open function %p for %s.\n"), openFunctions[i].openFct, lpszTypeName);
-                    status = openFunctions[i].openFct(&hObject, DesiredAccess, &oa);
-                    if (NT_SUCCESS(status))
-                    {
-                        ATLTRACE2(_T("Success. Returning handle %p.\n"), hObject);
-                        return hObject;
-                    }
-                    switch (status)
-                    {
-                    case STATUS_ACCESS_DENIED:
-                        ATLTRACE2(_T("Access denied.\n"));
-                        break;
-                    case STATUS_NOT_IMPLEMENTED:
-                        ATLTRACE2(_T("This open method is not implemented (yet?).\n"));
-                        break;
-                    case STATUS_OBJECT_TYPE_MISMATCH:
-                        ATLTRACE2(_T("Object type mismatch for this open method.\n"));
-                        // Use RtlNtStatusToDosError to translate code??
-                        // TODO: attempt to use CreateFile Win32 API?
-                        // e.g. HANDLE hObject = CreateFile(L"\\\\.\\"..., GENERIC_READ, FILE_SHARE_READ, NULL, CREATE_ALWAYS | CREATE_NEW, 0, NULL)
-                        break;
-                    default:
-                        ATLTRACE2(_T("Something went wrong: %08X. Returning INVALID_HANDLE_VALUE.\n"), status);
-                        break;
-                    }
-                    return INVALID_HANDLE_VALUE;
+                    hasObjInfo = true;
+                    ATLTRACE2(_T("NtQueryObject succeeded with status 0x%08X.\n"), queryStatus);
                 }
+                else
+                {
+                    ATLTRACE2(_T("NtQueryObject failed with status 0x%08X.\n"), queryStatus);
+                    memset(&obi, 0, sizeof(obi));
+                }
+                // Perhaps also read object-type-specific info for the known ones?
+                return hObject;
             }
-            ATLTRACE2(_T("Left for-loop. Not good, should have found some way to open %s by now.\n"), lpszFullName);
+            switch (openStatus)
+            {
+            case STATUS_ACCESS_DENIED:
+                ATLTRACE2(_T("Access denied.\n"));
+                break;
+            case STATUS_OBJECT_TYPE_MISMATCH:
+                ATLTRACE2(_T("Object type mismatch for this open method.\n"));
+                break;
+            default:
+                ATLTRACE2(_T("Something went wrong: %08X. Returning INVALID_HANDLE_VALUE.\n"), openStatus);
+                break;
+            }
+            ATLTRACE2(_T("Returning INVALID_HANDLE_VALUE for %s.\n"), lpszFullName);
             return INVALID_HANDLE_VALUE;
         }
     };

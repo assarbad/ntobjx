@@ -122,7 +122,7 @@ solution (iif(release, slnname, "ntobjx"))
         {
             "wtl/Include/*.h",
             "ntdll-stubs/*.txt",
-            "*.h",
+            "*.h", "util/*.h", "util/*.hpp",
             "*.rc",
             "*.cpp",
             "*.hpp",
@@ -139,6 +139,7 @@ solution (iif(release, slnname, "ntobjx"))
         vpaths
         {
             ["Header Files/WTL/*"] = { "wtl/Include/*.h" },
+            ["Header Files/Utility classes/*"] = { "util/*.h", "util/*.hpp" },
             ["Header Files/*"] = { "*.h" },
             ["Resource Files/*"] = { "**.rc" },
             ["Resource Files/res/*"] = { "res/*.*" },

@@ -61,6 +61,9 @@ BEGIN
             VALUE "OriginalFilename", ANSISTRING(TEXT_MODULE)
             VALUE "ProductName", ANSISTRING(TEXT_PRODUCTNAME)
             VALUE "ProductVersion", ANSISTRING(CREATE_PVER(PRD_MAJVER, PRD_MINVER, PRD_PATCH, PRD_BUILD))
+#ifdef TEXT_PORTIONSCOPYRIGHT
+            VALUE "Portions Copyright", TEXT_PORTIONSCOPYRIGHT
+#endif
 #ifdef TEXT_SPECIALBUILD
             VALUE "SpecialBuild", ANSISTRING(TEXT_SPECIALBUILD)
 #endif

@@ -387,6 +387,23 @@
 			Filter=""
 			>
 			<Filter
+				Name="Utility classes"
+				Filter=""
+				>
+				<File
+					RelativePath="util\LoadLibrary.h"
+					>
+				</File>
+				<File
+					RelativePath="util\SimpleBuffer.h"
+					>
+				</File>
+				<File
+					RelativePath="util\VersionInfo.h"
+					>
+				</File>
+			</Filter>
+			<Filter
 				Name="WTL"
 				Filter=""
 				>

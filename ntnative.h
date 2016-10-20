@@ -29,7 +29,7 @@
 ///////////////////////////////////////////////////////////////////////////////
 
 #ifndef __NTNATIVE_H_VER__
-#define __NTNATIVE_H_VER__ 2016040823
+#define __NTNATIVE_H_VER__ 2016102020
 #if (defined(_MSC_VER) && (_MSC_VER >= 1020)) || defined(__MCPP)
 #pragma once
 #endif // Check for "#pragma once" support

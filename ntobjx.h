@@ -62,6 +62,14 @@
 #   error ntobjx.h requires atlsecurity.h to be included first
 #endif
 
+#include "util/SimpleBuffer.h"
+#ifndef VTRACE
+#   define VTRACE(...) while (false) {}
+#endif
+#define CLL_NO_ENSURE_VERSION_CLASS
+#include "util/LoadLibrary.h"
+#include "util/VersionInfo.h"
+
 using ATL::CAccessToken;
 using ATL::CAtlMap;
 using ATL::CString;
@@ -209,88 +217,6 @@ namespace
     }
 } // anonymous namespace
 
-class CVersionInfo
-{
-    LPVOID m_lpVerInfo;
-    VS_FIXEDFILEINFO* m_pFixedFileInfo;
-    DWORD m_useTranslation;
-public:
-    CVersionInfo(HINSTANCE hInstance)
-        : m_lpVerInfo(NULL)
-        , m_pFixedFileInfo(NULL)
-        , m_useTranslation(0)
-    {
-        HRSRC hVersionResource = ::FindResource(hInstance, MAKEINTRESOURCE(VS_VERSION_INFO), RT_VERSION);
-        if(NULL != hVersionResource)
-        {
-            if(DWORD dwSize = ::SizeofResource(hInstance, hVersionResource))
-            {
-                if(HGLOBAL hVersionResourceData = ::LoadResource(hInstance, hVersionResource))
-                {
-                    if(LPVOID pVerInfoRO = ::LockResource(hVersionResourceData))
-                    {
-                        if(NULL != (m_lpVerInfo = ::LocalAlloc(LMEM_FIXED, dwSize)))
-                        {
-                            ::CopyMemory(m_lpVerInfo, pVerInfoRO, dwSize);
-                            UINT uLen;
-                            if(::VerQueryValue(m_lpVerInfo, _T("\\"), (LPVOID*)&m_pFixedFileInfo, &uLen))
-                            {
-                                ATLTRACE2(_T("%u.%u\n"), HIWORD(m_pFixedFileInfo->dwFileVersionMS), LOWORD(m_pFixedFileInfo->dwFileVersionMS));
-                                DWORD* translations;
-                                if(::VerQueryValue(m_lpVerInfo, _T("\\VarFileInfo\\Translation"), (LPVOID*)&translations, &uLen))
-                                {
-                                    size_t const numTranslations = uLen / sizeof(DWORD);
-                                    ATLTRACE2(_T("Number of translations: %u\n"), (UINT)numTranslations);
-                                    for(size_t i = 0; i < numTranslations; i++)
-                                    {
-                                        ATLTRACE2(_T("Translation %u: %08X\n"), (UINT)i, translations[i]);
-                                        switch(LOWORD(translations[i]))
-                                        {
-                                        case MAKELANGID(LANG_NEUTRAL, SUBLANG_NEUTRAL): // fall through
-                                        case MAKELANGID(LANG_ENGLISH, SUBLANG_ENGLISH_US):
-                                            if(1200 == HIWORD(translations[i])) // only Unicode entries
-                                            {
-                                                m_useTranslation = translations[i];
-                                                return;
-                                            }
-                                            break;
-                                        }
-                                    }
-                                }
-                            }
-                            else
-                            {
-                                m_pFixedFileInfo = NULL;
-                            }
-                        }
-                    }
-                }
-            }
-        }
-    }
-
-    virtual ~CVersionInfo()
-    {
-        ::LocalFree(m_lpVerInfo);
-    }
-
-    LPCTSTR operator[](LPCTSTR lpszKey) const
-    {
-        CString fullName;
-        fullName.Format(_T("\\StringFileInfo\\%04X%04X\\%s"), LOWORD(m_useTranslation), HIWORD(m_useTranslation), lpszKey);
-        ATLTRACE2(_T("Full name: %s\n"), fullName.GetString());
-        UINT uLen = 0;
-        LPTSTR lpszBuf = NULL;
-        if(::VerQueryValue(m_lpVerInfo, fullName, (LPVOID*)&lpszBuf, &uLen))
-        {
-            ATLTRACE2(_T("Value: %s\n"), lpszBuf);
-            return lpszBuf;
-        }
-        ATLTRACE2(_T("Value: NULL\n"));
-        return NULL;
-    }
-};
-
 class CSuppressRedraw
 {
     HWND m_hWnd;
@@ -337,15 +263,115 @@ public:
 class CObjectPropertySheet :
     public CPropertySheetImpl<CObjectPropertySheet>
 {
+    class CObjectSecurityNAPage :
+        public CPropertyPageImpl<CObjectSecurityNAPage>,
+        public CWinDataExchange<CObjectSecurityNAPage>
+    {
+        typedef CPropertyPageImpl<CObjectSecurityNAPage> baseClass;
+        GenericObject*  m_obj;
+        ObjectHandle&   m_objHdl;
+        bool            m_bFeatureUnavailable;
+        CFont           m_font;
+        CBrush          m_bkBrush;
+        CEdit           m_edtExplanation;
+        CObjectSecurityNAPage(); // hide it
+    public:
+        enum { IDD = IDD_SECURITY_NOT_AVAILABLE };
+
+        BEGIN_MSG_MAP(CObjectSecurityNAPage)
+            MESSAGE_HANDLER(WM_INITDIALOG, OnInitDialog)
+            MESSAGE_HANDLER(WM_CTLCOLORSTATIC, OnCtlColorStatic)
+            CHAIN_MSG_MAP(baseClass)
+        END_MSG_MAP()
+
+        CObjectSecurityNAPage(GenericObject* obj, ObjectHandle& objHdl, bool bFeatureUnavailable = false)
+            : baseClass((LPCTSTR)NULL)
+            , m_obj(obj)
+            , m_objHdl(objHdl)
+            , m_bFeatureUnavailable(bFeatureUnavailable)
+        {
+        }
+
+        LRESULT OnInitDialog(UINT /*uMsg*/, WPARAM /*wParam*/, LPARAM /*lParam*/, BOOL& bHandled)
+        {
+            m_edtExplanation.Attach(GetDlgItem(IDC_EXPLANATION_WHY));
+
+            if (m_bFeatureUnavailable)
+            {
+                m_edtExplanation.SetWindowText(_T("The feature has not been included in this build."));
+            }
+            else
+            {
+                if (!m_objHdl)
+                {
+                    CLoadLibrary ntdll(_T("ntdll.dll"));
+                    CSimpleBuf<TCHAR> status(ntdll.formatMessage<TCHAR>(ntdll.getHandle(), static_cast<DWORD>(m_objHdl.getOpenStatus())));
+                    m_edtExplanation.SetWindowText(status.Buffer());
+                }
+            }
+            LONG oldStyle = m_edtExplanation.GetWindowLong(GWL_STYLE);
+            m_edtExplanation.SetWindowLong(GWL_STYLE, oldStyle & ~ES_NOHIDESEL);
+            m_edtExplanation.SetSelNone(TRUE);
+
+            NONCLIENTMETRICS ncm = { 0 };
+            ncm.cbSize = sizeof(ncm);
+
+            if (::SystemParametersInfo(SPI_GETNONCLIENTMETRICS, sizeof(ncm), &ncm, 0))
+            {
+                LOGFONT logFont;
+                memcpy(&logFont, &ncm.lfMessageFont, sizeof(LOGFONT));
+                logFont.lfWeight = FW_BOLD;
+                HFONT hFont = m_font.CreateFontIndirect(&logFont);
+                if (hFont)
+                {
+                    SendDlgItemMessage(IDC_EXPLANATION_WHY, WM_SETFONT, reinterpret_cast<WPARAM>(hFont));
+                    SendDlgItemMessage(IDC_NO_SECURITY_CAPTION, WM_SETFONT, reinterpret_cast<WPARAM>(hFont));
+                }
+            }
+
+            bHandled = FALSE;
+            return TRUE;
+        }
+
+        LRESULT OnCtlColorStatic(UINT /*uMsg*/, WPARAM wParam, LPARAM lParam, BOOL& bHandled)
+        {
+            HWND hStatic = reinterpret_cast<HWND>(lParam);
+            HDC hdcStatic = reinterpret_cast<HDC>(wParam);
+            switch (::GetDlgCtrlID(hStatic))
+            {
+            case IDC_EXPLANATION_WHY:
+            {
+                ::SetTextColor(hdcStatic, RGB(0x80, 0, 0));
+                CDC dc(GetDC());
+                COLORREF dlgBkColor = dc.GetBkColor();
+                ::SetBkColor(hdcStatic, dlgBkColor);
+                m_bkBrush = ::CreateSolidBrush(dlgBkColor);
+                return reinterpret_cast<LRESULT>(HBRUSH(m_bkBrush));
+            }
+            default:
+                break;
+            }
+            bHandled = FALSE;
+            return FALSE;
+        }
+    };
+
     class CObjectDetailsPage :
         public CPropertyPageImpl<CObjectDetailsPage>,
         public CWinDataExchange<CObjectDetailsPage>
     {
         typedef CPropertyPageImpl<CObjectDetailsPage> baseClass;
         GenericObject*  m_obj;
+        ObjectHandle&   m_objHdl;
         CEdit           m_edtName;
         CEdit           m_edtFullname;
         CEdit           m_edtType;
+        CStatic         m_stcRefByPtr;
+        CStatic         m_stcRefByHdl;
+        CStatic         m_stcQuotaPaged;
+        CStatic         m_stcQuotaNonPaged;
+        CStatic         m_stcCreationTime;
+        CObjectDetailsPage(); // hide it
     public:
         enum { IDD = IDD_PROPERTIES };
 
@@ -354,9 +380,10 @@ class CObjectPropertySheet :
             CHAIN_MSG_MAP(baseClass)
         END_MSG_MAP()
 
-        CObjectDetailsPage(GenericObject* obj)
+        CObjectDetailsPage(GenericObject* obj, ObjectHandle& objHdl)
             : baseClass((LPCTSTR)NULL)
             , m_obj(obj)
+            , m_objHdl(objHdl)
         {
         }
 
@@ -365,6 +392,11 @@ class CObjectPropertySheet :
             m_edtName.Attach(GetDlgItem(IDC_EDIT_NAME));
             m_edtFullname.Attach(GetDlgItem(IDC_EDIT_FULLNAME));
             m_edtType.Attach(GetDlgItem(IDC_EDIT_TYPE));
+            m_stcRefByPtr.Attach(GetDlgItem(IDC_REF_BYPTR));
+            m_stcRefByHdl.Attach(GetDlgItem(IDC_REF_BYHDL));
+            m_stcQuotaPaged.Attach(GetDlgItem(IDC_QUOTA_PAGED));
+            m_stcQuotaNonPaged.Attach(GetDlgItem(IDC_QUOTA_NONPAGED));
+            m_stcCreationTime.Attach(GetDlgItem(IDC_OBJ_CREATION_TIME));
 
             if(m_obj)
             {
@@ -373,6 +405,53 @@ class CObjectPropertySheet :
                 m_edtType.SetWindowText(m_obj->type());
             }
 
+            if (m_objHdl)
+            {
+                LPCTSTR na = _T("n/a");
+                CString str;
+                if (m_objHdl.hasObjectInfo())
+                {
+                    str.Format(_T("%u"), m_objHdl.getObjectInfo().HandleCount);
+                    m_stcRefByHdl.SetWindowText(str);
+                    str.Format(_T("%u"), m_objHdl.getObjectInfo().ReferenceCount);
+                    m_stcRefByPtr.SetWindowText(str);
+                    str.Format(_T("%u"), m_objHdl.getObjectInfo().PagedPoolUsage);
+                    m_stcQuotaPaged.SetWindowText(str);
+                    str.Format(_T("%u"), m_objHdl.getObjectInfo().NonPagedPoolUsage);
+                    m_stcQuotaNonPaged.SetWindowText(str);
+                    LARGE_INTEGER const& li = m_objHdl.getObjectInfo().CreationTime;
+                    if(li.QuadPart > 0)
+                    {
+                        ATLASSERT(li.HighPart >= 0); // anything else will fail our conversion below
+                        FILETIME ft = { li.LowPart, static_cast<DWORD>(li.HighPart) };
+                        SYSTEMTIME st;
+                        ATLVERIFY(FileTimeToSystemTime(&ft, &st));
+                        str.Format(_T("%04d-%02d-%02d %02d:%02d:%02d.%03d"), st.wYear, st.wMonth, st.wDay, st.wHour, st.wMinute, st.wSecond, st.wMilliseconds);
+                        m_stcCreationTime.SetWindowText(str);
+                    }
+                    else
+                    {
+                        m_stcCreationTime.SetWindowText(na);
+                    }
+                }
+                else
+                {
+                    m_stcRefByHdl.SetWindowText(na);
+                    m_stcRefByPtr.SetWindowText(na);
+                    m_stcQuotaPaged.SetWindowText(na);
+                    m_stcQuotaNonPaged.SetWindowText(na);
+                    NTSTATUS status = m_objHdl.getQueryStatus();
+                    str.Format(_T("<Object query status: 0x%08X>"), status);
+                    m_stcCreationTime.SetWindowText(str);
+                }
+            }
+            else
+            {
+                NTSTATUS status = m_objHdl.getOpenStatus();
+                CString str;
+                str.Format(_T("<Object open status: 0x%08X>"), status);
+                m_stcCreationTime.SetWindowText(str);
+            }
             return TRUE;
         }
     };
@@ -382,11 +461,11 @@ class CObjectPropertySheet :
         public ISecurityInformation
     {
         GenericObject*  m_obj;
-        ObjectHandle    m_objHdl;
+        ObjectHandle&   m_objHdl;
     public:
-        CSecurityInformation(GenericObject* obj)
+        CSecurityInformation(GenericObject* obj, ObjectHandle& objHdl)
             : m_obj(obj)
-            , m_objHdl(obj)
+            , m_objHdl(objHdl)
         {
         }
 
@@ -412,9 +491,8 @@ class CObjectPropertySheet :
 
         STDMETHOD(GetObjectInformation)(PSI_OBJECT_INFO pObjectInfo)
         {
-            pObjectInfo->dwFlags = SI_ADVANCED | SI_READONLY;
+            pObjectInfo->dwFlags = SI_ADVANCED | SI_NO_TREE_APPLY | SI_READONLY;
             pObjectInfo->hInstance = NULL;
-            pObjectInfo->pszPageTitle = NULL;
             pObjectInfo->pszObjectName = const_cast<LPTSTR>(m_obj->name().GetString());
 
             return S_OK;
@@ -424,6 +502,7 @@ class CObjectPropertySheet :
         {
             HANDLE hObj = m_objHdl.getHandle();
             ATLASSERT(hObj != INVALID_HANDLE_VALUE);
+            ATLASSERT(hObj != NULL);
             DWORD dwResult = ::GetSecurityInfo(hObj, SE_KERNEL_OBJECT, si, NULL, NULL, NULL, NULL, ppSecurityDescriptor);
             return (ERROR_SUCCESS == dwResult) ? S_OK : HRESULT_FROM_WIN32(GetLastError());
         }
@@ -435,13 +514,18 @@ class CObjectPropertySheet :
 
         STDMETHOD(GetAccessRights) (const GUID* /*pguidObjectType*/, DWORD /*dwFlags*/, PSI_ACCESS *ppAccess, ULONG *pcAccesses, ULONG *piDefaultAccess)
         {
+            ATLASSERT(TIMER_QUERY_STATE == 0x0001);
+            ATLASSERT(TIMER_MODIFY_STATE == 0x0002);
+            ATLASSERT(TIMER_QUERY_STATE == MUTANT_QUERY_STATE);
+            ATLASSERT(TIMER_MODIFY_STATE == SEMAPHORE_MODIFY_STATE);
+            ATLASSERT(TIMER_MODIFY_STATE == IO_COMPLETION_MODIFY_STATE);
             static SI_ACCESS accessNameMapping[] =
             {
                 { &GUID_NULL, GENERIC_READ, _T("Read"), SI_ACCESS_GENERAL },
                 { &GUID_NULL, GENERIC_WRITE, _T("Write"), SI_ACCESS_GENERAL },
                 { &GUID_NULL, GENERIC_EXECUTE, _T("Execute"), SI_ACCESS_GENERAL },
-                { &GUID_NULL, MUTANT_QUERY_STATE, _T("Query State"), SI_ACCESS_GENERAL },
-                { &GUID_NULL, EVENT_MODIFY_STATE, _T("Modify State"), SI_ACCESS_GENERAL },
+                { &GUID_NULL, 0x0001, _T("Query State"), SI_ACCESS_GENERAL },
+                { &GUID_NULL, 0x0002, _T("Modify State"), SI_ACCESS_GENERAL },
                 { &GUID_NULL, SYNCHRONIZE, _T("Synchronize"), SI_ACCESS_GENERAL }
             };
 
@@ -470,10 +554,13 @@ class CObjectPropertySheet :
 #endif // DDKBUILD
 
     typedef CPropertySheetImpl<CObjectPropertySheet> baseClass;
+    GenericObject* m_obj;
+    ObjectHandle   m_objHdl;
     CObjectDetailsPage m_details;
 #ifndef DDKBUILD
-    CSecurityInformation m_security;
+    ATL::CAutoPtr<CSecurityInformation> m_security;
 #endif // DDKBUILD
+    ATL::CAutoPtr<CObjectSecurityNAPage> m_securityNA;
 public:
     BEGIN_MSG_MAP(CObjectPropertySheet)
         MESSAGE_HANDLER(WM_INITDIALOG, OnInitDialog)
@@ -482,16 +569,35 @@ public:
 
     CObjectPropertySheet(GenericObject* obj)
         : baseClass((LPCTSTR)NULL, 0, NULL)
-        , m_details(obj)
-#ifndef DDKBUILD
-        , m_security(obj)
-#endif // DDKBUILD
+        , m_obj(obj)
+        , m_objHdl(obj)
+        , m_details(m_obj, m_objHdl)
     {
-        ATLASSERT(NULL != obj);
+        baseClass::m_psh.dwFlags |= PSH_NOAPPLYNOW;
+
+        ATLASSERT(NULL != m_obj);
+        ATLTRACE2(_T("Adding 'Object Details' property page\n"));
         AddPage(m_details);
+
 #ifndef DDKBUILD
-        AddPage(::CreateSecurityPage(&m_security));
+        if (!m_objHdl)
+        {
+            m_securityNA.Attach(new CObjectSecurityNAPage(m_obj, m_objHdl));
+            ATLTRACE2(_T("Adding 'Security (N/A)' property page\n"));
+            AddPage(*m_securityNA);
+        }
+        else
+        {
+            m_security.Attach(new CSecurityInformation(m_obj, m_objHdl));
+            ATLTRACE2(_T("Adding 'Security' property page\n"));
+            AddPage(::CreateSecurityPage(m_security));
+        }
+#else
+        m_securityNA.Attach(new CObjectSecurityNAPage(m_obj, m_objHdl, true));
+        ATLTRACE2(_T("Adding 'Security (N/A)' property page - feature not built into program\n"));
+        AddPage(*m_securityNA);
 #endif // DDKBUILD
+
         SetTitle(obj->name(), PSH_PROPTITLE);
     }
 
@@ -570,11 +676,13 @@ class CAboutDlg :
     CHyperLinkCtxMenu m_website, m_projectpage, m_revisionurl;
     CVersionInfo& m_verinfo;
     CIcon m_appicon;
+    CFont m_progNameFont;
 public:
     enum { IDD = IDD_ABOUT };
 
     BEGIN_MSG_MAP(CAboutDlg)
         MESSAGE_HANDLER(WM_INITDIALOG, OnInitDialog)
+        MESSAGE_HANDLER(WM_CTLCOLORSTATIC, OnCtlColorStatic)
         COMMAND_ID_HANDLER(IDOK, OnCloseCmd)
         COMMAND_ID_HANDLER(IDCANCEL, OnCloseCmd)
     END_MSG_MAP()
@@ -615,6 +723,7 @@ public:
         ATLVERIFY(SetDlgItemText(IDC_STATIC_COPYRIGHT, m_verinfo[_T("LegalCopyright")]));
         ATLVERIFY(SetDlgItemText(IDC_STATIC_DESCRIPTION, m_verinfo[_T("FileDescription")]));
         ATLVERIFY(SetDlgItemText(IDC_STATIC_PROGNAME, m_verinfo[_T("ProductName")]));
+        ATLVERIFY(SetDlgItemText(IDC_STATIC_PORTIONSCOPYRIGHT, m_verinfo[_T("Portions Copyright")]));
 
         CString caption(_T("About "));
         caption.Append(m_verinfo[_T("ProductName")]);
@@ -626,7 +735,43 @@ public:
         ATLVERIFY(!m_appicon.IsNull());
         SetIcon(m_appicon);
 
+        NONCLIENTMETRICS ncm = { 0 };
+        ncm.cbSize = sizeof(ncm);
+
+        if (::SystemParametersInfo(SPI_GETNONCLIENTMETRICS, sizeof(ncm), &ncm, 0))
+        {
+            LOGFONT logFont;
+            memcpy(&logFont, &ncm.lfMessageFont, sizeof(LOGFONT));
+            logFont.lfWeight = FW_BOLD;
+            HFONT hFont = m_progNameFont.CreateFontIndirect(&logFont);
+            if (hFont)
+            {
+                SendDlgItemMessage(IDC_STATIC_PROGNAME, WM_SETFONT, reinterpret_cast<WPARAM>(hFont));
+            }
+        }
+
         return TRUE;
+    }
+
+    LRESULT OnCtlColorStatic(UINT /*uMsg*/, WPARAM wParam, LPARAM lParam, BOOL& bHandled)
+    {
+        HWND hStatic = reinterpret_cast<HWND>(lParam);
+        HDC hdcStatic = reinterpret_cast<HDC>(wParam);
+        switch (::GetDlgCtrlID(hStatic))
+        {
+        case IDC_STATIC_PORTIONSCOPYRIGHT:
+            ::SetTextColor(hdcStatic, RGB(0, 0x40, 0));
+            ::SetBkColor(hdcStatic, ::GetSysColor(COLOR_3DFACE));
+            return reinterpret_cast<LRESULT>(::GetSysColorBrush(COLOR_3DFACE));
+        case IDC_STATIC_PROGNAME:
+            ::SetTextColor(hdcStatic, RGB(0x80, 0, 0));
+            ::SetBkColor(hdcStatic, ::GetSysColor(COLOR_3DFACE));
+            return reinterpret_cast<LRESULT>(::GetSysColorBrush(COLOR_3DFACE));
+        default:
+            break;
+        }
+        bHandled = FALSE;
+        return FALSE;
     }
 
     LRESULT OnCloseCmd(WORD /*wNotifyCode*/, WORD wID, HWND /*hWndCtl*/, BOOL& /*bHandled*/)
