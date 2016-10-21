@@ -27,6 +27,7 @@
 #endif
 
 #define _ATL_USE_CSTRING
+#define _ATL_CSTRING_EXPLICIT_CONSTRUCTORS
 #define _WTL_NO_CSTRING
 
 // This activates a slight modification in atlctrlx.h which prevents the link

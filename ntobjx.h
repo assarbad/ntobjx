@@ -252,6 +252,122 @@ public:
     }
 };
 
+class CObjectImageList
+{
+    CImageList m_imagelist;
+public:
+    CObjectImageList()
+        : m_imagelist()
+    {
+        PrepareImageList_();
+    }
+
+    virtual ~CObjectImageList()
+    {
+    }
+
+    inline operator CImageList&()
+    {
+        return m_imagelist;
+    }
+
+    inline operator CImageList const&() const
+    {
+        return m_imagelist;
+    }
+
+    inline operator HIMAGELIST() const
+    {
+        return HIMAGELIST(m_imagelist);
+    }
+
+    inline bool IsNull() const
+    {
+        return m_imagelist.IsNull();
+    }
+
+    inline BOOL Create(int cx, int cy, UINT nFlags, int nInitial, int nGrow)
+    {
+        return m_imagelist.Create(cx, cy, nFlags, nInitial, nGrow);
+    }
+
+    inline BOOL Create(ATL::_U_STRINGorID bitmap, int cx, int nGrow, COLORREF crMask)
+    {
+        return m_imagelist.Create(bitmap, cx, nGrow, crMask);
+    }
+
+    inline int AddIcon(HICON hIcon)
+    {
+        return m_imagelist.AddIcon(hIcon);
+    }
+
+    int IndexByObjType(GenericObject* obj) const
+    {
+        return GetImageIndexByType_(obj);
+    }
+
+    HICON IconByObjType(GenericObject* obj)
+    {
+        return m_imagelist.ExtractIcon(GetImageIndexByType_(obj));
+    }
+
+private:
+
+    // Retrieve the image index based on the type string
+    int GetImageIndexByType_(GenericObject* obj) const
+    {
+        ATLASSERT(obj != NULL);
+        LPCTSTR typeName = obj->type();
+        int retval = 0;
+        for (size_t i = 0; i < resIconTypeMappingSize; i++)
+        {
+            if (0 == _tcsicmp(typeName, resIconTypeMapping[i].typeName))
+            {
+                if (IDI_DIRECTORY == resIconTypeMapping[i].resId)
+                {
+                    // This program is not multi-threaded, so this works, otherwise we'd need locking here
+                    static int emptydir = -1;
+                    if (Directory* dir = dynamic_cast<Directory*>(obj))
+                    {
+                        if (!dir->size())
+                        {
+                            if (-1 == emptydir)
+                            {
+                                for (size_t j = 0; j < resIconTypeMappingSize; j++)
+                                {
+                                    if (0 == _tcsicmp(_T(OBJTYPESTR_EMPTY_DIRECTORY), resIconTypeMapping[j].typeName))
+                                    {
+                                        emptydir = static_cast<int>(j);
+                                        break;
+                                    }
+                                }
+                            }
+                            ATLASSERT(-1 != emptydir);
+                            return emptydir;
+                        }
+                    }
+                }
+                return static_cast<int>(i);
+            }
+        }
+        return retval;
+    }
+
+    // We create our image list dynamically from the icons
+    void PrepareImageList_()
+    {
+        ATLTRACE2(_T("Preparing image list for %s\n"), _T(__FUNCTION__));
+        const int iResIconTypeMappingSize = static_cast<int>(resIconTypeMappingSize);
+        ATLVERIFY(m_imagelist.Create(imgListElemWidth, imgListElemHeight, ILC_COLOR32 | ILC_MASK, iResIconTypeMappingSize, iResIconTypeMappingSize));
+        for (int i = 0; i < iResIconTypeMappingSize; i++)
+        {
+            HICON hIcon = static_cast<HICON>(AtlLoadIconImage(MAKEINTRESOURCE(resIconTypeMapping[i].resId), LR_CREATEDIBSECTION, imgListElemWidth, imgListElemHeight));
+            ATLTRACE2(_T("Icon handle: %p - %s\n"), hIcon, resIconTypeMapping[i].typeName);
+            m_imagelist.AddIcon(hIcon);
+        }
+    }
+};
+
 #ifndef DDKBUILD
 #   include <Aclui.h>
 #   ifndef __ACCESS_CONTROL_API__
@@ -405,9 +521,9 @@ class CObjectPropertySheet :
                 m_edtType.SetWindowText(m_obj->type());
             }
 
+            LPCTSTR na = _T("n/a");
             if (m_objHdl)
             {
-                LPCTSTR na = _T("n/a");
                 CString str;
                 if (m_objHdl.hasObjectInfo())
                 {
@@ -447,6 +563,10 @@ class CObjectPropertySheet :
             }
             else
             {
+                m_stcRefByHdl.SetWindowText(na);
+                m_stcRefByPtr.SetWindowText(na);
+                m_stcQuotaPaged.SetWindowText(na);
+                m_stcQuotaNonPaged.SetWindowText(na);
                 NTSTATUS status = m_objHdl.getOpenStatus();
                 CString str;
                 str.Format(_T("<Object open status: 0x%08X>"), status);
@@ -509,7 +629,7 @@ class CObjectPropertySheet :
 
         STDMETHOD(SetSecurity)(SECURITY_INFORMATION /*si*/, PSECURITY_DESCRIPTOR /*pSecurityDescriptor*/)
         {
-            return E_NOTIMPL;
+            ATLTRACENOTIMPL(_T(__FUNCTION__));
         }
 
         STDMETHOD(GetAccessRights) (const GUID* /*pguidObjectType*/, DWORD /*dwFlags*/, PSI_ACCESS *ppAccess, ULONG *pcAccesses, ULONG *piDefaultAccess)
@@ -538,17 +658,17 @@ class CObjectPropertySheet :
 
         STDMETHOD(MapGeneric)(const GUID* /*pguidObjectType*/, UCHAR* /*pAceFlags*/, ACCESS_MASK* /*pMask*/)
         {
-            return S_OK;
+            ATLTRACENOTIMPL(_T(__FUNCTION__));
         }
 
         STDMETHOD(GetInheritTypes)(PSI_INHERIT_TYPE* /*ppInheritTypes*/, ULONG* /*pcInheritTypes*/)
         {
-            return S_OK;
+            ATLTRACENOTIMPL(_T(__FUNCTION__));
         }
 
         STDMETHOD(PropertySheetPageCallback)(HWND /*hwnd*/, UINT /*uMsg*/, SI_PAGE_TYPE /*uPage*/)
         {
-            return S_OK;
+            ATLTRACENOTIMPL(_T(__FUNCTION__));
         }
     };
 #endif // DDKBUILD
@@ -567,13 +687,18 @@ public:
         CHAIN_MSG_MAP(baseClass)
     END_MSG_MAP()
 
-    CObjectPropertySheet(GenericObject* obj)
+    CObjectPropertySheet(GenericObject* obj, CObjectImageList& imagelist)
         : baseClass((LPCTSTR)NULL, 0, NULL)
         , m_obj(obj)
         , m_objHdl(obj)
         , m_details(m_obj, m_objHdl)
     {
         baseClass::m_psh.dwFlags |= PSH_NOAPPLYNOW;
+        if (m_obj && imagelist.IndexByObjType(m_obj) >= 0)
+        {
+            baseClass::m_psh.dwFlags |= PSH_USEHICON;
+            baseClass::m_psh.hIcon = imagelist.IconByObjType(m_obj);
+        }
 
         ATLASSERT(NULL != m_obj);
         ATLTRACE2(_T("Adding 'Object Details' property page\n"));
@@ -792,7 +917,6 @@ class CNtObjectsTreeView :
     CImageList m_imagelist;
     HWND m_hFrameWnd;
     CAtlMap<Directory*, HTREEITEM> m_reverseLookup;
-protected:
     typedef CWindowImpl<CNtObjectsTreeView, CTreeViewCtrlEx, CNtObjectsTreeViewTraits> baseClass;
 public:
     /*lint -save -e446 */
@@ -1056,9 +1180,8 @@ private:
 class CNtObjectsListView :
     public CSortListViewCtrlImpl<CNtObjectsListView, CListViewCtrl, CNtObjectsListViewTraits>
 {
-    CImageList m_imagelist;
     HWND m_hFrameWnd;
-protected:
+    CObjectImageList* m_pimagelist;
     typedef CSortListViewCtrlImpl<CNtObjectsListView, CListViewCtrl, CNtObjectsListViewTraits> baseClass;
 public:
     /*lint -save -e446 */
@@ -1080,7 +1203,16 @@ public:
     CNtObjectsListView(HWND hFrameWnd = NULL)
         : baseClass()
         , m_hFrameWnd(hFrameWnd)
+        , m_pimagelist(NULL)
     {}
+
+    HWND Create(HWND hWndParent, CObjectImageList& imagelist, ATL::_U_RECT rect = NULL, LPCTSTR szWindowName = NULL,
+        DWORD dwStyle = 0, DWORD dwExStyle = 0,
+        ATL::_U_MENUorID MenuOrID = 0U, LPVOID lpCreateParam = NULL)
+    {
+        m_pimagelist = &imagelist;
+        return baseClass::Create(hWndParent, rect, szWindowName, dwStyle, dwExStyle, MenuOrID, lpCreateParam);
+    }
 
     inline void SetFrameWindow(HWND hFrameWnd)
     {
@@ -1091,11 +1223,19 @@ public:
     {
         CSuppressRedraw suppressRedraw(m_hWnd);
         DeleteAllItems();
-        if(::IsWindow(m_hWnd) && m_imagelist.IsNull())
+        ATLASSERT(m_pimagelist != NULL);
+#ifndef _DEBUG
+        if (!m_pimagelist)
         {
-            PrepareImageList_();
+            return; // Avoid outright crash
+        }
+#endif // !_DEBUG
+        if(::IsWindow(m_hWnd) && !m_pimagelist->IsNull())
+        {
+            (void)SetImageList(*m_pimagelist, LVSIL_SMALL);
         }
         ResetAllColumns_();
+        ATLASSERT(!m_pimagelist->IsNull());
         // To determine the required width for each column
         int widths[] = {-1, -1, -1};
         for(size_t i = 0; i < current.size(); i++)
@@ -1106,7 +1246,7 @@ public:
                 , current[i]->name()
                 , 0
                 , 0
-                , GetImageIndexByType_(current[i])
+                , m_pimagelist->IndexByObjType(current[i])
                 , reinterpret_cast<LPARAM>(current[i])
                 );
             int const nameWidth = GetStringWidth(current[i]->name());
@@ -1362,60 +1502,6 @@ private:
         return (-1 != HitTest(&lvhtti));
     }
 
-    // Retrieve the image index based on the type string
-    int GetImageIndexByType_(GenericObject* obj)
-    {
-        LPCTSTR typeName = obj->type();
-        int retval = 0;
-        for(size_t i = 0; i < resIconTypeMappingSize; i++)
-        {
-            if(0 == _tcsicmp(typeName, resIconTypeMapping[i].typeName))
-            {
-                if(IDI_DIRECTORY == resIconTypeMapping[i].resId)
-                {
-                    // This program is not multi-threaded, so this works, otherwise we'd need locking here
-                    static int emptydir = -1;
-                    if(Directory* dir = dynamic_cast<Directory*>(obj))
-                    {
-                        if(!dir->size())
-                        {
-                            if(-1 == emptydir)
-                            {
-                                for(size_t j = 0; j < resIconTypeMappingSize; j++)
-                                {
-                                    if(0 == _tcsicmp(_T(OBJTYPESTR_EMPTY_DIRECTORY), resIconTypeMapping[j].typeName))
-                                    {
-                                        emptydir = static_cast<int>(j);
-                                        break;
-                                    }
-                                }
-                            }
-                            ATLASSERT(-1 != emptydir);
-                            return emptydir;
-                        }
-                    }
-                }
-                return static_cast<int>(i);
-            }
-        }
-        return retval;
-    }
-
-    // We create our image list dynamically from the icons
-    void PrepareImageList_()
-    {
-        ATLTRACE2(_T("Preparing image list for %s\n"), _T(__FUNCTION__));
-        const int iResIconTypeMappingSize = static_cast<int>(resIconTypeMappingSize);
-        ATLVERIFY(m_imagelist.Create(imgListElemWidth, imgListElemHeight, ILC_COLOR32 | ILC_MASK, iResIconTypeMappingSize, iResIconTypeMappingSize));
-        for(int i = 0; i < iResIconTypeMappingSize; i++)
-        {
-            HICON hIcon = static_cast<HICON>(AtlLoadIconImage(MAKEINTRESOURCE(resIconTypeMapping[i].resId), LR_CREATEDIBSECTION, imgListElemWidth, imgListElemHeight));
-            ATLTRACE2(_T("Icon handle: %p - %s\n"), hIcon, resIconTypeMapping[i].typeName);
-            m_imagelist.AddIcon(hIcon);
-        }
-        (void)SetImageList(m_imagelist, LVSIL_SMALL);
-    }
-
     void DeleteAllColumns_()
     {
         ATLTRACE2(_T("Column count: %i\n"), GetColumnCount());
@@ -1488,6 +1574,7 @@ public:
     CSimpleArray<Directory*> m_visitedList;
     int m_visitedListIndex;
     HRESULT (CALLBACK* DllGetVersion)(DLLVERSIONINFO *);
+    CObjectImageList m_imagelist;
     CAccessToken m_Token;
 
     CNtObjectsMainFrame()
@@ -1497,6 +1584,7 @@ public:
         , m_activeObject(0)
         , m_verinfo(ModuleHelper::GetResourceInstance())
         , m_visitedListIndex(-1)
+        , m_imagelist()
         , DllGetVersion(0)
     {
         *(FARPROC*)&DllGetVersion = ::GetProcAddress(::GetModuleHandle(_T("shell32.dll")), "DllGetVersion");
@@ -1551,7 +1639,7 @@ public:
         m_vsplit.m_cxySplitBar = 3;
 
         ATLVERIFY(NULL != m_treeview.Create(m_hWndClient));
-        ATLVERIFY(NULL != m_listview.Create(m_hWndClient));
+        ATLVERIFY(NULL != m_listview.Create(m_hWndClient, m_imagelist));
         if(DllGetVersion)
         {
             DLLVERSIONINFO dllvi = {sizeof(DLLVERSIONINFO), 0, 0, 0, 0};
@@ -1835,7 +1923,7 @@ public:
             }
 #           endif // DDKBUILD
             ATLTRACE2(_T("last selected = %p -> %s\n"), m_activeObject, m_activeObject->fullname().GetString());
-            CObjectPropertySheet objprop(m_activeObject);
+            CObjectPropertySheet objprop(m_activeObject, m_imagelist);
             (void)objprop.DoModal(m_hWnd);
         }
 
@@ -1900,15 +1988,14 @@ private:
                 _ftprintf(f, _T("%s\\%s [%s]\n"), Prefix.GetString(), directory->name().GetString(), directory->type().GetString());
                 CString newPrefix(Prefix + _T("\t"));
                 OutputDirectory_(f, *directory, newPrefix);
+                continue;
             }
-            else if(symlink)
+            if(symlink)
             {
                 _ftprintf(f, _T("%s%s [%s] -> %s\n"), Prefix.GetString(), symlink->name().GetString(), symlink->type().GetString(), symlink->target().GetString());
+                continue;
             }
-            else
-            {
-                _ftprintf(f, _T("%s%s [%s]\n"), Prefix.GetString(), entry->name().GetString(), entry->type().GetString());
-            }
+            _ftprintf(f, _T("%s%s [%s]\n"), Prefix.GetString(), entry->name().GetString(), entry->type().GetString());
         }
     }
 
