@@ -44,7 +44,7 @@
 			<Tool
 				Name="VCCLCompilerTool"
 				Optimization="0"
-				AdditionalIncludeDirectories="wtl\Include"
+				AdditionalIncludeDirectories="wtl\Include;pugixml"
 				PreprocessorDefinitions="WIN32;_WINDOWS;STRICT;WINVER=0x0500"
 				BasicRuntimeChecks="3"
 				RuntimeLibrary="1"
@@ -63,7 +63,7 @@
 				Name="VCResourceCompilerTool"
 				AdditionalOptions="/nologo /l409"
 				PreprocessorDefinitions="WIN32;_WINDOWS;STRICT;WINVER=0x0500"
-				AdditionalIncludeDirectories="wtl\Include;.;$(IntDir)"
+				AdditionalIncludeDirectories="wtl\Include;pugixml;.;$(IntDir)"
 			/>
 			<Tool
 				Name="VCPreLinkEventTool"
@@ -133,7 +133,7 @@
 			<Tool
 				Name="VCCLCompilerTool"
 				Optimization="0"
-				AdditionalIncludeDirectories="wtl\Include"
+				AdditionalIncludeDirectories="wtl\Include;pugixml"
 				PreprocessorDefinitions="WIN32;_WINDOWS;STRICT;WINVER=0x0501"
 				BasicRuntimeChecks="3"
 				RuntimeLibrary="1"
@@ -152,7 +152,7 @@
 				Name="VCResourceCompilerTool"
 				AdditionalOptions="/nologo /l409"
 				PreprocessorDefinitions="WIN32;_WINDOWS;STRICT;WINVER=0x0501"
-				AdditionalIncludeDirectories="wtl\Include;.;$(IntDir)"
+				AdditionalIncludeDirectories="wtl\Include;pugixml;.;$(IntDir)"
 			/>
 			<Tool
 				Name="VCPreLinkEventTool"
@@ -222,7 +222,7 @@
 				Name="VCCLCompilerTool"
 				AdditionalOptions="/Oi /Os /Gy /Oy"
 				Optimization="3"
-				AdditionalIncludeDirectories="wtl\Include"
+				AdditionalIncludeDirectories="wtl\Include;pugixml"
 				PreprocessorDefinitions="WIN32;_WINDOWS;STRICT;NDEBUG;WINVER=0x0500"
 				StringPooling="true"
 				RuntimeLibrary="0"
@@ -241,7 +241,7 @@
 				Name="VCResourceCompilerTool"
 				AdditionalOptions="/nologo /l409"
 				PreprocessorDefinitions="WIN32;_WINDOWS;STRICT;NDEBUG;WINVER=0x0500"
-				AdditionalIncludeDirectories="wtl\Include;.;$(IntDir)"
+				AdditionalIncludeDirectories="wtl\Include;pugixml;.;$(IntDir)"
 			/>
 			<Tool
 				Name="VCPreLinkEventTool"
@@ -314,7 +314,7 @@
 				Name="VCCLCompilerTool"
 				AdditionalOptions="/Oi /Os /Gy /Oy"
 				Optimization="3"
-				AdditionalIncludeDirectories="wtl\Include"
+				AdditionalIncludeDirectories="wtl\Include;pugixml"
 				PreprocessorDefinitions="WIN32;_WINDOWS;STRICT;NDEBUG;WINVER=0x0501"
 				StringPooling="true"
 				RuntimeLibrary="0"
@@ -333,7 +333,7 @@
 				Name="VCResourceCompilerTool"
 				AdditionalOptions="/nologo /l409"
 				PreprocessorDefinitions="WIN32;_WINDOWS;STRICT;NDEBUG;WINVER=0x0501"
-				AdditionalIncludeDirectories="wtl\Include;.;$(IntDir)"
+				AdditionalIncludeDirectories="wtl\Include;pugixml;.;$(IntDir)"
 			/>
 			<Tool
 				Name="VCPreLinkEventTool"
@@ -602,6 +602,19 @@
 			</File>
 			<File
 				RelativePath="setvcvars.cmd"
+				>
+			</File>
+		</Filter>
+		<Filter
+			Name="pugixml"
+			Filter=""
+			>
+			<File
+				RelativePath="pugixml\pugiconfig.hpp"
+				>
+			</File>
+			<File
+				RelativePath="pugixml\pugixml.hpp"
 				>
 			</File>
 		</Filter>

@@ -69,6 +69,8 @@
 #define CLL_NO_ENSURE_VERSION_CLASS
 #include "util/LoadLibrary.h"
 #include "util/VersionInfo.h"
+#define _ALLOW_RTCc_IN_STL
+#include "pugixml.hpp"
 
 using ATL::CAccessToken;
 using ATL::CAtlMap;
@@ -1758,7 +1760,10 @@ public:
 
     LRESULT OnSaveAs(WORD /*wNotifyCode*/, WORD /*wID*/, HWND /*hWndCtl*/, BOOL& /*bHandled*/)
     {
-        LPCTSTR lpmszFilter = _T("Text files\0*.txt\0All files\0*.*\0\0");
+#ifdef _DEBUG
+        SaveAs_(_T("C:\\Users\\Oliver\\Desktop\\ntobjx.txt"), m_treeview.ObjectRoot());
+#else
+        LPCTSTR lpmszFilter = _T("Text files\0*.txt\0XML files\0*.xml\0All files\0*.*\0\0");
         LPCTSTR lpszDefExt = _T("txt");
         LPCTSTR lpszFileName = _T("ntobjx.txt");
         DWORD const dwFlags = OFN_HIDEREADONLY | OFN_OVERWRITEPROMPT;
@@ -1768,6 +1773,7 @@ public:
             ATLTRACE2(_T("The picked file is: %s\n"), dlg.m_szFileName);
             SaveAs_(dlg.m_szFileName, m_treeview.ObjectRoot());
         }
+#endif // _DEBUG
         return 0;
     }
 
@@ -1970,42 +1976,145 @@ private:
         ::SetWindowText(m_hWndStatusBar, fullName);
     }
 
-    void OutputDirectory_(FILE* f, Directory& current, CString Prefix = _T(""))
+    class IObjectDirectoryDumper
     {
-        if(0 == Prefix.GetLength())
-        {
-            _ftprintf(f, _T("\\\n"));
-            Prefix = _T("\t");
-        }
-        for(size_t i = 0; i < current.size(); i++)
-        {
-            GenericObject* entry = current[i];
-            SymbolicLink const* symlink = dynamic_cast<SymbolicLink const*>(entry);
-            Directory* directory = dynamic_cast<Directory*>(entry);
+    public:
+        virtual void DirectoryObject(const Directory* obj) = 0;
+        virtual void SymlinkObject(const SymbolicLink* obj) = 0;
+        virtual void ContainedObject(const GenericObject* obj) = 0;
+        virtual LPCTSTR getFileName() const = 0;
 
-            if(directory)
+        virtual void operator()(Directory& current)
+        {
+            for (size_t i = 0; i < current.size(); i++)
             {
-                _ftprintf(f, _T("%s\\%s [%s]\n"), Prefix.GetString(), directory->name().GetString(), directory->type().GetString());
-                CString newPrefix(Prefix + _T("\t"));
-                OutputDirectory_(f, *directory, newPrefix);
-                continue;
+                GenericObject* entry = current[i];
+
+                if (Directory* directory = dynamic_cast<Directory*>(entry))
+                {
+                    this->DirectoryObject(directory);
+                    operator()(*directory);
+                    continue;
+                }
+                if (SymbolicLink const* symlink = dynamic_cast<SymbolicLink const*>(entry))
+                {
+                    this->SymlinkObject(symlink);
+                    continue;
+                }
+                this->ContainedObject(entry);
             }
-            if(symlink)
-            {
-                _ftprintf(f, _T("%s%s [%s] -> %s\n"), Prefix.GetString(), symlink->name().GetString(), symlink->type().GetString(), symlink->target().GetString());
-                continue;
-            }
-            _ftprintf(f, _T("%s%s [%s]\n"), Prefix.GetString(), entry->name().GetString(), entry->type().GetString());
         }
-    }
+    };
+
+    class CXmlObjectDirectoryDumper :
+        public IObjectDirectoryDumper
+    {
+        pugi::xml_document m_document;
+        pugi::xml_node m_rootNode;
+        CString m_fileName;
+    public:
+        CXmlObjectDirectoryDumper(LPCTSTR lpszFileName)
+            : m_document()
+            , m_rootNode(m_document.append_child(_T("RootObject")))
+            , m_fileName(lpszFileName)
+        {
+        }
+
+        ~CXmlObjectDirectoryDumper()
+        {
+            ATLTRACE2(_T("Saving XML document to %s.\n"), m_fileName.GetString());
+            m_document.save_file(m_fileName.GetString());
+        }
+
+        void DirectoryObject(const Directory* obj)
+        {
+            ATLASSERT(obj != NULL);
+        }
+
+        void SymlinkObject(const SymbolicLink* obj)
+        {
+            ATLASSERT(obj != NULL);
+        }
+
+        void ContainedObject(const GenericObject* obj)
+        {
+            ATLASSERT(obj != NULL);
+        }
+
+        LPCTSTR getFileName() const
+        {
+            return m_fileName.GetString();
+        }
+    };
+
+    class CTxtObjectDirectoryDumper :
+        public IObjectDirectoryDumper
+    {
+        FILE* m_file;
+        bool m_bOpened;
+        CString m_fileName;
+    public:
+        CTxtObjectDirectoryDumper(LPCTSTR lpszFileName)
+            : m_file(NULL)
+            , m_bOpened(false)
+            , m_fileName(lpszFileName)
+        {
+            m_bOpened = (0 == _tfopen_s(&m_file, lpszFileName, _T("w+, ccs=UTF-8")));
+            if (m_bOpened)
+            {
+                _ftprintf(m_file, _T("\\\n")); // Root of object manager namespace
+            }
+        }
+
+        ~CTxtObjectDirectoryDumper()
+        {
+            ATLTRACE2(_T("Saving text document to %s.\n"), m_fileName.GetString());
+            m_bOpened = (0 != fclose(m_file));
+        }
+
+        void DirectoryObject(const Directory* obj)
+        {
+            ATLASSERT(obj != NULL);
+            LPCTSTR linePrefix = _T("\t");
+            _ftprintf(m_file, _T("%s\\%s [%s]\n"), linePrefix, obj->name().GetString(), obj->type().GetString());
+        }
+
+        void SymlinkObject(const SymbolicLink* obj)
+        {
+            ATLASSERT(obj != NULL);
+            LPCTSTR linePrefix = _T("\t");
+            _ftprintf(m_file, _T("%s%s [%s] -> %s\n"), linePrefix, obj->name().GetString(), obj->type().GetString(), obj->target().GetString());
+        }
+
+        void ContainedObject(const GenericObject* obj)
+        {
+            ATLASSERT(obj != NULL);
+            LPCTSTR linePrefix = _T("\t");
+            _ftprintf(m_file, _T("%s%s [%s]\n"), linePrefix, obj->name().GetString(), obj->type().GetString());
+        }
+
+        LPCTSTR getFileName() const
+        {
+            return m_fileName.GetString();
+        }
+    };
 
     void SaveAs_(LPCTSTR lpszFileName, Directory& objroot)
     {
-        FILE* f = NULL;
-        if(0 == _tfopen_s(&f, lpszFileName, _T("w+, ccs=UTF-8")))
+        if (size_t len = (lpszFileName) ? _tcslen(lpszFileName) : 0)
         {
-            OutputDirectory_(f, objroot);
-            fclose(f);
+            if ((len > 4) && (0 == _tcsicmp(_T(".xml"), &lpszFileName[len -4])))
+            {
+                ATLTRACE2(_T("Assuming the user wants to save an XML, based on extension: %s\n"), lpszFileName);
+                CXmlObjectDirectoryDumper dump(lpszFileName);
+                dump(objroot);
+            }
+            else
+            {
+                ATLTRACE2(_T("Assuming the user wants to save an TXT, based on extension: %s\n"), lpszFileName);
+                CTxtObjectDirectoryDumper dump(lpszFileName);
+                dump(objroot);
+            }
         }
     }
 };

@@ -110,7 +110,7 @@ solution (iif(release, slnname, "ntobjx"))
         targetname      ("ntobjx")
         flags           {"StaticRuntime", "Unicode", "NativeWChar", "ExtraWarnings", "WinMain", "NoMinimalRebuild", "NoIncrementalLink", "NoEditAndContinue"}
         targetdir       (iif(release, slnname, "build"))
-        includedirs     {"wtl\\Include"}
+        includedirs     {"wtl/Include", "pugixml"}
         objdir          (int_dir)
         links           {"ntdll-delayed", "version"}
         resoptions      {"/nologo", "/l409"}
@@ -122,6 +122,7 @@ solution (iif(release, slnname, "ntobjx"))
         {
             "wtl/Include/*.h",
             "ntdll-stubs/*.txt",
+            "pugixml/*.hpp",
             "*.h", "util/*.h", "util/*.hpp",
             "*.rc",
             "*.cpp",
