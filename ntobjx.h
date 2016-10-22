@@ -2050,18 +2050,13 @@ private:
 
         void SymlinkObject(const SymbolicLink* obj)
         {
-            ATLASSERT(obj != NULL);
-            pugi::xml_node node = m_currentNode.append_child(_T(OBJTYPESTR_SYMBOLICLINK));
-            ATLVERIFY(node.append_attribute(_T("name")).set_value(obj->name().GetString()));
-            ATLVERIFY(node.append_attribute(_T("target")).set_value(obj->target().GetString()));
+            pugi::xml_node node = AddStandardObject_(obj);
+            ATLVERIFY(node.append_attribute(_T("link")).set_value(obj->target().GetString()));
         }
 
         void ContainedObject(const GenericObject* obj)
         {
-            ATLASSERT(obj != NULL);
-            pugi::xml_node node = m_currentNode.append_child(_T("Object"));
-            ATLVERIFY(node.append_attribute(_T("type")).set_value(obj->type().GetString()));
-            ATLVERIFY(node.append_attribute(_T("name")).set_value(obj->name().GetString()));
+            (void)AddStandardObject_(obj);
         }
 
         void EnterDirectory(const Directory* obj)
@@ -2080,6 +2075,16 @@ private:
         LPCTSTR getFileName() const
         {
             return m_fileName.GetString();
+        }
+
+    private:
+        pugi::xml_node AddStandardObject_(const GenericObject* obj)
+        {
+            ATLASSERT(obj != NULL);
+            pugi::xml_node node = m_currentNode.append_child(_T("Object"));
+            ATLVERIFY(node.append_attribute(_T("type")).set_value(obj->type().GetString()));
+            ATLVERIFY(node.append_attribute(_T("name")).set_value(obj->name().GetString()));
+            return node;
         }
     };
 #endif // !NTOBJX_NO_XML_EXPORT
