@@ -1003,7 +1003,7 @@ public:
 
     LRESULT OnTVItemExpanding(int /*idCtrl*/, LPNMHDR pnmh, BOOL& bHandled)
     {
-        ATLTRACE2(_T(__FUNCTION__ "\n"));
+        ATLTRACE2(_T("%s\n"), _T(__FUNCTION__));
         LPNMTREEVIEW pnmtv = reinterpret_cast<LPNMTREEVIEW>(pnmh);
         // Don't allow to collapse the root item (which is the one without a pointer to the NtObjMgr::Directory)
         if((TVE_COLLAPSE == pnmtv->action) && (pnmtv->itemNew.hItem == GetRootItem()))
@@ -1054,7 +1054,7 @@ public:
 
     LRESULT OnTVSelChanged(int /*idCtrl*/, LPNMHDR pnmh, BOOL& bHandled)
     {
-        ATLTRACE2(_T(__FUNCTION__ "\n"));
+        ATLTRACE2(_T("%s\n"), _T(__FUNCTION__));
         LPNMTREEVIEW pnmtv = reinterpret_cast<LPNMTREEVIEW>(pnmh);
         ATLASSERT(NULL != pnmtv);
         bHandled = FALSE;
@@ -1103,7 +1103,7 @@ public:
 
     inline void SelectRoot()
     {
-        ATLTRACE2(_T(__FUNCTION__ "\n"));
+        ATLTRACE2(_T("%s\n"), _T(__FUNCTION__));
         (void)SelectItem(GetRootItem());
     }
 
@@ -1391,25 +1391,32 @@ public:
         switch(wParam)
         {
         case VK_RETURN:
-            if(int idx = GetNextItem(-1, LVNI_SELECTED))
             {
-                ATLASSERT(1 == GetSelectedCount());
-                if(-1 != idx)
+                int idx = GetNextItem(-1, LVNI_SELECTED);
+                ATLTRACE2(_T("%i == GetNextItem(-1, LVNI_SELECTED)\n"), idx);
+                if (idx >= 0)
                 {
-                    OpenPropertiesOrDirectory_(idx);
+                    ATLASSERT(1 == GetSelectedCount());
+                    if (-1 != idx)
+                    {
+                        OpenPropertiesOrDirectory_(idx);
+                    }
                 }
             }
             break;
         case VK_TAB:
             GetParent().GetNextDlgTabItem(m_hWnd).SetFocus(); // Allows to still use tab to change focus
             return 0;
+        case VK_BACK:
+            // FIXME|TODO
+            break;
         }
         return DefWindowProc(uMsg, wParam, lParam);
     }
 
     LRESULT OnDoubleClick(UINT /*uMsg*/, WPARAM /*wParam*/, LPARAM /*lParam*/, BOOL& /*bHandled*/)
     {
-        ATLTRACE2(_T(__FUNCTION__ "\n"));
+        ATLTRACE2(_T("%s\n"), _T(__FUNCTION__));
         // Find where the user clicked, so we know the item
         LVHITTESTINFO lvhtti = {0};
         CPoint pt;
@@ -1425,7 +1432,7 @@ public:
 
     LRESULT OnHeaderItemClick(int /*idCtrl*/, LPNMHDR pnmh, BOOL& /*bHandled*/)
     {
-        ATLTRACE2(_T(__FUNCTION__ "\n"));
+        ATLTRACE2(_T("%s\n"), _T(__FUNCTION__));
         LPNMHEADER p = reinterpret_cast<LPNMHEADER>(pnmh);
         if(p->iButton == 0)
         {
@@ -1441,7 +1448,6 @@ public:
 
     LRESULT OnLVItemChanged(int /*idCtrl*/, LPNMHDR pnmh, BOOL& bHandled)
     {
-        ATLTRACE2(_T(__FUNCTION__ "\n"));
         LPNMLISTVIEW pnmlv = reinterpret_cast<LPNMLISTVIEW>(pnmh);
         ATLASSERT(NULL != pnmlv);
         bHandled = FALSE;
@@ -1491,6 +1497,7 @@ private:
             {
                 if(dir->size())
                 {
+                    // FIXME|TODO: record the previous selected directory here? (for navigation)
                     // Tell the frame to update the listview with the new Directory
                     (void)::SendMessage(m_hFrameWnd, WM_VISIT_DIRECTORY, 0, reinterpret_cast<LPARAM>(dir));
                     return;
@@ -1837,7 +1844,7 @@ public:
     {
         if(Directory* dir = reinterpret_cast<Directory*>(lParam))
         {
-            ATLTRACE2(_T(__FUNCTION__ "\n"));
+            ATLTRACE2(_T("%s\n"), _T(__FUNCTION__));
             VisitDirectory_(dir);
             m_activeObject = dir;
             SetStatusBarItem_(dir);
@@ -1949,7 +1956,7 @@ private:
 
     void Navigate_(bool /*forward*/)
     {
-        ATLTRACE2(_T(__FUNCTION__ "\n"));
+        ATLTRACE2(_T("%s\n"), _T(__FUNCTION__));
     }
 
     void VisitDirectory_(Directory* dir)
