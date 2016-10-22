@@ -1763,9 +1763,9 @@ public:
     LRESULT OnSaveAs(WORD /*wNotifyCode*/, WORD /*wID*/, HWND /*hWndCtl*/, BOOL& /*bHandled*/)
     {
 #ifdef NTOBJX_NO_XML_EXPORT
-        LPCTSTR lpmszFilter = _T("Text files\0*.txt\0XML files\0*.xml\0All files\0*.*\0\0");
-#else
         LPCTSTR lpmszFilter = _T("Text files\0*.txt\0All files\0*.*\0\0");
+#else
+        LPCTSTR lpmszFilter = _T("Text files\0*.txt\0XML files\0*.xml\0All files\0*.*\0\0");
 #endif // !NTOBJX_NO_XML_EXPORT
         LPCTSTR lpszDefExt = _T("txt");
         LPCTSTR lpszFileName = _T("ntobjx.txt");
