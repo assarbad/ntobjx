@@ -1003,6 +1003,7 @@ public:
 
     LRESULT OnTVItemExpanding(int /*idCtrl*/, LPNMHDR pnmh, BOOL& bHandled)
     {
+        ATLTRACE2(_T(__FUNCTION__ "\n"));
         LPNMTREEVIEW pnmtv = reinterpret_cast<LPNMTREEVIEW>(pnmh);
         // Don't allow to collapse the root item (which is the one without a pointer to the NtObjMgr::Directory)
         if((TVE_COLLAPSE == pnmtv->action) && (pnmtv->itemNew.hItem == GetRootItem()))
@@ -1053,6 +1054,7 @@ public:
 
     LRESULT OnTVSelChanged(int /*idCtrl*/, LPNMHDR pnmh, BOOL& bHandled)
     {
+        ATLTRACE2(_T(__FUNCTION__ "\n"));
         LPNMTREEVIEW pnmtv = reinterpret_cast<LPNMTREEVIEW>(pnmh);
         ATLASSERT(NULL != pnmtv);
         bHandled = FALSE;
@@ -1101,6 +1103,7 @@ public:
 
     inline void SelectRoot()
     {
+        ATLTRACE2(_T(__FUNCTION__ "\n"));
         (void)SelectItem(GetRootItem());
     }
 
@@ -1406,6 +1409,7 @@ public:
 
     LRESULT OnDoubleClick(UINT /*uMsg*/, WPARAM /*wParam*/, LPARAM /*lParam*/, BOOL& /*bHandled*/)
     {
+        ATLTRACE2(_T(__FUNCTION__ "\n"));
         // Find where the user clicked, so we know the item
         LVHITTESTINFO lvhtti = {0};
         CPoint pt;
@@ -1421,6 +1425,7 @@ public:
 
     LRESULT OnHeaderItemClick(int /*idCtrl*/, LPNMHDR pnmh, BOOL& /*bHandled*/)
     {
+        ATLTRACE2(_T(__FUNCTION__ "\n"));
         LPNMHEADER p = reinterpret_cast<LPNMHEADER>(pnmh);
         if(p->iButton == 0)
         {
@@ -1436,6 +1441,7 @@ public:
 
     LRESULT OnLVItemChanged(int /*idCtrl*/, LPNMHDR pnmh, BOOL& bHandled)
     {
+        ATLTRACE2(_T(__FUNCTION__ "\n"));
         LPNMLISTVIEW pnmlv = reinterpret_cast<LPNMLISTVIEW>(pnmh);
         ATLASSERT(NULL != pnmlv);
         bHandled = FALSE;
@@ -1831,6 +1837,7 @@ public:
     {
         if(Directory* dir = reinterpret_cast<Directory*>(lParam))
         {
+            ATLTRACE2(_T(__FUNCTION__ "\n"));
             VisitDirectory_(dir);
             m_activeObject = dir;
             SetStatusBarItem_(dir);
@@ -1942,7 +1949,7 @@ private:
 
     void Navigate_(bool /*forward*/)
     {
-
+        ATLTRACE2(_T(__FUNCTION__ "\n"));
     }
 
     void VisitDirectory_(Directory* dir)

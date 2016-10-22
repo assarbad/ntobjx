@@ -172,6 +172,11 @@ extern "C" int __cdecl __purecall(void)
 
 int WINAPI _tWinMain(HINSTANCE hInstance, HINSTANCE /*hPrevInstance*/, LPTSTR lpstrCmdLine, int nCmdShow)
 {
+#if 0 && defined(_DEBUG)
+    _CrtSetDbgFlag(_CRTDBG_ALLOC_MEM_DF | _CRTDBG_LEAK_CHECK_DF);
+    _CrtSetReportMode(_CRT_ERROR, _CRTDBG_MODE_DEBUG);
+#endif // _DEBUG
+
     HRESULT hRes = ::CoInitializeEx(NULL, COINIT_MULTITHREADED);
     ATLASSERT(SUCCEEDED(hRes));
 

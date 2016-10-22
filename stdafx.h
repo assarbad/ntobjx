@@ -17,6 +17,19 @@
 #   endif
 #endif
 
+#if 0 && defined(_DEBUG)
+// https://msdn.microsoft.com/en-us/library/x98tx3cf.aspx
+#   define _CRTDBG_MAP_ALLOC
+#   include <stdlib.h>
+#   include <crtdbg.h>
+/*
+#   ifndef DBG_NEW
+#       define DBG_NEW new ( _NORMAL_BLOCK , __FILE__ , __LINE__ )
+#       define new DBG_NEW
+#   endif
+*/
+#endif // _DEBUG
+
 #define _ATL_NO_MSIMG
 #define _ATL_NOFORCE_MANIFEST
 #define _ATL_NO_OPENGL
