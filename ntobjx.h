@@ -2051,7 +2051,7 @@ private:
         void SymlinkObject(const SymbolicLink* obj)
         {
             pugi::xml_node node = AddStandardObject_(obj);
-            ATLVERIFY(node.append_attribute(_T("link")).set_value(obj->target().GetString()));
+            ATLVERIFY(node.append_attribute(_T("target")).set_value(obj->target().GetString()));
         }
 
         void ContainedObject(const GenericObject* obj)
