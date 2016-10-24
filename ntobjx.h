@@ -71,7 +71,10 @@
 #include "util/VersionInfo.h"
 #ifndef NTOBJX_NO_XML_EXPORT
 #define _ALLOW_RTCc_IN_STL
+#pragma warning(push)
+#pragma warning(disable:4995)
 #include "pugixml.hpp"
+#pragma warning(pop)
 #endif
 
 using ATL::CAccessToken;
@@ -87,8 +90,9 @@ using NtObjMgr::otDirectory;
 using NtObjMgr::ObjectHandle;
 using WTL::CFileDialog;
 
-#define WM_VISIT_DIRECTORY    (WM_USER+100)
-#define WM_SET_ACTIVE_OBJECT  (WM_USER+101)
+#define WM_VISIT_DIRECTORY           (WM_USER+100)
+#define WM_SET_ACTIVE_OBJECT         (WM_USER+101)
+#define WM_SELECT_TREEVIEW_DIRECTORY (WM_USER+102)
 
 // Handler prototypes (uncomment arguments if needed):
 //  LRESULT MessageHandler(UINT /*uMsg*/, WPARAM /*wParam*/, LPARAM /*lParam*/, BOOL& /*bHandled*/)
@@ -497,6 +501,7 @@ class CObjectPropertySheet :
 
         BEGIN_MSG_MAP(CObjectDetailsPage)
             MESSAGE_HANDLER(WM_INITDIALOG, OnInitDialog)
+            MESSAGE_HANDLER(WM_GETDLGCODE, OnGetDlgCode)
             CHAIN_MSG_MAP(baseClass)
         END_MSG_MAP()
 
@@ -577,6 +582,11 @@ class CObjectPropertySheet :
                 m_stcCreationTime.SetWindowText(str);
             }
             return TRUE;
+        }
+
+        LRESULT OnGetDlgCode(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL& /*bHandled*/)
+        {
+            return DLGC_WANTALLKEYS | DefDlgProc(*this, uMsg, wParam, lParam);
         }
     };
 
@@ -811,6 +821,7 @@ public:
 
     BEGIN_MSG_MAP(CAboutDlg)
         MESSAGE_HANDLER(WM_INITDIALOG, OnInitDialog)
+        MESSAGE_HANDLER(WM_GETDLGCODE, OnGetDlgCode)
         MESSAGE_HANDLER(WM_CTLCOLORSTATIC, OnCtlColorStatic)
         COMMAND_ID_HANDLER(IDOK, OnCloseCmd)
         COMMAND_ID_HANDLER(IDCANCEL, OnCloseCmd)
@@ -880,6 +891,11 @@ public:
         }
 
         return TRUE;
+    }
+
+    LRESULT OnGetDlgCode(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL& /*bHandled*/)
+    {
+        return DLGC_WANTALLKEYS | DefDlgProc(*this, uMsg, wParam, lParam);
     }
 
     LRESULT OnCtlColorStatic(UINT /*uMsg*/, WPARAM wParam, LPARAM lParam, BOOL& bHandled)
@@ -1054,13 +1070,13 @@ public:
 
     LRESULT OnTVSelChanged(int /*idCtrl*/, LPNMHDR pnmh, BOOL& bHandled)
     {
-        ATLTRACE2(_T("%s\n"), _T(__FUNCTION__));
         LPNMTREEVIEW pnmtv = reinterpret_cast<LPNMTREEVIEW>(pnmh);
         ATLASSERT(NULL != pnmtv);
         bHandled = FALSE;
         Directory* dir = reinterpret_cast<Directory*>(pnmtv->itemNew.lParam);
         if(m_bInitialized && dir)
         {
+            ATLTRACE2(_T("%s: %s\n"), _T(__FUNCTION__), dir->fullname().GetString());
             // Tell the frame to update the listview with the new Directory
             (void)::SendMessage(m_hFrameWnd, WM_VISIT_DIRECTORY, 0, reinterpret_cast<LPARAM>(dir));
             bHandled = TRUE;
@@ -1107,28 +1123,35 @@ public:
         (void)SelectItem(GetRootItem());
     }
 
-    inline HTREEITEM LookupTreeItem(Directory* dir)
+    inline CTreeItem LookupTreeItem(Directory* dir)
     {
         HTREEITEM ret = NULL;
         if(m_reverseLookup.Lookup(dir, ret))
         {
-            return ret;
+            ATLTRACE2(_T("Found %s in treeview\n"), dir->fullname().GetString());
+            return CTreeItem(ret, this);
         }
         return NULL;
     }
 
-    void SelectIfNotSelected(Directory* /*dir*/)
+    void SelectDirectory(Directory* dir, BOOL bIfNotAlreadySelected = FALSE)
     {
-/*
-        CTreeItem ti = LookupTreeItem(dir);
+        CTreeItem ti(LookupTreeItem(dir));
         if(!ti.IsNull())
         {
-            if(0 == (TVIS_SELECTED & ti.GetState(TVIS_SELECTED)))
+            if (bIfNotAlreadySelected)
+            {
+                if (0 == (TVIS_SELECTED & ti.GetState(TVIS_SELECTED))) // better select always? ...
+                {
+                    ti.Select();
+                }
+            }
+            else // unconditionally
             {
                 ti.Select();
             }
+
         }
-*/
     }
 
 private:
@@ -1366,8 +1389,7 @@ public:
                 case ID_POPUPMENU_OPENDIRECTORY:
                     if(Directory* dir = dynamic_cast<Directory*>(itemobj))
                     {
-                        // Tell the frame to update the listview with the new Directory
-                        (void)::SendMessage(m_hFrameWnd, WM_VISIT_DIRECTORY, 0, reinterpret_cast<LPARAM>(dir));
+                        OpenDirectory_(dir);
                     }
                     break;
                 default:
@@ -1484,8 +1506,17 @@ public:
 
 private:
 
-    void OpenPropertiesOrDirectory_(int idx)
+    void OpenDirectory_(Directory* dir) const
     {
+        ATLASSERT(dir != NULL);
+        ATLTRACE2(_T("%s: %s\n"), _T(__FUNCTION__), dir->fullname().GetString());
+        // Tell the frame to update the listview with the new Directory
+        (void)::SendMessage(m_hFrameWnd, WM_SELECT_TREEVIEW_DIRECTORY, 0, reinterpret_cast<LPARAM>(dir));
+    }
+
+    void OpenPropertiesOrDirectory_(int idx) const
+    {
+        ATLASSERT(idx != -1);
         LVITEM item = {0};
         item.iItem = idx;
         item.mask = LVIF_PARAM;
@@ -1497,9 +1528,7 @@ private:
             {
                 if(dir->size())
                 {
-                    // FIXME|TODO: record the previous selected directory here? (for navigation)
-                    // Tell the frame to update the listview with the new Directory
-                    (void)::SendMessage(m_hFrameWnd, WM_VISIT_DIRECTORY, 0, reinterpret_cast<LPARAM>(dir));
+                    OpenDirectory_(dir);
                     return;
                 }
                 // If it's empty, we'll show the properties instead, the user may still navigate
@@ -1509,7 +1538,7 @@ private:
         ::SendMessage(GetParent(), WM_COMMAND, MAKEWPARAM(ID_VIEW_PROPERTIES, 0), reinterpret_cast<LPARAM>(m_hWnd));
     }
 
-    bool ItemFromHitTest_(LVHITTESTINFO& lvhtti, CPoint& pt)
+    bool ItemFromHitTest_(LVHITTESTINFO& lvhtti, CPoint& pt) const
     {
         ATLVERIFY(::GetCursorPos(&pt));
         ATLTRACE2(_T("Point of click: %d/%d\n"), pt.x, pt.y);
@@ -1629,6 +1658,7 @@ public:
         MESSAGE_HANDLER(WM_SYSCOMMAND, OnSysCommand)
         MESSAGE_HANDLER(WM_APPCOMMAND, OnAppCommand)
         MESSAGE_HANDLER(WM_VISIT_DIRECTORY, OnVisitDirectory)
+        MESSAGE_HANDLER(WM_SELECT_TREEVIEW_DIRECTORY, OnSelectTreeviewDirectory)
         MESSAGE_HANDLER(WM_SET_ACTIVE_OBJECT, OnSetActiveObject)
         MESSAGE_HANDLER(WM_MENUSELECT, OnMenuSelect)
         COMMAND_ID_HANDLER(ID_APP_EXIT, OnFileExit)
@@ -1840,24 +1870,35 @@ public:
         return 0;
     }
 
+    // lParam contains a Directory*
     LRESULT OnVisitDirectory(UINT /*uMsg*/, WPARAM /*wParam*/, LPARAM lParam, BOOL& /*bHandled*/)
     {
+        ATLASSERT(lParam != 0);
         if(Directory* dir = reinterpret_cast<Directory*>(lParam))
         {
-            ATLTRACE2(_T("%s\n"), _T(__FUNCTION__));
+            ATLTRACE2(_T("%s: %s\n"), _T(__FUNCTION__), dir->fullname().GetString());
             VisitDirectory_(dir);
-            m_activeObject = dir;
-            SetStatusBarItem_(dir);
+            SetActiveObject_(dir);
         }
         return 0;
     }
 
-    LRESULT OnSetActiveObject(UINT /*uMsg*/, WPARAM /*wParam*/, LPARAM lParam, BOOL& /*bHandled*/)
+    LRESULT OnSelectTreeviewDirectory(UINT /*uMsg*/, WPARAM /*wParam*/, LPARAM lParam, BOOL& /*bHandled*/)
+    {
+        ATLASSERT(lParam != 0);
+        if (Directory* dir = reinterpret_cast<Directory*>(lParam))
+        {
+            ATLTRACE2(_T("%s: %s\n"), _T(__FUNCTION__), dir->fullname().GetString());
+            m_treeview.SelectDirectory(dir);
+        }
+        return 0;
+    }
+
+    inline LRESULT OnSetActiveObject(UINT /*uMsg*/, WPARAM /*wParam*/, LPARAM lParam, BOOL& /*bHandled*/)
     {
         if(GenericObject* obj = reinterpret_cast<GenericObject*>(lParam))
         {
-            m_activeObject = obj;
-            SetStatusBarItem_(obj);
+            SetActiveObject_(obj);
         }
         return 0;
     }
@@ -1887,7 +1928,7 @@ public:
         return 0;
     }
 
-    LRESULT OnFileExit(WORD /*wNotifyCode*/, WORD /*wID*/, HWND /*hWndCtl*/, BOOL& /*bHandled*/)
+    inline LRESULT OnFileExit(WORD /*wNotifyCode*/, WORD /*wID*/, HWND /*hWndCtl*/, BOOL& /*bHandled*/)
     {
         PostMessage(WM_CLOSE);
         return 0;
@@ -1959,13 +2000,18 @@ private:
         ATLTRACE2(_T("%s\n"), _T(__FUNCTION__));
     }
 
+    inline void SetActiveObject_(GenericObject* obj)
+    {
+        m_activeObject = obj;
+        SetStatusBarItem_(obj);
+    }
+
     void VisitDirectory_(Directory* dir)
     {
 #ifdef _DEBUG
         LPCWSTR fullName = (dir) ? dir->fullname().GetString() : _T("");
         ATLTRACE2(_T("Visiting Directory: '%s'\n"), fullName);
 #endif // _DEBUG
-        m_treeview.SelectIfNotSelected(dir);
         m_listview.FillFromDirectory(*dir);
         // Keep a list of visited directories
         AddToVisitedList_(dir);
@@ -1986,7 +2032,7 @@ private:
         }
     }
 
-    void SetStatusBarItem_(GenericObject* obj)
+    inline void SetStatusBarItem_(GenericObject* obj)
     {
         LPCWSTR fullName = (obj) ? obj->fullname().GetString() : NULL;
         ::SetWindowText(m_hWndStatusBar, fullName);
