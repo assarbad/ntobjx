@@ -176,7 +176,7 @@ STYLE DS_SETFONT | DS_FIXEDSYS | WS_CHILD | WS_DISABLED | WS_CAPTION
 CAPTION "Object details"
 FONT 8, "MS Shell Dlg", 0, 0, 0x0
 BEGIN
-    GROUPBOX        "Basic object information",IDC_STATIC,7,7,265,119
+    GROUPBOX        "Basic object information",IDC_STATIC,7,7,265,119,BS_CENTER
     LTEXT           "&Name:",IDC_STATIC,12,18,22,8
     LTEXT           "&Full path:",IDC_STATIC,12,34,31,8
     LTEXT           "&Type:",IDC_STATIC,12,50,20,8
@@ -195,6 +195,14 @@ BEGIN
     LTEXT           "",IDC_QUOTA_NONPAGED,202,106,59,8,SS_NOPREFIX
     LTEXT           "Created:",IDC_STATIC,12,66,30,8
     CTEXT           "",IDC_OBJ_CREATION_TIME,48,66,218,8,SS_NOPREFIX
+    GROUPBOX        "Object-specific basic information",IDC_GROUP_OBJSPECIFIC,7,129,265,71,BS_CENTER | NOT WS_VISIBLE
+    EDITTEXT        IDC_EXPLANATION_WHY,15,140,249,54,ES_CENTER | ES_MULTILINE | ES_READONLY | NOT WS_VISIBLE | NOT WS_BORDER | NOT WS_TABSTOP
+    RTEXT           "Static",IDC_STATIC_OBJSPEC_NAME1,15,147,67,8,NOT WS_VISIBLE
+    RTEXT           "Static",IDC_STATIC_OBJSPEC_NAME2,15,162,67,8,NOT WS_VISIBLE
+    RTEXT           "Static",IDC_STATIC_OBJSPEC_NAME3,15,177,67,8,NOT WS_VISIBLE
+    LTEXT           "Static",IDC_STATIC_OBJSPEC_ATTR1,95,147,169,8,NOT WS_VISIBLE
+    LTEXT           "Static",IDC_STATIC_OBJSPEC_ATTR2,95,162,169,8,NOT WS_VISIBLE
+    LTEXT           "Static",IDC_STATIC_OBJSPEC_ATTR3,95,177,169,8,NOT WS_VISIBLE
 END
 
 
@@ -274,9 +282,16 @@ END
 
 STRINGTABLE
 BEGIN
-    IDR_MAINFRAME           "ntobjx: NT Objects"
+    IDR_MAINFRAME           "ntobjx - NT Objects"
     IDS_PROGRAM_DESCRIPTION "A program to explore the dark corners of NT"
     IDS_ABOUT_MENUITEM      "About ntobjx\tF12"
+    IDS_STATUSBAR_PANE1     "Pane 1"
+    IDS_STATUSBAR_PANE2     "Pane 2"
+    IDS_STATUSBAR_PANE3     "Pane 3"
+    IDS_OBJSPEC_NAME1_EVENT "Event state:"
+    IDS_OBJSPEC_NAME2_EVENT "Event type:"
+    IDS_OBJSPEC_ATTR2_EVENT_SYNC "SynchronizationEvent"
+    IDS_OBJSPEC_ATTR2_EVENT_NOTIFY "NotificationEvent"
 END
 
 STRINGTABLE
@@ -338,6 +353,27 @@ END
 STRINGTABLE
 BEGIN
     ID_FILE_SAVE_AS         "Save object tree as flat (UTF-8) text file"
+END
+
+STRINGTABLE
+BEGIN
+    IDS_OBJSPEC_NAME1_IOCOMPLETION "Depth:"
+    IDS_OBJSPEC_NAME1_KEY   "Last write time:"
+    IDS_OBJSPEC_NAME2_KEY   "Title index:"
+    IDS_OBJSPEC_NAME1_MUTANT "Abandoned:"
+    IDS_OBJSPEC_NAME2_MUTANT "Current count:"
+    IDS_OBJSPEC_NAME3_MUTANT "Owned by caller:"
+    IDS_OBJSPEC_NAME1_SECTION "Base address:"
+    IDS_OBJSPEC_NAME2_SECTION "Maximum size:"
+    IDS_OBJSPEC_NAME3_SECTION "Allocation attributes:"
+    IDS_OBJSPEC_NAME1_SEMAPHORE "Current count:"
+    IDS_OBJSPEC_NAME2_SEMAPHORE "Maximum count:"
+END
+
+STRINGTABLE
+BEGIN
+    IDS_OBJSPEC_NAME1_TIMER "Timer state:"
+    IDS_OBJSPEC_NAME2_TIMER "Remaining time:"
 END
 
 #endif    // English (United States) resources

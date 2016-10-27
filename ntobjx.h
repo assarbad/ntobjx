@@ -223,6 +223,46 @@ namespace
             ATLVERIFY(::CloseClipboard());
         }
     }
+
+    // Example from https://msdn.microsoft.com/en-us/library/windows/desktop/aa376389.aspx
+    BOOL IsUserAdmin()
+    {
+        BOOL bResult;
+        SID_IDENTIFIER_AUTHORITY NtAuthority = SECURITY_NT_AUTHORITY;
+        PSID AdministratorsGroup;
+        bResult = ::AllocateAndInitializeSid(&NtAuthority, 2, SECURITY_BUILTIN_DOMAIN_RID, DOMAIN_ALIAS_RID_ADMINS, 0, 0, 0, 0, 0, 0, &AdministratorsGroup);
+        if (bResult)
+        {
+            if (!::CheckTokenMembership(NULL, AdministratorsGroup, &bResult))
+            {
+                bResult = FALSE;
+            }
+            ::FreeSid(AdministratorsGroup);
+        }
+
+        return bResult;
+    }
+
+    BOOL IsElevated()
+    {
+        BOOL bResult = FALSE;
+        HANDLE hToken = NULL;
+        if (::OpenProcessToken(GetCurrentProcess(), TOKEN_QUERY, &hToken))
+        {
+            TOKEN_ELEVATION Elevation;
+            DWORD cbSize = sizeof(TOKEN_ELEVATION);
+            if (::GetTokenInformation(hToken, TokenElevation, &Elevation, sizeof(Elevation), &cbSize))
+            {
+                bResult = Elevation.TokenIsElevated;
+            }
+        }
+        if (hToken)
+        {
+            ::CloseHandle(hToken);
+        }
+
+        return bResult;
+    }
 } // anonymous namespace
 
 class CSuppressRedraw
@@ -490,11 +530,21 @@ class CObjectPropertySheet :
         CEdit           m_edtName;
         CEdit           m_edtFullname;
         CEdit           m_edtType;
+        CFont           m_font;
+        CBrush          m_bkBrush;
+        CEdit           m_edtExplanation;
         CStatic         m_stcRefByPtr;
         CStatic         m_stcRefByHdl;
         CStatic         m_stcQuotaPaged;
         CStatic         m_stcQuotaNonPaged;
         CStatic         m_stcCreationTime;
+        CStatic         m_stcGroupObjSpecific;
+        CStatic         m_stcObjSpecName1;
+        CStatic         m_stcObjSpecName2;
+        CStatic         m_stcObjSpecName3;
+        CStatic         m_stcObjSpecAttr1;
+        CStatic         m_stcObjSpecAttr2;
+        CStatic         m_stcObjSpecAttr3;
         CObjectDetailsPage(); // hide it
     public:
         enum { IDD = IDD_PROPERTIES };
@@ -502,6 +552,7 @@ class CObjectPropertySheet :
         BEGIN_MSG_MAP(CObjectDetailsPage)
             MESSAGE_HANDLER(WM_INITDIALOG, OnInitDialog)
             MESSAGE_HANDLER(WM_GETDLGCODE, OnGetDlgCode)
+            MESSAGE_HANDLER(WM_CTLCOLORSTATIC, OnCtlColorStatic)
             CHAIN_MSG_MAP(baseClass)
         END_MSG_MAP()
 
@@ -517,11 +568,19 @@ class CObjectPropertySheet :
             m_edtName.Attach(GetDlgItem(IDC_EDIT_NAME));
             m_edtFullname.Attach(GetDlgItem(IDC_EDIT_FULLNAME));
             m_edtType.Attach(GetDlgItem(IDC_EDIT_TYPE));
+            m_edtExplanation.Attach(GetDlgItem(IDC_EXPLANATION_WHY));
             m_stcRefByPtr.Attach(GetDlgItem(IDC_REF_BYPTR));
             m_stcRefByHdl.Attach(GetDlgItem(IDC_REF_BYHDL));
             m_stcQuotaPaged.Attach(GetDlgItem(IDC_QUOTA_PAGED));
             m_stcQuotaNonPaged.Attach(GetDlgItem(IDC_QUOTA_NONPAGED));
             m_stcCreationTime.Attach(GetDlgItem(IDC_OBJ_CREATION_TIME));
+            m_stcGroupObjSpecific.Attach(GetDlgItem(IDC_GROUP_OBJSPECIFIC));
+            m_stcObjSpecName1.Attach(GetDlgItem(IDC_STATIC_OBJSPEC_NAME1));
+            m_stcObjSpecName2.Attach(GetDlgItem(IDC_STATIC_OBJSPEC_NAME2));
+            m_stcObjSpecName3.Attach(GetDlgItem(IDC_STATIC_OBJSPEC_NAME3));
+            m_stcObjSpecAttr1.Attach(GetDlgItem(IDC_STATIC_OBJSPEC_ATTR1));
+            m_stcObjSpecAttr2.Attach(GetDlgItem(IDC_STATIC_OBJSPEC_ATTR2));
+            m_stcObjSpecAttr3.Attach(GetDlgItem(IDC_STATIC_OBJSPEC_ATTR3));
 
             if(m_obj)
             {
@@ -544,20 +603,9 @@ class CObjectPropertySheet :
                     m_stcQuotaPaged.SetWindowText(str);
                     str.Format(_T("%u"), m_objHdl.getObjectInfo().NonPagedPoolUsage);
                     m_stcQuotaNonPaged.SetWindowText(str);
-                    LARGE_INTEGER const& li = m_objHdl.getObjectInfo().CreationTime;
-                    if(li.QuadPart > 0)
-                    {
-                        ATLASSERT(li.HighPart >= 0); // anything else will fail our conversion below
-                        FILETIME ft = { li.LowPart, static_cast<DWORD>(li.HighPart) };
-                        SYSTEMTIME st;
-                        ATLVERIFY(FileTimeToSystemTime(&ft, &st));
-                        str.Format(_T("%04d-%02d-%02d %02d:%02d:%02d.%03d"), st.wYear, st.wMonth, st.wDay, st.wHour, st.wMinute, st.wSecond, st.wMilliseconds);
-                        m_stcCreationTime.SetWindowText(str);
-                    }
-                    else
-                    {
-                        m_stcCreationTime.SetWindowText(na);
-                    }
+                    m_stcCreationTime.SetWindowText(FormatCreationTime_(m_objHdl.getObjectInfo().CreationTime));
+
+                    ShowObjectSpecificInfo_();
                 }
                 else
                 {
@@ -581,12 +629,249 @@ class CObjectPropertySheet :
                 str.Format(_T("<Object open status: 0x%08X>"), status);
                 m_stcCreationTime.SetWindowText(str);
             }
+
+            NONCLIENTMETRICS ncm = { 0 };
+            ncm.cbSize = sizeof(ncm);
+
+            if (::SystemParametersInfo(SPI_GETNONCLIENTMETRICS, sizeof(ncm), &ncm, 0))
+            {
+                LOGFONT logFont;
+                memcpy(&logFont, &ncm.lfMessageFont, sizeof(LOGFONT));
+                logFont.lfWeight = FW_BOLD;
+                HFONT hFont = m_font.CreateFontIndirect(&logFont);
+                if (hFont)
+                {
+                    SendDlgItemMessage(IDC_EXPLANATION_WHY, WM_SETFONT, reinterpret_cast<WPARAM>(hFont));
+                }
+            }
+
+            LONG oldStyle = m_edtExplanation.GetWindowLong(GWL_STYLE);
+            m_edtExplanation.SetWindowLong(GWL_STYLE, oldStyle & ~ES_NOHIDESEL);
+            m_edtExplanation.SetSelNone(TRUE);
+
             return TRUE;
+        }
+
+        LRESULT OnCtlColorStatic(UINT /*uMsg*/, WPARAM wParam, LPARAM lParam, BOOL& bHandled)
+        {
+            HWND hStatic = reinterpret_cast<HWND>(lParam);
+            HDC hdcStatic = reinterpret_cast<HDC>(wParam);
+            switch (::GetDlgCtrlID(hStatic))
+            {
+            case IDC_EXPLANATION_WHY:
+            {
+                ::SetTextColor(hdcStatic, RGB(0x80, 0, 0));
+                CDC dc(GetDC());
+                COLORREF dlgBkColor = dc.GetBkColor();
+                ::SetBkColor(hdcStatic, dlgBkColor);
+                m_bkBrush = ::CreateSolidBrush(dlgBkColor);
+                return reinterpret_cast<LRESULT>(HBRUSH(m_bkBrush));
+            }
+            default:
+                break;
+            }
+            bHandled = FALSE;
+            return FALSE;
         }
 
         LRESULT OnGetDlgCode(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL& /*bHandled*/)
         {
             return DLGC_WANTALLKEYS | DefDlgProc(*this, uMsg, wParam, lParam);
+        }
+
+    private:
+
+        static CString FormatCreationTime_(LARGE_INTEGER const& li)
+        {
+            CString str;
+            if (li.QuadPart > 0)
+            {
+                ATLASSERT(li.HighPart >= 0); // anything else will fail our conversion below
+                FILETIME ft = { li.LowPart, static_cast<DWORD>(li.HighPart) };
+                SYSTEMTIME st;
+                ATLVERIFY(FileTimeToSystemTime(&ft, &st));
+                str.Format(_T("%04d-%02d-%02d %02d:%02d:%02d.%03d"), st.wYear, st.wMonth, st.wDay, st.wHour, st.wMinute, st.wSecond, st.wMilliseconds);
+            }
+            else
+            {
+                str = _T("n/a");
+            }
+            return str;
+        }
+
+        void SetAttributesVisible_(int num)
+        {
+            m_stcGroupObjSpecific.ShowWindow(SW_SHOWNOACTIVATE);
+            if (num < 0)
+                m_edtExplanation.ShowWindow(SW_SHOWNOACTIVATE);
+            if (num >= 1)
+            {
+                m_stcObjSpecName1.ShowWindow(SW_SHOWNOACTIVATE);
+                m_stcObjSpecAttr1.ShowWindow(SW_SHOWNOACTIVATE);
+            }
+            if (num >= 2)
+            {
+                m_stcObjSpecName2.ShowWindow(SW_SHOWNOACTIVATE);
+                m_stcObjSpecAttr2.ShowWindow(SW_SHOWNOACTIVATE);
+            }
+            if (num >= 3)
+            {
+                m_stcObjSpecName3.ShowWindow(SW_SHOWNOACTIVATE);
+                m_stcObjSpecAttr3.ShowWindow(SW_SHOWNOACTIVATE);
+            }
+        }
+
+        void ShowObjectSpecificError_(NTSTATUS statusCode)
+        {
+            CLoadLibrary ntdll(_T("ntdll.dll"));
+            CSimpleBuf<TCHAR> status(ntdll.formatMessage<TCHAR>(ntdll.getHandle(), static_cast<DWORD>(statusCode)));
+            m_edtExplanation.SetWindowText(status.Buffer());
+            SetAttributesVisible_(-1);
+        }
+
+        void ShowObjectSpecificInfo_()
+        {
+            CString str;
+            if (ObjectHandle::CEventBasicInformation const* info = m_objHdl.getEventBasicInfo())
+            {
+                if (*info)
+                {
+                    SetAttributesVisible_(2);
+                    ATLVERIFY(str.LoadString(IDS_OBJSPEC_NAME1_EVENT));
+                    m_stcObjSpecName1.SetWindowText(str);
+                    ATLVERIFY(str.LoadString(IDS_OBJSPEC_NAME2_EVENT));
+                    m_stcObjSpecName2.SetWindowText(str);
+                    str.Format(_T("%d"), info->EventState);
+                    m_stcObjSpecAttr1.SetWindowText(str);
+                    switch (info->EventType)
+                    {
+                    case SynchronizationEvent:
+                        ATLVERIFY(str.LoadString(IDS_OBJSPEC_ATTR2_EVENT_SYNC));
+                        break;
+                    case NotificationEvent:
+                        ATLVERIFY(str.LoadString(IDS_OBJSPEC_ATTR2_EVENT_NOTIFY));
+                        break;
+                    default:
+                        str.Format(_T("<unknown=%d>"), info->EventType);
+                        break;
+                    }
+                    m_stcObjSpecAttr2.SetWindowText(str);
+                }
+                else
+                    ShowObjectSpecificError_(info->getQueryStatus());
+            }
+
+            if (ObjectHandle::CIoCompletionBasicInformation const* info = m_objHdl.getIoCompletionBasicInfo())
+            {
+                if (*info)
+                {
+                    SetAttributesVisible_(1);
+                    ATLVERIFY(str.LoadString(IDS_OBJSPEC_NAME1_IOCOMPLETION));
+                    m_stcObjSpecName1.SetWindowText(str);
+                    str.Format(_T("%u"), info->Depth);
+                    m_stcObjSpecAttr1.SetWindowText(str);
+                }
+                else
+                    ShowObjectSpecificError_(info->getQueryStatus());
+            }
+
+            if (ObjectHandle::CKeyBasicInformation const* info = m_objHdl.getKeyBasicInfo())
+            {
+                if (*info)
+                {
+                    SetAttributesVisible_(2);
+                    ATLVERIFY(str.LoadString(IDS_OBJSPEC_NAME1_KEY));
+                    m_stcObjSpecName1.SetWindowText(str);
+                    ATLVERIFY(str.LoadString(IDS_OBJSPEC_NAME2_KEY));
+                    m_stcObjSpecName2.SetWindowText(str);
+                    str = FormatCreationTime_(info->LastWriteTime);
+                    m_stcObjSpecAttr1.SetWindowText(str);
+                    str.Format(_T("%u"), info->TitleIndex);
+                    m_stcObjSpecAttr2.SetWindowText(str);
+                }
+                else
+                    ShowObjectSpecificError_(info->getQueryStatus());
+            }
+
+            if (ObjectHandle::CMutantBasicInformation const* info = m_objHdl.getMutantBasicInfo())
+            {
+                if (*info)
+                {
+                    SetAttributesVisible_(3);
+                    ATLVERIFY(str.LoadString(IDS_OBJSPEC_NAME1_MUTANT));
+                    m_stcObjSpecName1.SetWindowText(str);
+                    ATLVERIFY(str.LoadString(IDS_OBJSPEC_NAME2_MUTANT));
+                    m_stcObjSpecName2.SetWindowText(str);
+                    ATLVERIFY(str.LoadString(IDS_OBJSPEC_NAME3_MUTANT));
+                    m_stcObjSpecName3.SetWindowText(str);
+                    str = info->AbandonedState ? _T("yes") : _T("no");
+                    m_stcObjSpecAttr1.SetWindowText(str);
+                    str.Format(_T("%d"), info->CurrentCount);
+                    m_stcObjSpecAttr2.SetWindowText(str);
+                    str = info->OwnedByCaller ? _T("yes") : _T("no");
+                    m_stcObjSpecAttr3.SetWindowText(str);
+                }
+                else
+                    ShowObjectSpecificError_(info->getQueryStatus());
+            }
+
+            if (ObjectHandle::CSectionBasicInformation const* info = m_objHdl.getSectionBasicInfo())
+            {
+                if (*info)
+                {
+                    SetAttributesVisible_(3);
+                    ATLVERIFY(str.LoadString(IDS_OBJSPEC_NAME1_SECTION));
+                    m_stcObjSpecName1.SetWindowText(str);
+                    ATLVERIFY(str.LoadString(IDS_OBJSPEC_NAME2_SECTION));
+                    m_stcObjSpecName2.SetWindowText(str);
+                    ATLVERIFY(str.LoadString(IDS_OBJSPEC_NAME3_SECTION));
+                    m_stcObjSpecName3.SetWindowText(str);
+                    str.Format(_T("0x%p"), info->BaseAddress);
+                    m_stcObjSpecAttr1.SetWindowText(str);
+                    str.Format(_T("%I64d"), info->MaximumSize.QuadPart);
+                    m_stcObjSpecAttr2.SetWindowText(str);
+                    str.Format(_T("%08X"), info->AllocationAttributes);
+                    m_stcObjSpecAttr3.SetWindowText(str);
+                }
+                else
+                    ShowObjectSpecificError_(info->getQueryStatus());
+            }
+
+            if (ObjectHandle::CSemaphoreBasicInformation const* info = m_objHdl.getSemaphoreBasicInfo())
+            {
+                if (*info)
+                {
+                    SetAttributesVisible_(2);
+                    ATLVERIFY(str.LoadString(IDS_OBJSPEC_NAME1_SEMAPHORE));
+                    m_stcObjSpecName1.SetWindowText(str);
+                    ATLVERIFY(str.LoadString(IDS_OBJSPEC_NAME2_SEMAPHORE));
+                    m_stcObjSpecName2.SetWindowText(str);
+                    str.Format(_T("%u"), info->CurrentCount);
+                    m_stcObjSpecAttr1.SetWindowText(str);
+                    str.Format(_T("%u"), info->MaximumCount);
+                    m_stcObjSpecAttr2.SetWindowText(str);
+                }
+                else
+                    ShowObjectSpecificError_(info->getQueryStatus());
+            }
+
+            if (ObjectHandle::CTimerBasicInformation const* info = m_objHdl.getTimerBasicInfo())
+            {
+                if (*info)
+                {
+                    SetAttributesVisible_(2);
+                    ATLVERIFY(str.LoadString(IDS_OBJSPEC_NAME1_TIMER));
+                    m_stcObjSpecName1.SetWindowText(str);
+                    ATLVERIFY(str.LoadString(IDS_OBJSPEC_NAME2_TIMER));
+                    m_stcObjSpecName2.SetWindowText(str);
+                    str = info->TimerState ? _T("on") : _T("off");
+                    m_stcObjSpecAttr1.SetWindowText(str);
+                    str.Format(_T("%I64d"), info->RemainingTime.QuadPart);
+                    m_stcObjSpecAttr2.SetWindowText(str);
+                }
+                else
+                    ShowObjectSpecificError_(info->getQueryStatus());
+            }
         }
     };
 
@@ -869,6 +1154,7 @@ public:
         caption.Append(m_verinfo[_T("ProductName")]);
         caption.Append(_T(" "));
         caption.Append(m_verinfo[_T("FileVersion")]);
+        caption.AppendFormat(_T(" (%d-bit)"), sizeof(void*) == 4 ? 32 : 64);
         SetWindowText(caption);
 
         m_appicon.LoadIcon(IDR_MAINFRAME);
@@ -927,7 +1213,7 @@ public:
 };
 
 typedef CWinTraitsOR<WS_TABSTOP | TVS_HASLINES | TVS_HASBUTTONS | TVS_SHOWSELALWAYS | TVS_INFOTIP, WS_EX_CLIENTEDGE, CControlWinTraits> CNtObjectsTreeViewTraits;
-typedef CWinTraitsOR<WS_TABSTOP | LVS_SHAREIMAGELISTS | LVS_SINGLESEL, 0, CSortListViewCtrlTraits> CNtObjectsListViewTraits;
+typedef CWinTraitsOR<WS_TABSTOP | LVS_SHAREIMAGELISTS | LVS_SINGLESEL, LVS_EX_FULLROWSELECT | LVS_EX_INFOTIP, CSortListViewCtrlTraits> CNtObjectsListViewTraits;
 
 class CNtObjectsTreeView :
     public CWindowImpl<CNtObjectsTreeView, CTreeViewCtrlEx, CNtObjectsTreeViewTraits>
@@ -1226,6 +1512,7 @@ public:
         NOTIFY_CODE_HANDLER(HDN_ITEMCLICKA, OnHeaderItemClick)
         NOTIFY_CODE_HANDLER(HDN_ITEMCLICKW, OnHeaderItemClick)
         NOTIFY_CODE_HANDLER(LVN_ITEMCHANGED, OnLVItemChanged)
+        NOTIFY_CODE_HANDLER(LVN_GETINFOTIP, OnGetInfoTip)
         DEFAULT_REFLECTION_HANDLER()
         CHAIN_MSG_MAP(baseClass)
     END_MSG_MAP()
@@ -1476,9 +1763,48 @@ public:
         if(pnmlv && (pnmlv->uChanged & LVIF_STATE) && (pnmlv->uNewState & LVIS_SELECTED))
         {
             GenericObject* obj = reinterpret_cast<GenericObject*>(pnmlv->lParam);
-            // Tell the frame that this object is now to be considered active
-            (void)::SendMessage(m_hFrameWnd, WM_SET_ACTIVE_OBJECT, 0, reinterpret_cast<LPARAM>(obj));
-            bHandled = TRUE;
+            ATLASSERT(NULL != obj);
+            if (obj)
+            {
+                // Tell the frame that this object is now to be considered active
+                (void)::SendMessage(m_hFrameWnd, WM_SET_ACTIVE_OBJECT, 0, reinterpret_cast<LPARAM>(obj));
+                bHandled = TRUE;
+            }
+        }
+        return 0;
+    }
+
+    LRESULT OnGetInfoTip(int /*idCtrl*/, LPNMHDR pnmh, BOOL& bHandled)
+    {
+        LPNMLVGETINFOTIP pnmlv = reinterpret_cast<LPNMLVGETINFOTIP>(pnmh);
+        ATLASSERT(NULL != pnmlv);
+        bHandled = FALSE;
+        if (pnmlv)
+        {
+            LVITEM item = { 0 };
+            item.iItem = pnmlv->iItem;
+            item.mask = LVIF_PARAM;
+            ATLVERIFY(GetItem(&item));
+
+            GenericObject* obj = reinterpret_cast<GenericObject*>(item.lParam);
+            ATLASSERT(NULL != obj);
+            if (obj)
+            {
+                LPCTSTR comment = findComment(obj->fullname());
+                if (comment)
+                {
+                    CString tip;
+                    tip.Preallocate(pnmlv->cchTextMax);
+                    // Name of the object
+                    tip.Append(obj->fullname());
+                    // Line breaks
+                    tip.Append(_T("\n\n"));
+                    // Comment
+                    tip.Append(comment);
+                    _tcscpy_s(&pnmlv->pszText[0], pnmlv->cchTextMax - 1, tip.GetString());
+                    bHandled = TRUE;
+                }
+            }
         }
         return 0;
     }
@@ -1573,7 +1899,7 @@ private:
             CString columnName;
             for(int idx = 0; idx < static_cast<int>(_countof(columnDefaults)); idx++)
             {
-                columnName.LoadString(columnDefaults[idx].resId);
+                ATLVERIFY(columnName.LoadString(columnDefaults[idx].resId));
                 if(idx > (GetColumnCount() - 1))
                 {
                     InsertColumn(idx, columnName);
@@ -1597,9 +1923,23 @@ private:
 #ifndef LVS_EX_DOUBLEBUFFER
 #   define LVS_EX_DOUBLEBUFFER     0x00010000
 #endif
+#ifndef TVS_EX_DOUBLEBUFFER
+#   define TVS_EX_DOUBLEBUFFER     0x0004
+#endif
+
+
+class CNtObjectsStatusBar : public CMultiPaneStatusBarCtrlImpl<CNtObjectsStatusBar>
+{
+public:
+    DECLARE_WND_SUPERCLASS(_T("NtObjectsStatusBar"), GetWndClassName())
+
+    void SetPaneWidths(int pane_widths[], int nPanes)
+    {
+    }
+};
 
 /*lint -esym(1509, CNtObjectsMainFrame) */
-class CNtObjectsMainFrame : 
+class CNtObjectsMainFrame :
     public CFrameWindowImpl<CNtObjectsMainFrame>,
     public CUpdateUI<CNtObjectsMainFrame>,
     public CMessageFilter,
@@ -1608,7 +1948,7 @@ class CNtObjectsMainFrame :
 public:
     DECLARE_FRAME_WND_CLASS(_T("NtObjectsMainFrame"), IDR_MAINFRAME)
 
-    CMultiPaneStatusBarCtrl m_status;
+    CNtObjectsStatusBar m_status;
     CSplitterWindow m_vsplit;
     CNtObjectsTreeView m_treeview;
     CNtObjectsListView m_listview;
@@ -1690,15 +2030,21 @@ public:
         if(DllGetVersion)
         {
             DLLVERSIONINFO dllvi = {sizeof(DLLVERSIONINFO), 0, 0, 0, 0};
-            if(SUCCEEDED(DllGetVersion(&dllvi)) && dllvi.dwMajorVersion >= 6)
-                m_listview.SetExtendedListViewStyle(LVS_EX_FULLROWSELECT | LVS_EX_DOUBLEBUFFER);
+            if (SUCCEEDED(DllGetVersion(&dllvi)) && dllvi.dwMajorVersion >= 6)
+            {
+                m_treeview.SetExtendedStyle(TVS_EX_DOUBLEBUFFER, TVS_EX_DOUBLEBUFFER);
+                m_listview.SetExtendedListViewStyle(CNtObjectsListViewTraits::GetWndExStyle(LVS_EX_DOUBLEBUFFER));
+            }
             else
-                m_listview.SetExtendedListViewStyle(LVS_EX_FULLROWSELECT);
+            {
+                m_listview.SetExtendedListViewStyle(CNtObjectsListViewTraits::GetWndExStyle(0));
+            }
         }
         else
         {
-            m_listview.SetExtendedListViewStyle(LVS_EX_FULLROWSELECT);
+            m_listview.SetExtendedListViewStyle(CNtObjectsListViewTraits::GetWndExStyle(0));
         }
+
         ATLTRACE2(_T("Control ID for splitter: %i\n"), ::GetDlgCtrlID(m_vsplit));
         ATLTRACE2(_T("Control ID for treeview: %i\n"), ::GetDlgCtrlID(m_treeview));
         ATLTRACE2(_T("Control ID for listview: %i\n"), ::GetDlgCtrlID(m_listview));
@@ -1735,6 +2081,8 @@ public:
             ATLTRACE2(_T("New title: %s\n"), newDlgTitle.GetString());
             ATLVERIFY(SetWindowText(newDlgTitle.GetString()));
         }
+
+        AdjustStatusBarPaneWidths_();
 
         // register object for message filtering and idle updates
         CMessageLoop* pLoop = _Module.GetMessageLoop();
@@ -1883,6 +2231,7 @@ public:
         return 0;
     }
 
+    // lParam contains a Directory*
     LRESULT OnSelectTreeviewDirectory(UINT /*uMsg*/, WPARAM /*wParam*/, LPARAM lParam, BOOL& /*bHandled*/)
     {
         ATLASSERT(lParam != 0);
@@ -1979,7 +2328,7 @@ public:
                     {
                         if(m_Token.EnablePrivilege(requiredPrivileges[i], NULL, &bNotAllAssigned))
                         {
-                            ATLTRACE2(_T("%s %s enabled\n"), requiredPrivileges[i], (bNotAllAssigned) ? _T("could not be") : _T("was successfully"));
+                            ATLTRACE2(_T("%s %s enabled (%d)\n"), requiredPrivileges[i], (bNotAllAssigned) ? _T("could not be") : _T("was successfully"), GetLastError());
                         }
                     }
                 }
@@ -2004,6 +2353,12 @@ private:
     {
         m_activeObject = obj;
         SetStatusBarItem_(obj);
+    }
+
+    void AdjustStatusBarPaneWidths_()
+    {
+        int panes[] = { ID_DEFAULT_PANE, IDS_STATUSBAR_PANE1, IDS_STATUSBAR_PANE2 };
+        m_status.SetPanes(panes, _countof(panes));
     }
 
     void VisitDirectory_(Directory* dir)

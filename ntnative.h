@@ -29,7 +29,7 @@
 ///////////////////////////////////////////////////////////////////////////////
 
 #ifndef __NTNATIVE_H_VER__
-#define __NTNATIVE_H_VER__ 2016102020
+#define __NTNATIVE_H_VER__ 2016102722
 #if (defined(_MSC_VER) && (_MSC_VER >= 1020)) || defined(__MCPP)
 #pragma once
 #endif // Check for "#pragma once" support
@@ -108,13 +108,13 @@
 #   define RtlZeroMemory(Destination,Length) memset((Destination),0,(Length))
 
     __kernel_entry NTSTATUS
-        NTAPI 
+        NTAPI
         NtClose (
-        IN HANDLE Handle
+        __in HANDLE Handle
         );
 
     VOID
-        NTAPI 
+        NTAPI
         RtlInitUnicodeString (
         PUNICODE_STRING DestinationString,
         PCWSTR SourceString
@@ -138,8 +138,11 @@
 
 #if (_MSC_VER < 1400)
 typedef enum _OBJECT_INFORMATION_CLASS {
-    ObjectBasicInformation = 0,
-    ObjectTypeInformation = 2
+    ObjectBasicInformation,
+    ObjectNameInformation,
+    ObjectTypeInformation,
+    ObjectAllInformation,
+    ObjectDataInformation
 } OBJECT_INFORMATION_CLASS;
 #endif
 
@@ -267,6 +270,10 @@ typedef enum _EVENT_INFORMATION_CLASS
     EventBasicInformation
 } EVENT_INFORMATION_CLASS;
 
+typedef enum _IO_COMPLETION_INFORMATION_CLASS {
+    IoCompletionBasicInformation
+} IO_COMPLETION_INFORMATION_CLASS, *PIO_COMPLETION_INFORMATION_CLASS;
+
 typedef enum _KEY_INFORMATION_CLASS {
     KeyBasicInformation,
     KeyNodeInformation,
@@ -308,6 +315,27 @@ typedef enum _TIMER_INFORMATION_CLASS
 {
     TimerBasicInformation
 } TIMER_INFORMATION_CLASS;
+
+typedef enum _EVENT_TYPE {
+    NotificationEvent,
+    SynchronizationEvent
+} EVENT_TYPE, *PEVENT_TYPE;
+
+typedef struct _EVENT_BASIC_INFORMATION {
+    EVENT_TYPE EventType;
+    LONG EventState;
+} EVENT_BASIC_INFORMATION, *PEVENT_BASIC_INFORMATION;
+
+typedef struct _IO_COMPLETION_BASIC_INFORMATION {
+    ULONG Depth;
+} IO_COMPLETION_BASIC_INFORMATION, *PIO_COMPLETION_BASIC_INFORMATION;
+
+typedef struct _KEY_BASIC_INFORMATION {
+    LARGE_INTEGER LastWriteTime;
+    ULONG TitleIndex;
+    ULONG NameLength;
+    WCHAR Name[1]; // Variable length string
+} KEY_BASIC_INFORMATION, *PKEY_BASIC_INFORMATION;
 
 typedef struct _KEY_VALUE_BASIC_INFORMATION {
     ULONG   TitleIndex;
@@ -388,6 +416,16 @@ typedef struct _SECTION_IMAGE_INFORMATION {
     ULONG CheckSum;
 } SECTION_IMAGE_INFORMATION, *PSECTION_IMAGE_INFORMATION;
 
+typedef struct _SEMAPHORE_BASIC_INFORMATION {
+    ULONG CurrentCount;
+    ULONG MaximumCount;
+} SEMAPHORE_BASIC_INFORMATION, *PSEMAPHORE_BASIC_INFORMATION;
+
+typedef struct _TIMER_BASIC_INFORMATION {
+    LARGE_INTEGER RemainingTime;
+    BOOLEAN TimerState;
+} TIMER_BASIC_INFORMATION, *PTIMER_BASIC_INFORMATION;
+
 //
 //  The context structure is used when generating 8.3 names.  The caller must
 //  always zero out the structure before starting a new generation sequence
@@ -434,6 +472,16 @@ NtQueryEvent(
 
 NTSTATUS
 NTAPI
+NtQueryIoCompletion(
+    __in HANDLE IoCompletionHandle,
+    __in IO_COMPLETION_INFORMATION_CLASS InformationClass,
+    __out PVOID IoCompletionInformation,
+    __in ULONG InformationBufferLength,
+    __out PULONG RequiredLength OPTIONAL
+);
+
+NTSTATUS
+NTAPI
 NtQueryMutant(
     __in HANDLE MutantHandle,
     __in MUTANT_INFORMATION_CLASS MutantInformationClass,
@@ -455,12 +503,22 @@ NtQuerySemaphore(
 NTSTATUS
 NTAPI
 NtQuerySection(
-    IN HANDLE SectionHandle,
-    IN SECTION_INFORMATION_CLASS SectionInformationClass,
-    OUT PVOID SectionInformation,
-    IN ULONG SectionInformationLength,
-    OUT PULONG ReturnLength OPTIONAL
+    __in HANDLE SectionHandle,
+    __in SECTION_INFORMATION_CLASS SectionInformationClass,
+    __out PVOID SectionInformation,
+    __in ULONG SectionInformationLength,
+    __out PULONG ReturnLength OPTIONAL
      );
+
+NTSTATUS
+NTAPI
+NtQueryTimer(
+    __in HANDLE TimerHandle,
+    __in TIMER_INFORMATION_CLASS TimerInformationClass,
+    __out PVOID TimerInformation,
+    __in ULONG TimerInformationLength,
+    __out PULONG ReturnLength OPTIONAL
+);
 
 NTSTATUS
 NTAPI
@@ -693,9 +751,11 @@ NtUnmapViewOfSection(
 #define ZwQuerySystemInformation NtQuerySystemInformation
 #define ZwQuerySystemTime NtQuerySystemTime
 #define ZwQueryEvent NtQueryEvent
+#define ZwQueryIoCompletion NtQueryIoCompletion
 #define ZwQueryMutant NtQueryMutant
 #define ZwQuerySemaphore NtQuerySemaphore
 #define ZwQuerySection NtQuerySection
+#define ZwQueryTimer NtQueryTimer
 #define ZwOpenDirectoryObject NtOpenDirectoryObject
 #define ZwQueryDirectoryObject NtQueryDirectoryObject
 #define ZwOpenSymbolicLinkObject NtOpenSymbolicLinkObject

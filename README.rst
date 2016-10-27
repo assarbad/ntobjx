@@ -19,10 +19,9 @@ from live.sysinternals.com_ (both from Microsoft).
 
 State of affairs and compatibility
 ----------------------------------
-With the exception of the object-specific properties (e.g. mutant-specific,
-semaphore-specific etc, the utility already duplicates the functionality of
-WinObj_. It even extends on it by allowing you to export a text or XML
-representation (both using Unicode) of the object manager namespace.
+The utility already duplicates the functionality of WinObj_ and surpasses it.
+It allows you to export a text or XML representation (both using Unicode) of
+the object manager namespace.
 
 The utility should work on Windows 2000 and newer. Windows NT 4.0 and older are
 explicitly **unsupported** (although the source can probably be adapted to run

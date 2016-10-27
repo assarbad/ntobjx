@@ -30,9 +30,12 @@ EXPORTS
     ; locally declared symbols (not in winternl.h)
     RtlGetVersion
     NtQueryEvent
+    NtQueryIoCompletion
+    NtQueryKey
     NtQueryMutant
     NtQuerySemaphore
     NtQuerySection
+    NtQueryTimer
     NtOpenDirectoryObject
     NtQueryDirectoryObject
     NtOpenSymbolicLinkObject

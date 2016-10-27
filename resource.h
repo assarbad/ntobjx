@@ -5,12 +5,32 @@
 #define IDR_MAINFRAME                   1
 #define IDS_PROGRAM_DESCRIPTION         2
 #define IDS_ABOUT_MENUITEM              3
+#define IDS_STATUSBAR_PANE1             4
+#define IDS_STATUSBAR_PANE2             5
+#define IDS_STATUSBAR_PANE3             6
+#define IDS_OBJSPEC_NAME1_EVENT         7
+#define IDS_OBJSPEC_NAME2_EVENT         8
+#define IDS_OBJSPEC_ATTR2_EVENT_SYNC    9
+#define IDS_OBJSPEC_ATTR2_EVENT_NOTIFY  10
 #define IDD_PROPERTIES                  107
 #define IDR_POPUP_MENU1                 202
 #define IDD_ABOUT                       205
 #define IDR_POPUP_HYPERLINK1            207
 #define IDD_FIND_OBJECT                 209
 #define IDD_SECURITY_NOT_AVAILABLE      210
+#define IDS_OBJSPEC_NAME1_IOCOMPLETION  213
+#define IDS_OBJSPEC_NAME1_KEY           214
+#define IDS_OBJSPEC_NAME2_KEY           215
+#define IDS_OBJSPEC_NAME1_MUTANT        216
+#define IDS_OBJSPEC_NAME2_MUTANT        217
+#define IDS_OBJSPEC_NAME3_MUTANT        218
+#define IDS_OBJSPEC_NAME1_SECTION       219
+#define IDS_OBJSPEC_NAME2_SECTION       220
+#define IDS_OBJSPEC_NAME3_SECTION       221
+#define IDS_OBJSPEC_NAME1_SEMAPHORE     222
+#define IDS_OBJSPEC_NAME2_SEMAPHORE     223
+#define IDS_OBJSPEC_NAME1_TIMER         224
+#define IDS_OBJSPEC_NAME2_TIMER         225
 #define IDC_STATIC_PROGNAME             1000
 #define IDC_STATIC_COPYRIGHT            1001
 #define IDC_STATIC_DESCRIPTION          1002
@@ -29,7 +49,14 @@
 #define IDC_QUOTA_PAGED                 1020
 #define IDC_QUOTA_NONPAGED              1021
 #define IDC_OBJ_CREATION_TIME           1022
+#define IDC_GROUP_OBJSPECIFIC           1023
+#define IDC_STATIC_OBJSPEC_NAME1        1024
 #define IDS_ABOUT_DESCRIPTION           1025
+#define IDC_STATIC_OBJSPEC_NAME2        1025
+#define IDC_STATIC_OBJSPEC_NAME3        1026
+#define IDC_STATIC_OBJSPEC_ATTR1        1027
+#define IDC_STATIC_OBJSPEC_ATTR2        1028
+#define IDC_STATIC_OBJSPEC_ATTR3        1029
 #define ID_VIEW_PROPERTIES              32774
 #define ID_POPUPMENU_COPYNAME           32775
 #define ID_POPUPMENU_COPYFULLPATH       32776
@@ -49,9 +76,9 @@
 // 
 #ifdef APSTUDIO_INVOKED
 #ifndef APSTUDIO_READONLY_SYMBOLS
-#define _APS_NEXT_RESOURCE_VALUE        213
+#define _APS_NEXT_RESOURCE_VALUE        218
 #define _APS_NEXT_COMMAND_VALUE         32788
-#define _APS_NEXT_CONTROL_VALUE         1023
+#define _APS_NEXT_CONTROL_VALUE         1028
 #define _APS_NEXT_SYMED_VALUE           108
 #endif
 #endif

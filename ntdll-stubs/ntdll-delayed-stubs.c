@@ -246,7 +246,27 @@ NtQueryEvent (
 
 NTSTATUS
 NTAPI
-NtQueryMutant (
+NtQueryKey(
+    __in HANDLE KeyHandle,
+    __in KEY_INFORMATION_CLASS KeyInformationClass,
+    __out_bcount_opt(Length) PVOID KeyInformation,
+    __in ULONG Length,
+    __out PULONG ResultLength
+    ) { return 0; }
+
+NTSTATUS
+NTAPI
+NtQueryIoCompletion(
+    __in HANDLE IoCompletionHandle,
+    __in IO_COMPLETION_INFORMATION_CLASS InformationClass,
+    __out PVOID IoCompletionInformation,
+    __in ULONG InformationBufferLength,
+    __out PULONG RequiredLength OPTIONAL
+    ) { return 0; }
+
+NTSTATUS
+NTAPI
+NtQueryMutant(
     __in HANDLE MutantHandle,
     __in MUTANT_INFORMATION_CLASS MutantInformationClass,
     __out_bcount(MutantInformationLength) PVOID MutantInformation,
@@ -273,6 +293,16 @@ NtQuerySection(
     IN ULONG SectionInformationLength,
     OUT PULONG ReturnLength OPTIONAL
      ) { return 0; }
+
+NTSTATUS
+NTAPI
+NtQueryTimer(
+    __in HANDLE TimerHandle,
+    __in TIMER_INFORMATION_CLASS TimerInformationClass,
+    __out PVOID TimerInformation,
+    __in ULONG TimerInformationLength,
+    __out PULONG ReturnLength OPTIONAL
+    ) { return 0; }
 
 NTSTATUS
 NTAPI

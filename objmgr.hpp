@@ -27,7 +27,7 @@
 ///////////////////////////////////////////////////////////////////////////////
 
 #ifndef __OBJMGR_HPP_VER__
-#define __OBJMGR_HPP_VER__ 2016102020
+#define __OBJMGR_HPP_VER__ 2016102800
 #if (defined(_MSC_VER) && (_MSC_VER >= 1020)) || defined(__MCPP)
 #pragma once
 #endif // Check for "#pragma once" support
@@ -36,6 +36,24 @@
 #include <atlstr.h>
 #include <atlcoll.h>
 #include "objtypes.h"
+#ifdef _DEBUG // for textual NTSTATUS values in trace messages
+#   include "util/SimpleBuffer.h"
+#   ifndef VTRACE
+#       define VTRACE(...) while (false) {}
+#   endif
+#   define CLL_NO_ENSURE_VERSION_CLASS
+#   include "util/LoadLibrary.h"
+#   include "util/VersionInfo.h"
+#   define TRACE_NTSTATUS(x) \
+        do \
+        { \
+            CLoadLibrary ntdll(_T("ntdll.dll")); \
+            CSimpleBuf<TCHAR> status(ntdll.formatMessage<TCHAR>(ntdll.getHandle(), static_cast<DWORD>(x))); \
+            ATLTRACE2(_T("  NTSTATUS was '%s'\n"), status.Buffer()); \
+        } while (0)
+#else
+#   define TRACE_NTSTATUS(x) do {} while (0)
+#endif // _DEBUG
 
 namespace NtObjMgr{
 
@@ -406,11 +424,233 @@ namespace NtObjMgr{
 
     template<typename T> class ObjectHandleT
     {
+    public:
+        struct CEventBasicInformation : public EVENT_BASIC_INFORMATION
+        {
+            typedef EVENT_BASIC_INFORMATION baseClass;
+        private:
+            CEventBasicInformation();
+            CEventBasicInformation& operator=(CEventBasicInformation&);
+            NTSTATUS m_queryStatus;
+        public:
+            CEventBasicInformation(HANDLE hObject)
+            {
+                ULONG uRetLen = 0;
+                m_queryStatus = ::NtQueryEvent(hObject, EventBasicInformation, static_cast<baseClass*>(this), sizeof(baseClass), &uRetLen);
+                ATLTRACE2(_T("  status = %08X; length = %u; this = %p\n"), m_queryStatus, uRetLen, this);
+                TRACE_NTSTATUS(m_queryStatus);
+            }
+
+            inline NTSTATUS getQueryStatus() const
+            {
+                return m_queryStatus;
+            }
+
+            operator baseClass const*() const
+            {
+                return NT_SUCCESS(m_queryStatus) ? this : 0;
+            }
+        };
+
+        struct CIoCompletionBasicInformation : public IO_COMPLETION_BASIC_INFORMATION
+        {
+            typedef IO_COMPLETION_BASIC_INFORMATION baseClass;
+        private:
+            CIoCompletionBasicInformation();
+            CIoCompletionBasicInformation& operator=(CIoCompletionBasicInformation&);
+            NTSTATUS m_queryStatus;
+        public:
+            CIoCompletionBasicInformation(HANDLE hObject)
+            {
+                ULONG uRetLen = 0;
+                m_queryStatus = ::NtQueryIoCompletion(hObject, IoCompletionBasicInformation, static_cast<baseClass*>(this), sizeof(baseClass), &uRetLen);
+                ATLTRACE2(_T("  status = %08X; length = %u; this = %p\n"), m_queryStatus, uRetLen, this);
+                TRACE_NTSTATUS(m_queryStatus);
+            }
+
+            inline NTSTATUS getQueryStatus() const
+            {
+                return m_queryStatus;
+            }
+
+            inline operator bool() const
+            {
+                return !this->operator!();
+            }
+
+            inline bool operator!() const
+            {
+                return NT_ERROR(m_queryStatus);
+            }
+        };
+
+        struct KEY_BASIC_INFORMATION_WITH_NAMEBUF : public KEY_BASIC_INFORMATION
+        {
+            WCHAR NameBufferExtended[MAX_PATH * 2];
+        };
+
+        struct CKeyBasicInformation : public KEY_BASIC_INFORMATION_WITH_NAMEBUF
+        {
+            typedef KEY_BASIC_INFORMATION_WITH_NAMEBUF baseClass;
+        private:
+            CKeyBasicInformation();
+            CKeyBasicInformation& operator=(CKeyBasicInformation&);
+            NTSTATUS m_queryStatus;
+        public:
+            CKeyBasicInformation(HANDLE hObject)
+            {
+                ULONG uRetLen = 0;
+                m_queryStatus = ::NtQueryKey(hObject, KeyBasicInformation, static_cast<baseClass*>(this), sizeof(baseClass), &uRetLen);
+                ATLTRACE2(_T("  status = %08X; length = %u; this = %p\n"), m_queryStatus, uRetLen, this);
+                TRACE_NTSTATUS(m_queryStatus);
+            }
+
+            inline NTSTATUS getQueryStatus() const
+            {
+                return m_queryStatus;
+            }
+
+            inline operator bool() const
+            {
+                return !this->operator!();
+            }
+
+            inline bool operator!() const
+            {
+                return NT_ERROR(m_queryStatus);
+            }
+        };
+
+        struct CMutantBasicInformation : public MUTANT_BASIC_INFORMATION
+        {
+            typedef MUTANT_BASIC_INFORMATION baseClass;
+        private:
+            CMutantBasicInformation();
+            CMutantBasicInformation& operator=(CMutantBasicInformation&);
+            NTSTATUS m_queryStatus;
+        public:
+            CMutantBasicInformation(HANDLE hObject)
+            {
+                ULONG uRetLen = 0;
+                m_queryStatus = ::NtQueryMutant(hObject, MutantBasicInformation, static_cast<baseClass*>(this), sizeof(baseClass), &uRetLen);
+                ATLTRACE2(_T("  status = %08X; length = %u; this = %p\n"), m_queryStatus, uRetLen, this);
+                TRACE_NTSTATUS(m_queryStatus);
+            }
+
+            inline NTSTATUS getQueryStatus() const
+            {
+                return m_queryStatus;
+            }
+
+            inline operator bool() const
+            {
+                return !this->operator!();
+            }
+
+            inline bool operator!() const
+            {
+                return NT_ERROR(m_queryStatus);
+            }
+        };
+
+        struct CSectionBasicInformation : public SECTION_BASIC_INFORMATION
+        {
+            typedef SECTION_BASIC_INFORMATION baseClass;
+        private:
+            CSectionBasicInformation();
+            CSectionBasicInformation& operator=(CSectionBasicInformation&);
+            NTSTATUS m_queryStatus;
+        public:
+            CSectionBasicInformation(HANDLE hObject)
+            {
+                ULONG uRetLen = 0;
+                m_queryStatus = ::NtQuerySection(hObject, SectionBasicInformation, static_cast<baseClass*>(this), sizeof(baseClass), &uRetLen);
+                ATLTRACE2(_T("  status = %08X; length = %u; this = %p\n"), m_queryStatus, uRetLen, this);
+                TRACE_NTSTATUS(m_queryStatus);
+            }
+
+            inline NTSTATUS getQueryStatus() const
+            {
+                return m_queryStatus;
+            }
+
+            inline operator bool() const
+            {
+                return !this->operator!();
+            }
+
+            inline bool operator!() const
+            {
+                return NT_ERROR(m_queryStatus);
+            }
+        };
+
+        struct CSemaphoreBasicInformation : public SEMAPHORE_BASIC_INFORMATION
+        {
+            typedef SEMAPHORE_BASIC_INFORMATION baseClass;
+        private:
+            CSemaphoreBasicInformation();
+            CSemaphoreBasicInformation& operator=(CSemaphoreBasicInformation&);
+            NTSTATUS m_queryStatus;
+        public:
+            CSemaphoreBasicInformation(HANDLE hObject)
+            {
+                ULONG uRetLen = 0;
+                m_queryStatus = ::NtQuerySemaphore(hObject, SemaphoreBasicInformation, static_cast<baseClass*>(this), sizeof(baseClass), &uRetLen);
+                ATLTRACE2(_T("  status = %08X; length = %u; this = %p\n"), m_queryStatus, uRetLen, this);
+                TRACE_NTSTATUS(m_queryStatus);
+            }
+
+            inline NTSTATUS getQueryStatus() const
+            {
+                return m_queryStatus;
+            }
+
+            inline operator bool() const
+            {
+                return !this->operator!();
+            }
+
+            inline bool operator!() const
+            {
+                return NT_ERROR(m_queryStatus);
+            }
+        };
+
+        struct CTimerBasicInformation : public TIMER_BASIC_INFORMATION
+        {
+            typedef TIMER_BASIC_INFORMATION baseClass;
+        private:
+            CTimerBasicInformation();
+            CTimerBasicInformation& operator=(CTimerBasicInformation&);
+            NTSTATUS m_queryStatus;
+        public:
+            CTimerBasicInformation(HANDLE hObject)
+            {
+                ULONG uRetLen = 0;
+                m_queryStatus = ::NtQueryTimer(hObject, TimerBasicInformation, static_cast<baseClass*>(this), sizeof(baseClass), &uRetLen);
+                ATLTRACE2(_T("  status = %08X; length = %u; this = %p\n"), m_queryStatus, uRetLen, this);
+                TRACE_NTSTATUS(m_queryStatus);
+            }
+
+            inline NTSTATUS getQueryStatus() const
+            {
+                return m_queryStatus;
+            }
+
+            inline operator bool() const
+            {
+                return !this->operator!();
+            }
+
+            inline bool operator!() const
+            {
+                return NT_ERROR(m_queryStatus);
+            }
+        };
+    private:
         typedef NTSTATUS(NTAPI *openobj_fct_t)(PHANDLE, ACCESS_MASK, POBJECT_ATTRIBUTES);
 
-#if 0
-        ACCESS_MASK m_accessMask;
-#endif // 0
         NTSTATUS m_openStatus;
         NTSTATUS m_queryStatus;
         bool m_bHasObjectInfo;
@@ -418,16 +658,76 @@ namespace NtObjMgr{
         openobj_fct_t m_openObjectFunction; // cached for reopen
         OBJECT_BASIC_INFORMATION m_obi;
         HANDLE m_hObject;
+        CEventBasicInformation* m_eventBasicInfo;
+        CIoCompletionBasicInformation* m_ioCompletionBasicInfo;
+        CKeyBasicInformation* m_keyBasicInfo;
+        CMutantBasicInformation* m_mutantBasicInfo;
+        CSectionBasicInformation* m_sectionBasicInfo;
+        CSemaphoreBasicInformation* m_semaphoreBasicInfo;
+        CTimerBasicInformation* m_timerBasicInfo;
     public:
-        ObjectHandleT(GenericObjectT<T>* obj, ACCESS_MASK DesiredAccess = READ_CONTROL)
-            // m_accessMask(DesiredAccess)
+        ObjectHandleT(GenericObjectT<T>* obj, ACCESS_MASK DesiredAccess = READ_CONTROL | GENERIC_READ, ACCESS_MASK FallbackAccess1 = READ_CONTROL | FILE_READ_ATTRIBUTES | FILE_READ_ACCESS, ACCESS_MASK FallbackAccess2 = READ_CONTROL)
             : m_openStatus(STATUS_SUCCESS)
             , m_queryStatus(STATUS_SUCCESS)
             , m_bHasObjectInfo(false)
             , m_obj(obj)
             , m_openObjectFunction(m_obj ? PickOpenObjectFunction_(m_obj->type().GetString()) : NULL)
-            , m_hObject(OpenByObjectType_(m_obj, m_openObjectFunction, m_openStatus, m_queryStatus, m_bHasObjectInfo, m_obi , DesiredAccess))
+            , m_hObject(OpenByObjectType_(m_obj, m_openObjectFunction, m_openStatus, m_queryStatus, m_bHasObjectInfo, m_obi , DesiredAccess, FallbackAccess1, FallbackAccess2))
+            , m_eventBasicInfo(0)
+            , m_ioCompletionBasicInfo(0)
+            , m_keyBasicInfo(0)
+            , m_mutantBasicInfo(0)
+            , m_sectionBasicInfo(0)
+            , m_semaphoreBasicInfo(0)
+            , m_timerBasicInfo(0)
         {
+            if(!m_obj || (INVALID_HANDLE_VALUE == m_hObject))
+            {
+                ATLTRACE2(_T("Bailing out early m_ob == %p; m_hObject == %p\n"), m_obj, m_hObject);
+                return;
+            }
+            
+            if (0 == _tcsicmp(_T(OBJTYPESTR_EVENT), m_obj->type()))
+            {
+                ATLTRACE2(_T("Attempting to query object-specific info for %s\n"), m_obj->type().GetString());
+                m_eventBasicInfo = new CEventBasicInformation(m_hObject);
+            }
+
+            if (0 == _tcsicmp(_T(OBJTYPESTR_IOCOMPLETION), m_obj->type()))
+            {
+                ATLTRACE2(_T("Attempting to query object-specific info for %s\n"), m_obj->type().GetString());
+                m_ioCompletionBasicInfo = new CIoCompletionBasicInformation(m_hObject);
+            }
+
+            if (0 == _tcsicmp(_T(OBJTYPESTR_KEY), m_obj->type()))
+            {
+                ATLTRACE2(_T("Attempting to query object-specific info for %s\n"), m_obj->type().GetString());
+                m_keyBasicInfo = new CKeyBasicInformation(m_hObject);
+            }
+
+            if (0 == _tcsicmp(_T(OBJTYPESTR_MUTANT), m_obj->type()))
+            {
+                ATLTRACE2(_T("Attempting to query object-specific info for %s\n"), m_obj->type().GetString());
+                m_mutantBasicInfo = new CMutantBasicInformation(m_hObject);
+            }
+
+            if (0 == _tcsicmp(_T(OBJTYPESTR_SECTION), m_obj->type()))
+            {
+                ATLTRACE2(_T("Attempting to query object-specific info for %s\n"), m_obj->type().GetString());
+                m_sectionBasicInfo = new CSectionBasicInformation(m_hObject);
+            }
+
+            if (0 == _tcsicmp(_T(OBJTYPESTR_SEMAPHORE), m_obj->type()))
+            {
+                ATLTRACE2(_T("Attempting to query object-specific info for %s\n"), m_obj->type().GetString());
+                m_semaphoreBasicInfo = new CSemaphoreBasicInformation(m_hObject);
+            }
+
+            if (0 == _tcsicmp(_T(OBJTYPESTR_TIMER), m_obj->type()))
+            {
+                ATLTRACE2(_T("Attempting to query object-specific info for %s\n"), m_obj->type().GetString());
+                m_timerBasicInfo = new CTimerBasicInformation(m_hObject);
+            }
         }
 
         virtual ~ObjectHandleT()
@@ -443,11 +743,6 @@ namespace NtObjMgr{
             return m_hObject;
         }
 
-        inline ACCESS_MASK getEffectiveAccessMask() const
-        {
-            return m_accessMask;
-        }
-
         inline NTSTATUS getOpenStatus() const
         {
             return m_openStatus;
@@ -455,7 +750,7 @@ namespace NtObjMgr{
 
         inline NTSTATUS getQueryStatus() const
         {
-            return m_openStatus;
+            return m_queryStatus;
         }
 
         inline bool hasObjectInfo() const
@@ -477,6 +772,15 @@ namespace NtObjMgr{
         {
             return (m_hObject == INVALID_HANDLE_VALUE) || (m_hObject == NULL);
         }
+
+        // object-specific basic information
+        inline CEventBasicInformation const* getEventBasicInfo() const { return m_eventBasicInfo; };
+        inline CIoCompletionBasicInformation const* getIoCompletionBasicInfo() const { return m_ioCompletionBasicInfo; };
+        inline CKeyBasicInformation const* getKeyBasicInfo() const { return m_keyBasicInfo;  };
+        inline CMutantBasicInformation const* getMutantBasicInfo() const { return m_mutantBasicInfo;  };
+        inline CSectionBasicInformation const* getSectionBasicInfo() const { return m_sectionBasicInfo; };
+        inline CSemaphoreBasicInformation const* getSemaphoreBasicInfo() const { return m_semaphoreBasicInfo;  };
+        inline CTimerBasicInformation const* getTimerBasicInfo() const { return m_timerBasicInfo;  };
 
     private:
         static NTSTATUS NTAPI OpenObjectAsFile_(__out PHANDLE Handle, __in ACCESS_MASK DesiredAccess, __in POBJECT_ATTRIBUTES ObjectAttributes)
@@ -504,7 +808,6 @@ namespace NtObjMgr{
                 { _T(OBJTYPESTR_SEMAPHORE), NtOpenSemaphore },
                 { _T(OBJTYPESTR_SYMBOLICLINK), NtOpenSymbolicLinkObject },
                 { _T(OBJTYPESTR_TIMER), NtOpenTimer },
-                { _T(OBJTYPESTR_DEVICE), OpenObjectAsFile_ },
             };
             openobj_fct_t OpenObjectFct = OpenObjectAsFile_; // default
 
@@ -522,7 +825,7 @@ namespace NtObjMgr{
             return OpenObjectFct;
         }
 
-        static HANDLE OpenByObjectType_(GenericObjectT<T>* obj, openobj_fct_t OpenObjectFunc, NTSTATUS& openStatus, NTSTATUS& queryStatus, bool& hasObjInfo, OBJECT_BASIC_INFORMATION& obi, ACCESS_MASK DesiredAccess = READ_CONTROL)
+        static HANDLE OpenByObjectType_(GenericObjectT<T>* obj, openobj_fct_t OpenObjectFunc, NTSTATUS& openStatus, NTSTATUS& queryStatus, bool& hasObjInfo, OBJECT_BASIC_INFORMATION& obi, ACCESS_MASK DesiredAccess = READ_CONTROL | GENERIC_READ, ACCESS_MASK FallbackAccess1 = READ_CONTROL | FILE_READ_ATTRIBUTES | FILE_READ_ACCESS, ACCESS_MASK FallbackAccess2 = READ_CONTROL)
         {
             memset(&obi, 0, sizeof(obi));
 
@@ -550,6 +853,19 @@ namespace NtObjMgr{
 
             ATLTRACE2(_T("Trying to open %s as type %s.\n"), lpszFullName, lpszTypeName);
             openStatus = OpenObjectFunc(&hObject, DesiredAccess, &oa);
+            // Try with a lesser access mask
+            if (STATUS_ACCESS_DENIED == openStatus)
+            {
+                ATLTRACE2(_T("Failed open with %08X, trying again with access mask %08X\n"), openStatus, FallbackAccess1);
+                NTSTATUS privOpenStatus = OpenObjectFunc(&hObject, FallbackAccess1, &oa);
+                // Try with an even lesser access mask
+                if(STATUS_ACCESS_DENIED == privOpenStatus)
+                {
+                    ATLTRACE2(_T("Failed open with %08X, trying again with access mask %08X\n"), openStatus, FallbackAccess2);
+                    privOpenStatus = OpenObjectFunc(&hObject, FallbackAccess2, &oa);
+                }
+                openStatus = privOpenStatus;
+            }
             if (NT_SUCCESS(openStatus))
             {
                 ATLTRACE2(_T("Success. Returning handle %p.\n"), hObject);
@@ -568,6 +884,7 @@ namespace NtObjMgr{
                 // Perhaps also read object-type-specific info for the known ones?
                 return hObject;
             }
+            TRACE_NTSTATUS(openStatus);
             switch (openStatus)
             {
             case STATUS_ACCESS_DENIED:

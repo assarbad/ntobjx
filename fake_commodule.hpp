@@ -51,7 +51,7 @@ namespace ATL
     public:
         CComModule()
         {
-            // Should have only one instance of a class 
+            // Should have only one instance of a class
             // derived from CComModule in a project.
             ATLASSERT(_pModule == NULL);
             _pModule = this;
