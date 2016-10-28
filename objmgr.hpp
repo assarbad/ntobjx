@@ -39,7 +39,7 @@
 #ifdef _DEBUG // for textual NTSTATUS values in trace messages
 #   include "util/SimpleBuffer.h"
 #   ifndef VTRACE
-#       define VTRACE(...) while (false) {}
+#       define VTRACE(...) do {} while(false)
 #   endif
 #   define CLL_NO_ENSURE_VERSION_CLASS
 #   include "util/LoadLibrary.h"
@@ -834,6 +834,11 @@ namespace NtObjMgr{
                 ATLTRACE2(_T("Passed GenericObjectT<T>* was NULL.\n"));
                 return INVALID_HANDLE_VALUE;
             }
+            if(!OpenObjectFunc)
+            {
+                ATLTRACE2(_T("OpenObjectFunc was NULL.\n"));
+                return INVALID_HANDLE_VALUE;
+            }
 
             HANDLE hObject = INVALID_HANDLE_VALUE;
             OBJECT_ATTRIBUTES oa;
@@ -850,6 +855,7 @@ namespace NtObjMgr{
 #endif // !_DEBUG
 
             ATLASSERT(lpszTypeName != NULL);
+            ATLASSERT(OpenObjectFunc != NULL);
 
             ATLTRACE2(_T("Trying to open %s as type %s.\n"), lpszFullName, lpszTypeName);
             openStatus = OpenObjectFunc(&hObject, DesiredAccess, &oa);

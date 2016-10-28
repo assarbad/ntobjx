@@ -22,7 +22,7 @@
 ///
 ///////////////////////////////////////////////////////////////////////////////
 #ifndef __EXEVERSION_H_VERSION__
-#define __EXEVERSION_H_VERSION__ 2016102422
+#define __EXEVERSION_H_VERSION__ 2016102820
 
 #if defined(_MSC_VER) && (_MSC_VER >= 1020)
 #pragma once
@@ -36,7 +36,7 @@
 #define TEXT_AUTHOR            Oliver Schneider // author (optional value)
 #define PRD_MAJVER             1 // major product version
 #define PRD_MINVER             2 // minor product version
-#define PRD_PATCH              3 // patch number
+#define PRD_PATCH              5 // patch number
 #define PRD_BUILD              HG_REV_NO // build number for product
 #define PRD_BUILD_NUMERIC      HG_REV_NO_NUMERIC // build number for product
 #define FILE_MAJVER            PRD_MAJVER // major file version
@@ -53,7 +53,7 @@
 #define TEXT_COPYRIGHT         Copyright (c) EXE_YEAR TEXT_AUTHOR // copyright information
 #define TEXT_INTERNALNAME      ntobjx.exe
 #define HG_REPOSITORY          "https://bitbucket.org/assarbad/ntobjx"
-#define TEXT_PORTIONSCOPYRIGHT "Portions\nCopyright (c) FRISK Software International (FRISK).\nCopyright (c) Microsoft Corporation, WTL Team.\nAll rights reserved."
+#define TEXT_PORTIONSCOPYRIGHT "Portions (WTL, pugixml, FRISK utility classes), see source code for details:\nCopyright (c) Microsoft Corporation, WTL Team. All rights reserved.\nCopyright (c) Arseny Kapoulkine.\nCopyright (c) FRISK Software International (FRISK). All rights reserved."
 
 #define _ANSISTRING(text) #text
 #define ANSISTRING(text) _ANSISTRING(text)

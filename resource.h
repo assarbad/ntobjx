@@ -12,6 +12,9 @@
 #define IDS_OBJSPEC_NAME2_EVENT         8
 #define IDS_OBJSPEC_ATTR2_EVENT_SYNC    9
 #define IDS_OBJSPEC_ATTR2_EVENT_NOTIFY  10
+#define IDS_OBJSPEC_ERROR               11
+#define IDS_OBJSPEC_INFO                12
+#define IDS_OBJSPEC_NAME1_SYMLINK       13
 #define IDD_PROPERTIES                  107
 #define IDR_POPUP_MENU1                 202
 #define IDD_ABOUT                       205

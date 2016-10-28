@@ -176,8 +176,9 @@ public:
         Load(LibName, DllDirectory, AsDataFile);
     }
     ~CLoadLibrary()
+
     {
-        Free();
+        (void)Free();
     }
     inline bool IsOK() const
     {
@@ -212,7 +213,7 @@ public:
                 else
                 {
                     VTRACE("Apparently we are out of memory ...");
-                    fullDirPath.ReAlloc(0);
+                    (void)fullDirPath.ReAlloc(0);
                 }
 #endif // _DEBUG
             }
@@ -242,7 +243,7 @@ public:
     {
         Load(LibName, NULL, AsDataFile);
     }
-    inline bool Free()
+    inline bool Free() /*lint -sem(CLoadLibrary::Free,cleanup) */
     {
         if(m_NeedToFree && m_module)
         {
@@ -499,7 +500,7 @@ public:
     {
         return m_module;
     }
-    inline HMODULE Detach()
+    inline HMODULE Detach() /*lint -sem(CLoadLibrary::Detach,cleanup) */
     {
         HMODULE hTemp = m_module;
         m_module = 0;

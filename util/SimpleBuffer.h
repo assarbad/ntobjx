@@ -45,7 +45,7 @@
 #endif // _MSC_VER
 
 #ifndef DBGPRINTF
-#define DBGPRINTF(...) while(false) {}
+#define DBGPRINTF(...) do {} while(false)
 #endif
 // Very simple wrapper for zero terminated strings of a given "character" type
 template <typename T> class CSimpleBuf
@@ -60,7 +60,7 @@ public:
         DBGPRINTF("[%p::%s] (default ctor)\n", this, __FUNCTION__);
         if(count)
         {
-            ReAlloc(count);
+            (void)ReAlloc(count);
         }
     }
     // Copy ctor operator for same class
@@ -88,7 +88,7 @@ public:
         if(&RValue != this)
         {
             DBGPRINTF("[%p::%s] (assignment op)\n", this, __FUNCTION__);
-            ReAlloc(0); // free the buffer first
+            (void)ReAlloc(0); // free the buffer first
             if(RValue.Buffer() && ReAlloc(RValue.Length<size_t>()))
             {
                 memcpy(Buffer(), RValue.Buffer(), min_(LengthBytes<size_t>(), RValue.LengthBytes<size_t>()));
@@ -100,13 +100,13 @@ public:
     CSimpleBuf& operator=(const value_type* RValue)
     {
         DBGPRINTF("[%p::%s] (assignment op - elem*)\n", this, __FUNCTION__);
-        ReAlloc(0); // free the buffer first
+        (void)ReAlloc(0); // free the buffer first
         if(RValue)
         {
             const size_t len = buflen_(RValue);
             if(!len)
             {
-                ReAlloc(1); // Make it an empty string, since the pointer was non-NULL, but length was zero!
+                (void)ReAlloc(1); // Make it an empty string, since the pointer was non-NULL, but length was zero!
             }
             else if(ReAlloc(len))
             {
@@ -333,7 +333,7 @@ protected:
     {
         return size_t(0);
     }
-    template <> CSimpleBuf<char> UnicodeToAnsi_(const char* Value, UINT codePage) const
+    template <typename T> CSimpleBuf<char> UnicodeToAnsi_(const char* Value, UINT codePage) const
     {
         if(!Value)
         {
@@ -341,7 +341,7 @@ protected:
         }
         return Value;
     }
-    template <> CSimpleBuf<char> UnicodeToAnsi_(const wchar_t* Value, UINT codePage) const
+    template <typename T> CSimpleBuf<char> UnicodeToAnsi_(const wchar_t* Value, UINT codePage) const
     {
         if(!Value)
         {
@@ -363,7 +363,7 @@ protected:
     {
         return size_t(0);
     }
-    template <> CSimpleBuf<wchar_t> AnsiToUnicode_(const char* Value, UINT codePage) const
+    template <typename T> CSimpleBuf<wchar_t> AnsiToUnicode_(const char* Value, UINT codePage) const
     {
         if(!Value)
         {
@@ -380,7 +380,7 @@ protected:
         }
         return size_t(0);
     }
-    template <> CSimpleBuf<wchar_t> AnsiToUnicode_(const wchar_t* Value, UINT codePage) const
+    template <typename T> CSimpleBuf<wchar_t> AnsiToUnicode_(const wchar_t* Value, UINT codePage) const
     {
         if(!Value)
         {

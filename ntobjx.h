@@ -62,6 +62,10 @@
 #   error ntobjx.h requires atlsecurity.h to be included first
 #endif
 
+#ifndef __func__
+#   define __func__ __FUNCTION__
+#endif
+
 #include "util/SimpleBuffer.h"
 #ifndef VTRACE
 #   define VTRACE(...) while (false) {}
@@ -404,7 +408,7 @@ private:
     // We create our image list dynamically from the icons
     void PrepareImageList_()
     {
-        ATLTRACE2(_T("Preparing image list for %s\n"), _T(__FUNCTION__));
+        ATLTRACE2(_T("Preparing image list for %hs\n"), __func__);
         const int iResIconTypeMappingSize = static_cast<int>(resIconTypeMappingSize);
         ATLVERIFY(m_imagelist.Create(imgListElemWidth, imgListElemHeight, ILC_COLOR32 | ILC_MASK, iResIconTypeMappingSize, iResIconTypeMappingSize));
         for (int i = 0; i < iResIconTypeMappingSize; i++)
@@ -454,6 +458,11 @@ class CObjectPropertySheet :
             , m_objHdl(objHdl)
             , m_bFeatureUnavailable(bFeatureUnavailable)
         {
+        }
+
+        ~CObjectSecurityNAPage()
+        {
+            m_obj = 0;
         }
 
         LRESULT OnInitDialog(UINT /*uMsg*/, WPARAM /*wParam*/, LPARAM /*lParam*/, BOOL& bHandled)
@@ -545,6 +554,7 @@ class CObjectPropertySheet :
         CStatic         m_stcObjSpecAttr1;
         CStatic         m_stcObjSpecAttr2;
         CStatic         m_stcObjSpecAttr3;
+
         CObjectDetailsPage(); // hide it
     public:
         enum { IDD = IDD_PROPERTIES };
@@ -582,7 +592,8 @@ class CObjectPropertySheet :
             m_stcObjSpecAttr2.Attach(GetDlgItem(IDC_STATIC_OBJSPEC_ATTR2));
             m_stcObjSpecAttr3.Attach(GetDlgItem(IDC_STATIC_OBJSPEC_ATTR3));
 
-            if(m_obj)
+            ATLASSERT(m_obj);
+            if (m_obj)
             {
                 m_edtName.SetWindowText(m_obj->name());
                 m_edtFullname.SetWindowText(m_obj->fullname());
@@ -703,7 +714,16 @@ class CObjectPropertySheet :
         {
             m_stcGroupObjSpecific.ShowWindow(SW_SHOWNOACTIVATE);
             if (num < 0)
+            {
                 m_edtExplanation.ShowWindow(SW_SHOWNOACTIVATE);
+                return;
+            }
+            if (m_obj)
+            {
+                CString str;
+                str.Format(IDS_OBJSPEC_INFO, m_obj->type().GetString());
+                m_stcGroupObjSpecific.SetWindowText(str);
+            }
             if (num >= 1)
             {
                 m_stcObjSpecName1.ShowWindow(SW_SHOWNOACTIVATE);
@@ -726,12 +746,120 @@ class CObjectPropertySheet :
             CLoadLibrary ntdll(_T("ntdll.dll"));
             CSimpleBuf<TCHAR> status(ntdll.formatMessage<TCHAR>(ntdll.getHandle(), static_cast<DWORD>(statusCode)));
             m_edtExplanation.SetWindowText(status.Buffer());
+            if (m_obj)
+            {
+                CString str;
+                str.Format(IDS_OBJSPEC_ERROR, m_obj->type().GetString());
+                m_stcGroupObjSpecific.SetWindowText(str);
+            }
             SetAttributesVisible_(-1);
+        }
+
+#ifndef SEC_IMAGE_NO_EXECUTE
+#   define SEC_IMAGE_NO_EXECUTE (SEC_IMAGE | SEC_NOCACHE)     
+#endif
+        CString ReadableAllocationAttributes_(ULONG aa)
+        {
+            CString str;
+            if (PAGE_NOACCESS & aa)
+            {
+                str.Append(_T("!access+"));
+            }
+            if (PAGE_READONLY & aa)
+            {
+                str.Append(_T("ro+"));
+            }
+            if (PAGE_READWRITE & aa)
+            {
+                str.Append(_T("rw+"));
+            }
+            if (PAGE_WRITECOPY & aa)
+            {
+                str.Append(_T("cow+"));
+            }
+            if (PAGE_EXECUTE & aa)
+            {
+                str.Append(_T("x+"));
+            }
+            if (PAGE_EXECUTE_READ & aa)
+            {
+                str.Append(_T("xro+"));
+            }
+            if (PAGE_EXECUTE_READWRITE & aa)
+            {
+                str.Append(_T("xrw+"));
+            }
+            if (PAGE_EXECUTE_WRITECOPY & aa)
+            {
+                str.Append(_T("xcow+"));
+            }
+            if (PAGE_GUARD & aa)
+            {
+                str.Append(_T("guard+"));
+            }
+            if ((PAGE_NOCACHE & aa) || (SEC_NOCACHE & aa))
+            {
+                str.Append(_T("!cache+"));
+            }
+            if ((PAGE_WRITECOMBINE & aa) || (SEC_WRITECOMBINE & aa))
+            {
+                str.Append(_T("wcomb+"));
+            }
+            if (SEC_FILE & aa)
+            {
+                str.Append(_T("file+"));
+            }
+            if (SEC_IMAGE & aa)
+            {
+                if (SEC_IMAGE_NO_EXECUTE & aa)
+                {
+                    str.Append(_T("img!x+"));
+                }
+                else
+                {
+                    str.Append(_T("img+"));
+                }
+            }
+            if (SEC_PROTECTED_IMAGE & aa)
+            {
+                str.Append(_T("protimg+"));
+            }
+            if (SEC_RESERVE & aa)
+            {
+                str.Append(_T("resrv+"));
+            }
+            if (SEC_COMMIT & aa)
+            {
+                str.Append(_T("commit+"));
+            }
+            if (SEC_LARGE_PAGES & aa)
+            {
+                str.Append(_T("lrgpgs+"));
+            }
+
+            if (str.GetLength())
+            {
+                str.Truncate(str.GetLength() - 1);
+            }
+            return str;
         }
 
         void ShowObjectSpecificInfo_()
         {
             CString str;
+
+            if (m_obj && otSymlink == m_obj->objtype())
+            {
+                if (SymbolicLink* symlink = dynamic_cast<SymbolicLink*>(m_obj))
+                {
+                    SetAttributesVisible_(1);
+                    ATLVERIFY(str.LoadString(IDS_OBJSPEC_NAME1_SYMLINK));
+                    m_stcObjSpecName1.SetWindowText(str);
+                    m_stcObjSpecAttr1.SetWindowText(symlink->target());
+                    //m_tooltip.Attach(GetDlgItem(IDC_STATIC_OBJSPEC_ATTR3));
+                }
+            }
+
             if (ObjectHandle::CEventBasicInformation const* info = m_objHdl.getEventBasicInfo())
             {
                 if (*info)
@@ -831,6 +959,11 @@ class CObjectPropertySheet :
                     str.Format(_T("%I64d"), info->MaximumSize.QuadPart);
                     m_stcObjSpecAttr2.SetWindowText(str);
                     str.Format(_T("%08X"), info->AllocationAttributes);
+                    CString readable = ReadableAllocationAttributes_(info->AllocationAttributes);
+                    if (readable.GetLength())
+                    {
+                        str.AppendFormat(_T(" (%s)"), readable.GetString());
+                    }
                     m_stcObjSpecAttr3.SetWindowText(str);
                 }
                 else
@@ -1305,7 +1438,7 @@ public:
 
     LRESULT OnTVItemExpanding(int /*idCtrl*/, LPNMHDR pnmh, BOOL& bHandled)
     {
-        ATLTRACE2(_T("%s\n"), _T(__FUNCTION__));
+        ATLTRACE2(_T("%hs\n"), __func__);
         LPNMTREEVIEW pnmtv = reinterpret_cast<LPNMTREEVIEW>(pnmh);
         // Don't allow to collapse the root item (which is the one without a pointer to the NtObjMgr::Directory)
         if((TVE_COLLAPSE == pnmtv->action) && (pnmtv->itemNew.hItem == GetRootItem()))
@@ -1362,7 +1495,7 @@ public:
         Directory* dir = reinterpret_cast<Directory*>(pnmtv->itemNew.lParam);
         if(m_bInitialized && dir)
         {
-            ATLTRACE2(_T("%s: %s\n"), _T(__FUNCTION__), dir->fullname().GetString());
+            ATLTRACE2(_T("%hs: %s\n"), __func__, dir->fullname().GetString());
             // Tell the frame to update the listview with the new Directory
             (void)::SendMessage(m_hFrameWnd, WM_VISIT_DIRECTORY, 0, reinterpret_cast<LPARAM>(dir));
             bHandled = TRUE;
@@ -1405,7 +1538,7 @@ public:
 
     inline void SelectRoot()
     {
-        ATLTRACE2(_T("%s\n"), _T(__FUNCTION__));
+        ATLTRACE2(_T("%hs\n"), __func__);
         (void)SelectItem(GetRootItem());
     }
 
@@ -1453,7 +1586,7 @@ private:
     // We create our image list dynamically from the icons
     void PrepareImageList_()
     {
-        ATLTRACE2(_T("Preparing image list for %s\n"), _T(__FUNCTION__));
+        ATLTRACE2(_T("Preparing image list for %hs\n"), __func__);
         WORD iconList[] = { IDI_OBJMGR_ROOT, IDI_DIRECTORY, IDI_EMPTY_DIRECTORY };
         ATLVERIFY(m_imagelist.Create(imgListElemWidth, imgListElemHeight, ILC_COLOR32 | ILC_MASK, (int)_countof(iconList), (int)_countof(iconList)));
         for(size_t i = 0; i < _countof(iconList); i++)
@@ -1725,7 +1858,7 @@ public:
 
     LRESULT OnDoubleClick(UINT /*uMsg*/, WPARAM /*wParam*/, LPARAM /*lParam*/, BOOL& /*bHandled*/)
     {
-        ATLTRACE2(_T("%s\n"), _T(__FUNCTION__));
+        ATLTRACE2(_T("%hs\n"), __func__);
         // Find where the user clicked, so we know the item
         LVHITTESTINFO lvhtti = {0};
         CPoint pt;
@@ -1741,7 +1874,7 @@ public:
 
     LRESULT OnHeaderItemClick(int /*idCtrl*/, LPNMHDR pnmh, BOOL& /*bHandled*/)
     {
-        ATLTRACE2(_T("%s\n"), _T(__FUNCTION__));
+        ATLTRACE2(_T("%hs\n"), __func__);
         LPNMHEADER p = reinterpret_cast<LPNMHEADER>(pnmh);
         if(p->iButton == 0)
         {
@@ -1835,7 +1968,7 @@ private:
     void OpenDirectory_(Directory* dir) const
     {
         ATLASSERT(dir != NULL);
-        ATLTRACE2(_T("%s: %s\n"), _T(__FUNCTION__), dir->fullname().GetString());
+        ATLTRACE2(_T("%hs: %s\n"), __func__, dir->fullname().GetString());
         // Tell the frame to update the listview with the new Directory
         (void)::SendMessage(m_hFrameWnd, WM_SELECT_TREEVIEW_DIRECTORY, 0, reinterpret_cast<LPARAM>(dir));
     }
@@ -1931,7 +2064,9 @@ private:
 class CNtObjectsStatusBar : public CMultiPaneStatusBarCtrlImpl<CNtObjectsStatusBar>
 {
 public:
+    /*lint -save -e446 */
     DECLARE_WND_SUPERCLASS(_T("NtObjectsStatusBar"), GetWndClassName())
+    /*lint -restore */
 
     void SetPaneWidths(int pane_widths[], int nPanes)
     {
@@ -2224,7 +2359,7 @@ public:
         ATLASSERT(lParam != 0);
         if(Directory* dir = reinterpret_cast<Directory*>(lParam))
         {
-            ATLTRACE2(_T("%s: %s\n"), _T(__FUNCTION__), dir->fullname().GetString());
+            ATLTRACE2(_T("%hs: %s\n"), __func__, dir->fullname().GetString());
             VisitDirectory_(dir);
             SetActiveObject_(dir);
         }
@@ -2237,7 +2372,7 @@ public:
         ATLASSERT(lParam != 0);
         if (Directory* dir = reinterpret_cast<Directory*>(lParam))
         {
-            ATLTRACE2(_T("%s: %s\n"), _T(__FUNCTION__), dir->fullname().GetString());
+            ATLTRACE2(_T("%hs: %s\n"), __func__, dir->fullname().GetString());
             m_treeview.SelectDirectory(dir);
         }
         return 0;
@@ -2346,7 +2481,7 @@ private:
 
     void Navigate_(bool /*forward*/)
     {
-        ATLTRACE2(_T("%s\n"), _T(__FUNCTION__));
+        ATLTRACE2(_T("%hs\n"), __func__);
     }
 
     inline void SetActiveObject_(GenericObject* obj)
@@ -2363,6 +2498,11 @@ private:
 
     void VisitDirectory_(Directory* dir)
     {
+        ATLASSERT(dir != NULL);
+        if (!dir)
+        {
+            return;
+        }
 #ifdef _DEBUG
         LPCWSTR fullName = (dir) ? dir->fullname().GetString() : _T("");
         ATLTRACE2(_T("Visiting Directory: '%s'\n"), fullName);
@@ -2558,7 +2698,7 @@ private:
         if (size_t len = (lpszFileName) ? _tcslen(lpszFileName) : 0)
         {
 #ifndef NTOBJX_NO_XML_EXPORT
-            if ((len > 4) && (0 == _tcsicmp(_T(".xml"), &lpszFileName[len -4])))
+            if (lpszFileName && (len > 4) && (0 == _tcsicmp(_T(".xml"), &lpszFileName[len -4])))
             {
                 ATLTRACE2(_T("Assuming the user wants to save an XML, based on extension: %s\n"), lpszFileName);
                 CXmlObjectDirectoryDumper dump(lpszFileName);
