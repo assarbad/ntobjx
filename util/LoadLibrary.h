@@ -178,7 +178,7 @@ public:
     ~CLoadLibrary()
 
     {
-        (void)Free();
+        (void)Free(); //lint !e1551
     }
     inline bool IsOK() const
     {

@@ -318,11 +318,6 @@ public:
     {
     }
 
-    inline operator CImageList&()
-    {
-        return m_imagelist;
-    }
-
     inline operator CImageList const&() const
     {
         return m_imagelist;
@@ -432,8 +427,7 @@ class CObjectPropertySheet :
     public CPropertySheetImpl<CObjectPropertySheet>
 {
     class CObjectSecurityNAPage :
-        public CPropertyPageImpl<CObjectSecurityNAPage>,
-        public CWinDataExchange<CObjectSecurityNAPage>
+        public CPropertyPageImpl<CObjectSecurityNAPage>
     {
         typedef CPropertyPageImpl<CObjectSecurityNAPage> baseClass;
         GenericObject*  m_obj;
@@ -460,7 +454,7 @@ class CObjectPropertySheet :
         {
         }
 
-        ~CObjectSecurityNAPage()
+        virtual ~CObjectSecurityNAPage()
         {
             m_obj = 0;
         }
@@ -530,8 +524,7 @@ class CObjectPropertySheet :
     };
 
     class CObjectDetailsPage :
-        public CPropertyPageImpl<CObjectDetailsPage>,
-        public CWinDataExchange<CObjectDetailsPage>
+        public CPropertyPageImpl<CObjectDetailsPage>
     {
         typedef CPropertyPageImpl<CObjectDetailsPage> baseClass;
         GenericObject*  m_obj;
@@ -1156,6 +1149,11 @@ public:
 #endif // DDKBUILD
 
         SetTitle(obj->name(), PSH_PROPTITLE);
+    }
+
+    ~CObjectPropertySheet()
+    {
+        m_obj = 0;
     }
 
     LRESULT OnInitDialog(UINT /*uMsg*/, WPARAM /*wParam*/, LPARAM /*lParam*/, BOOL& bHandled)
@@ -2536,6 +2534,7 @@ private:
     class IObjectDirectoryDumper
     {
     public:
+        virtual ~IObjectDirectoryDumper() {}
         virtual void SymlinkObject(const SymbolicLink* obj) = 0;
         virtual void ContainedObject(const GenericObject* obj) = 0;
         virtual void EnterDirectory(const Directory* obj) = 0;
@@ -2586,7 +2585,14 @@ private:
         ~CXmlObjectDirectoryDumper()
         {
             ATLTRACE2(_T("Saving XML document to %s.\n"), m_fileName.GetString());
-            m_document.save_file(m_fileName.GetString());
+            try
+            {
+                m_document.save_file(m_fileName.GetString());
+            }
+            catch (...)
+            {
+                ATLTRACE2(_T(__FUNCTION__) _T("\n"));
+            }
         }
 
         void SymlinkObject(const SymbolicLink* obj)
