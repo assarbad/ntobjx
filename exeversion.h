@@ -36,7 +36,7 @@
 #define TEXT_AUTHOR            Oliver Schneider // author (optional value)
 #define PRD_MAJVER             1 // major product version
 #define PRD_MINVER             2 // minor product version
-#define PRD_PATCH              5 // patch number
+#define PRD_PATCH              6 // patch number
 #define PRD_BUILD              HG_REV_NO // build number for product
 #define PRD_BUILD_NUMERIC      HG_REV_NO_NUMERIC // build number for product
 #define FILE_MAJVER            PRD_MAJVER // major file version

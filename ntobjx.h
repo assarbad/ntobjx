@@ -2066,8 +2066,10 @@ public:
     DECLARE_WND_SUPERCLASS(_T("NtObjectsStatusBar"), GetWndClassName())
     /*lint -restore */
 
-    void SetPaneWidths(int pane_widths[], int nPanes)
+    void InitializePanes(bool bIsAdmin, bool bIsElevated)
     {
+        int panes[] = { ID_DEFAULT_PANE, bIsAdmin ? IDS_STATUSBAR_ADMIN : IDS_STATUSBAR_NOTADMIN, bIsElevated ? IDS_STATUSBAR_ELEVATED : IDS_STATUSBAR_NOTELEVATED };
+        SetPanes(panes, _countof(panes));
     }
 };
 
@@ -2085,7 +2087,6 @@ public:
     CSplitterWindow m_vsplit;
     CNtObjectsTreeView m_treeview;
     CNtObjectsListView m_listview;
-    LONG m_objroot_initialized; // only write to this member using Interlocked*()
     bool m_bFirstOnIdle;
     bool m_bIsFindDialogOpen;
     GenericObject* m_activeObject;
@@ -2095,16 +2096,19 @@ public:
     HRESULT (CALLBACK* DllGetVersion)(DLLVERSIONINFO *);
     CObjectImageList m_imagelist;
     CAccessToken m_Token;
+    const bool m_bIsAdmin;
+    const bool m_bIsElevated;
 
     CNtObjectsMainFrame()
-        : m_objroot_initialized(0)
-        , m_bFirstOnIdle(true) // to force initial refresh
+        : m_bFirstOnIdle(true) // to force initial refresh
         , m_bIsFindDialogOpen(false)
         , m_activeObject(0)
         , m_verinfo(ModuleHelper::GetResourceInstance())
         , m_visitedListIndex(-1)
-        , m_imagelist()
         , DllGetVersion(0)
+        , m_imagelist()
+        , m_bIsAdmin(IsUserAdmin() != FALSE)
+        , m_bIsElevated(IsElevated() != FALSE)
     {
         *(FARPROC*)&DllGetVersion = ::GetProcAddress(::GetModuleHandle(_T("shell32.dll")), "DllGetVersion");
     }
@@ -2146,10 +2150,8 @@ public:
 
     LRESULT OnCreate(UINT /*uMsg*/, WPARAM /*wParam*/, LPARAM /*lParam*/, BOOL& /*bHandled*/)
     {
-        m_objroot_initialized = 0;
-
-        ATLVERIFY(CreateSimpleStatusBar());
-        m_status.SubclassWindow(m_hWndStatusBar);
+        m_hWndStatusBar = m_status.Create(*this);
+        m_status.InitializePanes(m_bIsAdmin, m_bIsElevated);
 
         m_hWndClient = m_vsplit.Create(m_hWnd, rcDefault, NULL, WS_CHILD | WS_VISIBLE | WS_CLIPSIBLINGS | WS_CLIPCHILDREN);
         // Add WS_EX_CONTROLPARENT such that tab stops work
@@ -2215,8 +2217,6 @@ public:
             ATLVERIFY(SetWindowText(newDlgTitle.GetString()));
         }
 
-        AdjustStatusBarPaneWidths_();
-
         // register object for message filtering and idle updates
         CMessageLoop* pLoop = _Module.GetMessageLoop();
         ATLASSERT(NULL != pLoop);
@@ -2264,13 +2264,11 @@ public:
     LRESULT OnViewRefresh(WORD /*wNotifyCode*/, WORD /*wID*/, HWND /*hWndCtl*/, BOOL& /*bHandled*/)
     {
         CWaitCursor wc;
-        (void)InterlockedExchange(&m_objroot_initialized, 0);
         if(m_treeview.EmptyAndRefill())
         {
             // Invalidate the cached items
             m_visitedList.RemoveAll();
             m_visitedListIndex = -1;
-            (void)InterlockedExchange(&m_objroot_initialized, 1);
             // The following triggers TVN_SELCHANGED which in turn fills the listview
             m_treeview.SelectRoot();
         }
@@ -2488,12 +2486,6 @@ private:
         SetStatusBarItem_(obj);
     }
 
-    void AdjustStatusBarPaneWidths_()
-    {
-        int panes[] = { ID_DEFAULT_PANE, IDS_STATUSBAR_PANE1, IDS_STATUSBAR_PANE2 };
-        m_status.SetPanes(panes, _countof(panes));
-    }
-
     void VisitDirectory_(Directory* dir)
     {
         ATLASSERT(dir != NULL);
@@ -2527,8 +2519,42 @@ private:
 
     inline void SetStatusBarItem_(GenericObject* obj)
     {
+        ATLASSERT(obj != NULL);
+
         LPCWSTR fullName = (obj) ? obj->fullname().GetString() : NULL;
-        ::SetWindowText(m_hWndStatusBar, fullName);
+        if (Directory* pdir = dynamic_cast<Directory*>(obj))
+        {
+            Directory& dir = *pdir;
+            ULONG nSymLinks = 0, nDirectories = 0, nChildren = static_cast<ULONG>(dir.size());
+            for (size_t i = 0; i < dir.size(); i++)
+            {
+                GenericObject* childobj = dir[i];
+
+                ATLASSERT(childobj != NULL);
+                if (!childobj)
+                    continue;
+
+                switch (dir[i]->objtype())
+                {
+                case otSymlink:
+                    nSymLinks++;
+                    break;
+                case otDirectory:
+                    nDirectories++;
+                    break;
+                default:
+                    break;
+                }
+            }
+            CString str;
+            str.Format(IDS_STATUSBAR_DIR_DETAILS, fullName, nDirectories, nSymLinks, nChildren);
+            m_status.SetWindowText(str);
+        }
+        else
+        {
+            m_status.SetWindowText(fullName);
+        }
+        m_status.SetPaneIcon(ID_DEFAULT_PANE, m_imagelist.IconByObjType(obj));
     }
 
     class IObjectDirectoryDumper

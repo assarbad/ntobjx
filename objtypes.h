@@ -1,5 +1,5 @@
 #ifndef __OBJTYPES_H_VER__
-#define __OBJTYPES_H_VER__ 2016040618
+#define __OBJTYPES_H_VER__ 2016102911
 // $Id$
 #if (defined(_MSC_VER) && (_MSC_VER >= 1020)) || defined(__MCPP)
 #pragma once
@@ -49,8 +49,7 @@
 
 // Special types
 #define IDI_OBJMGR_ROOT          5900
-#define IDI_SYMLINK_TO_DIRECTORY 5901
-#define IDI_EMPTY_DIRECTORY      5902
+#define IDI_EMPTY_DIRECTORY      5901
 
 // "Aliases" (i.e. we reuse the images) of the above types
 #define IDI_ALPCPORT             IDI_PORT

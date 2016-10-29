@@ -285,9 +285,9 @@ BEGIN
     IDR_MAINFRAME           "ntobjx - NT Objects"
     IDS_PROGRAM_DESCRIPTION "A program to explore the dark corners of NT"
     IDS_ABOUT_MENUITEM      "About ntobjx\tF12"
-    IDS_STATUSBAR_PANE1     "Pane 1"
-    IDS_STATUSBAR_PANE2     "Pane 2"
-    IDS_STATUSBAR_PANE3     "Pane 3"
+    IDS_STATUSBAR_ADMIN     "admin"
+    IDS_STATUSBAR_NOTADMIN  "!admin"
+    IDS_STATUSBAR_ELEVATED  "elevated"
     IDS_OBJSPEC_NAME1_EVENT "Event state:"
     IDS_OBJSPEC_NAME2_EVENT "Event type:"
     IDS_OBJSPEC_ATTR2_EVENT_SYNC "SynchronizationEvent"
@@ -295,6 +295,8 @@ BEGIN
     IDS_OBJSPEC_ERROR       "Error retrieving %s-specific basic information"
     IDS_OBJSPEC_INFO        "%s-specific basic information"
     IDS_OBJSPEC_NAME1_SYMLINK "Link target:"
+    IDS_STATUSBAR_NOTELEVATED "!elevated"
+    IDS_STATUSBAR_DIR_DETAILS "%s (dir: %u, lnk %u, all %u)"
 END
 
 STRINGTABLE

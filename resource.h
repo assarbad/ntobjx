@@ -5,9 +5,9 @@
 #define IDR_MAINFRAME                   1
 #define IDS_PROGRAM_DESCRIPTION         2
 #define IDS_ABOUT_MENUITEM              3
-#define IDS_STATUSBAR_PANE1             4
-#define IDS_STATUSBAR_PANE2             5
-#define IDS_STATUSBAR_PANE3             6
+#define IDS_STATUSBAR_ADMIN             4
+#define IDS_STATUSBAR_NOTADMIN          5
+#define IDS_STATUSBAR_ELEVATED          6
 #define IDS_OBJSPEC_NAME1_EVENT         7
 #define IDS_OBJSPEC_NAME2_EVENT         8
 #define IDS_OBJSPEC_ATTR2_EVENT_SYNC    9
@@ -15,6 +15,8 @@
 #define IDS_OBJSPEC_ERROR               11
 #define IDS_OBJSPEC_INFO                12
 #define IDS_OBJSPEC_NAME1_SYMLINK       13
+#define IDS_STATUSBAR_NOTELEVATED       14
+#define IDS_STATUSBAR_DIR_DETAILS       15
 #define IDD_PROPERTIES                  107
 #define IDR_POPUP_MENU1                 202
 #define IDD_ABOUT                       205
