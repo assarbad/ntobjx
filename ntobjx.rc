@@ -59,7 +59,7 @@ BEGIN
     END
     POPUP "&View"
     BEGIN
-        MENUITEM "&Find\tCtrl+F",               ID_VIEW_FIND
+        MENUITEM "&Find\tCtrl+F",               ID_VIEW_FIND, INACTIVE
         MENUITEM SEPARATOR
         MENUITEM "&Properties\tF10",            ID_VIEW_PROPERTIES
         MENUITEM "&Refresh\tF5",                ID_VIEW_REFRESH

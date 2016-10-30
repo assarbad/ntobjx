@@ -106,7 +106,11 @@ using WTL::CFileDialog;
 
 namespace
 {
-    int const maxVisitedDepth = 10;
+#ifdef _DEBUG
+    int const maxVisitedDepth = 5; // this is more practical in debug builds
+#else
+    int const maxVisitedDepth = 50;
+#endif // _DEBUG
     int const imgListElemWidth = 16;
     int const imgListElemHeight = 16;
 
@@ -2099,7 +2103,7 @@ public:
     bool m_bIsFindDialogOpen;
     GenericObject* m_activeObject;
     CVersionInfo m_verinfo;
-    CSimpleArray<Directory*> m_visitedList;
+    CSimpleStack<Directory*> m_visitedList;
     int m_visitedListIndex;
     HRESULT (CALLBACK* DllGetVersion)(DLLVERSIONINFO *);
     CObjectImageList m_imagelist;
@@ -2335,6 +2339,7 @@ public:
 
     LRESULT OnAppCommand(UINT /*uMsg*/, WPARAM /*wParam*/, LPARAM lParam, BOOL& bHandled)
     {
+        bHandled = FALSE;
         SHORT cmd  = GET_APPCOMMAND_LPARAM(lParam);
         if(int sz = m_visitedList.GetSize())
         {
@@ -2343,18 +2348,15 @@ public:
             {
             case APPCOMMAND_BROWSER_BACKWARD:
             case APPCOMMAND_MEDIA_PREVIOUSTRACK:
-                ATLTRACE2(_T("Navigate backward\n"));
-                Navigate_(false);
+                bHandled = Navigate_(false);
                 break;
             case APPCOMMAND_BROWSER_FORWARD:
             case APPCOMMAND_MEDIA_NEXTTRACK:
-                ATLTRACE2(_T("Navigate forward\n"));
-                Navigate_(true);
+                bHandled = Navigate_(true);
                 break;
             }
         }
 
-        bHandled = FALSE;
         return 0;
     }
 
@@ -2494,9 +2496,14 @@ public:
 
 private:
 
-    void Navigate_(bool /*forward*/)
+    inline BOOL Navigate_(bool forward)
     {
-        ATLTRACE2(_T("%hs\n"), __func__);
+        ATLTRACE2(_T("%hs: %s\n"), __func__, (forward) ? _T("forward") : _T("backward"));
+        if (m_visitedList.GetSize())
+        {
+            TrimVisitedList_();
+        }
+        return FALSE;
     }
 
     inline void SetActiveObject_(GenericObject* obj)
@@ -2521,18 +2528,29 @@ private:
         AddToVisitedList_(dir);
     }
 
-    void AddToVisitedList_(Directory* dir)
+    inline void AddToVisitedList_(Directory* dir)
     {
         if(dir)
         {
             ATLASSERT(maxVisitedDepth > 0);
-            // Should we trim the list?
-            while(m_visitedList.GetSize() >= maxVisitedDepth)
+            TrimVisitedList_();
+            ATLVERIFY(m_visitedList.Push(dir));
+#ifdef _DEBUG
+            for (int i = 0; i < m_visitedList.GetSize(); i++)
             {
-                ATLVERIFY(m_visitedList.RemoveAt(0));
-                ATLTRACE2(_T("Trimmed visited list. New size: %i\n"), m_visitedList.GetSize());
+                ATLTRACE2(_T("  [%i] %s\n"), i, m_visitedList[i]->fullname().GetString());
             }
-            ATLVERIFY(m_visitedList.Add(dir));
+#endif // _DEBUG
+        }
+    }
+
+    inline void TrimVisitedList_()
+    {
+        // Should we trim the list?
+        while (m_visitedList.GetSize() > maxVisitedDepth)
+        {
+            ATLVERIFY(m_visitedList.RemoveAt(0));
+            ATLTRACE2(_T("Trimmed visited list. New size: %i\n"), m_visitedList.GetSize());
         }
     }
 
