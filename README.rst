@@ -4,10 +4,10 @@
 
 About
 -----
-This utility is meant to become an open source clone and eventually to surpass
-the functionality of WinObj_. I have dabbled with the NT object manager
-namespace before and there are some other corners of Windows systems which are
-usually hard to explore using default Win32-APIs.
+This utility is meant to be an open source replacement of WinObj_. I have
+dabbled with the NT object manager namespace before and there are some other
+corners of Windows systems which are usually hard to explore using default
+Win32-APIs.
 
 This utility aims to shed some light into these dark corners of Windows systems.
 
