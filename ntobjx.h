@@ -97,6 +97,7 @@ using WTL::CFileDialog;
 #define WM_VISIT_DIRECTORY           (WM_USER+100)
 #define WM_SET_ACTIVE_OBJECT         (WM_USER+101)
 #define WM_SELECT_TREEVIEW_DIRECTORY (WM_USER+102)
+#define WM_DIRECTORY_UP              (WM_USER+103)
 
 // Handler prototypes (uncomment arguments if needed):
 //  LRESULT MessageHandler(UINT /*uMsg*/, WPARAM /*wParam*/, LPARAM /*lParam*/, BOOL& /*bHandled*/)
@@ -554,7 +555,6 @@ class CObjectPropertySheet :
 
         BEGIN_MSG_MAP(CObjectDetailsPage)
             MESSAGE_HANDLER(WM_INITDIALOG, OnInitDialog)
-            MESSAGE_HANDLER(WM_GETDLGCODE, OnGetDlgCode)
             MESSAGE_HANDLER(WM_CTLCOLORSTATIC, OnCtlColorStatic)
             CHAIN_MSG_MAP(baseClass)
         END_MSG_MAP()
@@ -676,11 +676,6 @@ class CObjectPropertySheet :
             }
             bHandled = FALSE;
             return FALSE;
-        }
-
-        LRESULT OnGetDlgCode(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL& /*bHandled*/)
-        {
-            return DLGC_WANTALLKEYS | DefDlgProc(*this, uMsg, wParam, lParam);
         }
 
     private:
@@ -1237,7 +1232,6 @@ public:
 
     BEGIN_MSG_MAP(CAboutDlg)
         MESSAGE_HANDLER(WM_INITDIALOG, OnInitDialog)
-        MESSAGE_HANDLER(WM_GETDLGCODE, OnGetDlgCode)
         MESSAGE_HANDLER(WM_CTLCOLORSTATIC, OnCtlColorStatic)
         COMMAND_ID_HANDLER(IDOK, OnCloseCmd)
         COMMAND_ID_HANDLER(IDCANCEL, OnCloseCmd)
@@ -1310,11 +1304,6 @@ public:
         return TRUE;
     }
 
-    LRESULT OnGetDlgCode(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL& /*bHandled*/)
-    {
-        return DLGC_WANTALLKEYS | DefDlgProc(*this, uMsg, wParam, lParam);
-    }
-
     LRESULT OnCtlColorStatic(UINT /*uMsg*/, WPARAM wParam, LPARAM lParam, BOOL& bHandled)
     {
         HWND hStatic = reinterpret_cast<HWND>(lParam);
@@ -1349,12 +1338,14 @@ typedef CWinTraitsOR<WS_TABSTOP | LVS_SHAREIMAGELISTS | LVS_SINGLESEL, LVS_EX_FU
 class CNtObjectsTreeView :
     public CWindowImpl<CNtObjectsTreeView, CTreeViewCtrlEx, CNtObjectsTreeViewTraits>
 {
+    typedef CAtlMap<Directory*, HTREEITEM> CReverseDirTreeMap;
+    typedef CWindowImpl<CNtObjectsTreeView, CTreeViewCtrlEx, CNtObjectsTreeViewTraits> baseClass;
+
     bool m_bInitialized;
     Directory m_objroot;
     CImageList m_imagelist;
     HWND m_hFrameWnd;
-    CAtlMap<Directory*, HTREEITEM> m_reverseLookup;
-    typedef CWindowImpl<CNtObjectsTreeView, CTreeViewCtrlEx, CNtObjectsTreeViewTraits> baseClass;
+    CReverseDirTreeMap m_reverseLookup;
 public:
     /*lint -save -e446 */
     DECLARE_WND_SUPERCLASS(_T("NtObjectsTreeView"), CTreeViewCtrlEx::GetWndClassName())
@@ -1569,6 +1560,22 @@ public:
             }
 
         }
+    }
+
+    Directory* ParentFromSelection()
+    {
+        CTreeItem ti(GetSelectedItem());
+        ATLASSERT(!ti.IsNull());
+        if(!ti.IsNull())
+        {
+            CTreeItem parent(ti.GetParent());
+            if (!parent.IsNull()) // we only want to navigate up if there is a parent ...
+            {
+                if (Directory* dir = reinterpret_cast<Directory*>(parent.GetData()))
+                    return dir;
+            }
+        }
+        return 0;
     }
 
 private:
@@ -1848,7 +1855,8 @@ public:
             GetParent().GetNextDlgTabItem(m_hWnd).SetFocus(); // Allows to still use tab to change focus
             return 0;
         case VK_BACK:
-            // FIXME|TODO
+            // Tell the frame that the user asked to go one directory back up
+            (void)::SendMessage(m_hFrameWnd, WM_DIRECTORY_UP, 0, 0);
             break;
         }
         return DefWindowProc(uMsg, wParam, lParam);
@@ -2137,6 +2145,7 @@ public:
         MESSAGE_HANDLER(WM_VISIT_DIRECTORY, OnVisitDirectory)
         MESSAGE_HANDLER(WM_SELECT_TREEVIEW_DIRECTORY, OnSelectTreeviewDirectory)
         MESSAGE_HANDLER(WM_SET_ACTIVE_OBJECT, OnSetActiveObject)
+        MESSAGE_HANDLER(WM_DIRECTORY_UP, OnDirectoryUp)
         MESSAGE_HANDLER(WM_MENUSELECT, OnMenuSelect)
         COMMAND_ID_HANDLER(ID_APP_EXIT, OnFileExit)
         COMMAND_ID_HANDLER(ID_VIEW_PROPERTIES, OnViewProperties)
@@ -2379,6 +2388,16 @@ public:
         if(GenericObject* obj = reinterpret_cast<GenericObject*>(lParam))
         {
             SetActiveObject_(obj);
+        }
+        return 0;
+    }
+
+    inline LRESULT OnDirectoryUp(UINT /*uMsg*/, WPARAM /*wParam*/, LPARAM /*lParam*/, BOOL& /*bHandled*/)
+    {
+        if (Directory* dir = m_treeview.ParentFromSelection())
+        {
+            ATLTRACE2(_T("%hs: %s\n"), __func__, dir->fullname().GetString());
+            m_treeview.SelectDirectory(dir);
         }
         return 0;
     }

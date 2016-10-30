@@ -9,7 +9,7 @@ the functionality of WinObj_. I have dabbled with the NT object manager
 namespace before and there are some other corners of Windows systems which are
 usually hard to explore using default Win32-APIs.
 
-This utility aims to shed some light into these corners of Windows systems.
+This utility aims to shed some light into these dark corners of Windows systems.
 
 Download
 --------
@@ -65,8 +65,8 @@ The GUI utility itself is released under Microsoft Public License (MS-PL_), the
 license under which the Windows Template Library (WTL_) comes. That is owed to
 the fact that I am not a lawyer and therefore cannot judge how compatible that
 license is with other licenses. For example the MS-PL is *not* compatible with
-the GPL for all I know. Meaning that linking the WTL into a program under GPL is
-not possible.
+the GPL for all I know. Meaning that linking the WTL into a program under GPL
+would not be possible.
 
 However, I am dual-licensing all of my source files under the MIT license *and*
 MS-PL. The resulting binary is released under the terms of the MS-PL, but the

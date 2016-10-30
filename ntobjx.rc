@@ -296,7 +296,7 @@ BEGIN
     IDS_OBJSPEC_INFO        "%s-specific basic information"
     IDS_OBJSPEC_NAME1_SYMLINK "Link target:"
     IDS_STATUSBAR_NOTELEVATED "!elevated"
-    IDS_STATUSBAR_DIR_DETAILS "%s (dir: %u, lnk %u, all %u)"
+    IDS_STATUSBAR_DIR_DETAILS "%s (dir: %u, lnk: %u, all: %u)"
 END
 
 STRINGTABLE
