@@ -11,6 +11,8 @@ usually hard to explore using default Win32-APIs.
 
 This utility aims to shed some light into these dark corners of Windows systems.
 
+You can find screenshots in the documentation_.
+
 Download
 --------
 A code-signed version of the utility can be found in the `download section`_.
@@ -79,6 +81,7 @@ at the same time complying with the requirements of the MS-PL.
 The texts for both licenses can be found in ``LICENSE.txt`` and ``wtl/MS-PL.txt``
 respectively.
 
+.. _documentation: https://bitbucket.org/assarbad/ntobjx/wiki/help/English
 .. _download section: https://bitbucket.org/assarbad/ntobjx/downloads
 .. _live.sysinternals.com: https://live.sysinternals.com/sigcheck.exe
 .. _premake4 flavor: https://bitbucket.org/windirstat/premake-stable
