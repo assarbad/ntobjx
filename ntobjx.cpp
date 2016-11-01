@@ -37,6 +37,7 @@
 #include <atlctrlx.h>
 #include <atlsplit.h>
 #include <atlsecurity.h>
+#include <stdarg.h>
 
 #include "resource.h"
 
@@ -47,7 +48,6 @@ using NtObjMgr::GenericObject;
 using NtObjMgr::SymbolicLink;
 
 #include "ntobjx.h"
-#include <stdarg.h>
 
 CNtObjectsAppModule _Module;
 
@@ -62,6 +62,7 @@ CNtObjectsAppModule _Module;
 #define EXACTI_ENTRY(match, comment)   { _T(match), _T(comment), 0x1 }
 
 /*lint -save -e651 */
+// FIXME: this needs to go into the resource section
 const objtype_comment_t comments[] = {
     EXACTI_ENTRY("\\ArcName", "Symlinks mapping ARC-style (Advanced RISC Computing) names to NT-style names; used during early boot stages"),
     EXACTI_ENTRY("\\BaseNamedObjects", "This is where global ALPC port, event, job, mutex (mutant), semaphore, symbolic link, section (memory mapped file) and waitable timer objects live"),

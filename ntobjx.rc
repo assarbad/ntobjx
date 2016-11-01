@@ -13,36 +13,368 @@
 #undef APSTUDIO_READONLY_SYMBOLS
 
 /////////////////////////////////////////////////////////////////////////////
+// German (Germany) resources
+
+#if !defined(AFX_RESOURCE_DLL) || defined(AFX_TARG_DEU)
+LANGUAGE LANG_GERMAN, SUBLANG_GERMAN
+#pragma code_page(1252)
+
+/////////////////////////////////////////////////////////////////////////////
+//
+// Menu
+//
+
+IDR_MAINFRAME MENU
+BEGIN
+    POPUP "&Datei"
+    BEGIN
+        MENUITEM "&Speichern unter ...\tStrg+S", ID_FILE_SAVE_AS
+        MENUITEM SEPARATOR
+        MENUITEM "B&eenden\tAlt+F4",            ID_APP_EXIT
+    END
+    POPUP "An&sicht"
+    BEGIN
+        MENUITEM "&Suche Objekt\tStrg+F",       ID_VIEW_FIND, INACTIVE
+        MENUITEM SEPARATOR
+        MENUITEM "&Eigenschaften\tF10",         ID_VIEW_PROPERTIES
+        MENUITEM "Aktualisie&ren\tF5",          ID_VIEW_REFRESH
+        MENUITEM SEPARATOR
+        POPUP "Sprache wechse&ln"
+        BEGIN
+            MENUITEM "Englisch",                    ID_SWITCHLANGUAGE_ENGLISH
+            MENUITEM "Deutsch",                     ID_SWITCHLANGUAGE_GERMAN
+        END
+    END
+    MENUITEM "Ü&ber",                       ID_SHOW_ABOUT
+END
+
+IDR_POPUP_HYPERLINK1 MENU
+BEGIN
+    POPUP "Hyperlink context menu"
+    BEGIN
+        MENUITEM "Kopiere URL",                 ID_POPUPMENU_COPYURL
+    END
+END
+
+IDR_POPUP_MENU1 MENU
+BEGIN
+    POPUP "Beliebiges Objekt"
+    BEGIN
+        MENUITEM "Objekt&namen kopieren",       ID_POPUPMENU_COPYNAME
+        MENUITEM "Objekt&pfad kopieren",        ID_POPUPMENU_COPYFULLPATH
+        MENUITEM "Objektpfad als C/C++ &String", ID_POPUPMENU_COPYASCSTRING
+        MENUITEM SEPARATOR
+        MENUITEM "&Eigenschaften\tF10",         ID_POPUPMENU_PROPERTIES
+    END
+    POPUP "SymbolicLink-Objekt"
+    BEGIN
+        MENUITEM "Objekt&namen kopieren",       ID_POPUPMENU_COPYNAME
+        MENUITEM "Objekt&pfad kopieren",        ID_POPUPMENU_COPYFULLPATH
+        MENUITEM "Objektpfad als C/C++ &String", ID_POPUPMENU_COPYASCSTRING
+        MENUITEM "Objekt&ziel kopieren",        ID_POPUPMENU_COPYSYMLINKTARGET
+        MENUITEM SEPARATOR
+        MENUITEM "&Eigenschaften\tF10",         ID_POPUPMENU_PROPERTIES
+    END
+    POPUP "Directory-Objekt"
+    BEGIN
+        MENUITEM "Ö&ffnen",                     ID_POPUPMENU_OPENDIRECTORY
+        MENUITEM "Objekt&namen kopieren",       ID_POPUPMENU_COPYNAME
+        MENUITEM "Objekt&pfad kopieren",        ID_POPUPMENU_COPYFULLPATH
+        MENUITEM "Objektpfad als C/C++ &String", ID_POPUPMENU_COPYASCSTRING
+        MENUITEM SEPARATOR
+        MENUITEM "&Eigenschaften\tF10",         ID_POPUPMENU_PROPERTIES
+    END
+END
+
+
+/////////////////////////////////////////////////////////////////////////////
+//
+// Accelerator
+//
+
+IDR_MAINFRAME ACCELERATORS
+BEGIN
+    "S",            ID_FILE_SAVE_AS,        VIRTKEY, CONTROL, NOINVERT
+    VK_F12,         ID_SHOW_ABOUT,          VIRTKEY, NOINVERT
+    VK_F10,         ID_VIEW_PROPERTIES,     VIRTKEY, NOINVERT
+    VK_F5,          ID_VIEW_REFRESH,        VIRTKEY, NOINVERT
+    "F",            ID_VIEW_FIND,           VIRTKEY, CONTROL, NOINVERT
+END
+
+
+/////////////////////////////////////////////////////////////////////////////
+//
+// Dialog
+//
+
+IDD_ABOUT DIALOGEX 0, 0, 255, 146
+STYLE DS_SETFONT | DS_MODALFRAME | DS_FIXEDSYS | WS_POPUP | WS_CAPTION | WS_SYSMENU
+CAPTION "Über"
+FONT 8, "MS Shell Dlg", 400, 0, 0x1
+BEGIN
+    DEFPUSHBUTTON   "OK",IDOK,102,125,50,14
+    CTEXT           "IDC_STATIC_PROGNAME",IDC_STATIC_PROGNAME,7,7,241,8,SS_NOPREFIX
+    CTEXT           "IDC_STATIC_PROJECT_WEBSITE",IDC_STATIC_PROJECT_WEBSITE,7,63,241,8,SS_NOPREFIX
+    CTEXT           "IDC_STATIC_DESCRIPTION",IDC_STATIC_DESCRIPTION,7,17,241,8,SS_NOPREFIX
+    CTEXT           "IDC_STATIC_COPYRIGHT",IDC_STATIC_COPYRIGHT,7,26,241,8,SS_NOPREFIX
+    CTEXT           "Quelltext und signierte Programmdateien findet ihr hier:",IDC_STATIC,7,55,241,8,SS_NOPREFIX
+    CTEXT           "IDC_STATIC_WEBSITE",IDC_STATIC_WEBSITE,7,36,241,8,SS_NOPREFIX
+    CTEXT           "IDC_STATIC_REVISION",IDC_STATIC_REVISION,7,75,241,8,SS_NOPREFIX
+    LTEXT           "IDC_STATIC_PORTIONSCOPYRIGHT",IDC_STATIC_PORTIONSCOPYRIGHT,7,90,241,34,SS_NOPREFIX
+END
+
+IDD_FIND_OBJECT DIALOGEX 0, 0, 239, 30
+STYLE DS_SETFONT | DS_MODALFRAME | DS_FIXEDSYS | WS_POPUP | WS_CAPTION | WS_SYSMENU
+CAPTION "Suche Objekt"
+FONT 8, "MS Shell Dlg", 400, 0, 0x1
+BEGIN
+    DEFPUSHBUTTON   "Suche",IDOK,180,8,50,14
+    EDITTEXT        IDC_EDIT_FINDTEXT,50,8,127,14,ES_AUTOHSCROLL
+    LTEXT           "Text suchen:",IDC_STATIC,7,11,43,8
+END
+
+IDD_PROPERTIES DIALOGEX 0, 0, 279, 207
+STYLE DS_SETFONT | DS_FIXEDSYS | WS_CHILD | WS_DISABLED | WS_CAPTION
+CAPTION "Objektdetails"
+FONT 8, "MS Shell Dlg", 0, 0, 0x0
+BEGIN
+    GROUPBOX        "Grundlegende Objektinformationen",IDC_STATIC,7,7,265,119,BS_CENTER
+    LTEXT           "&Name:",IDC_STATIC,12,18,22,8
+    LTEXT           "P&fad:",IDC_STATIC,12,34,18,8
+    LTEXT           "&Typ:",IDC_STATIC,12,50,16,8
+    GROUPBOX        "Verweise",IDC_STATIC,13,80,124,40
+    GROUPBOX        "Speicherkontingentnutzung",IDC_STATIC,141,80,124,40
+    EDITTEXT        IDC_EDIT_NAME,48,18,218,12,ES_READONLY | NOT WS_BORDER,WS_EX_STATICEDGE
+    EDITTEXT        IDC_EDIT_FULLNAME,48,34,218,12,ES_READONLY | NOT WS_BORDER,WS_EX_STATICEDGE
+    EDITTEXT        IDC_EDIT_TYPE,48,50,218,12,ES_READONLY | NOT WS_BORDER,WS_EX_STATICEDGE
+    LTEXT           "Als Zeiger:",IDC_STATIC,19,93,35,8,SS_NOPREFIX
+    LTEXT           "Als Handle:",IDC_STATIC,19,106,37,8,SS_NOPREFIX
+    LTEXT           "Paged Pool:",IDC_STATIC,147,93,39,8,SS_NOPREFIX
+    LTEXT           "Nonpaged Pool:",IDC_STATIC,147,106,52,8,SS_NOPREFIX
+    LTEXT           "",IDC_REF_BYPTR,59,93,72,8,SS_NOPREFIX
+    LTEXT           "",IDC_REF_BYHDL,59,106,72,8,SS_NOPREFIX
+    LTEXT           "",IDC_QUOTA_PAGED,202,93,59,8,SS_NOPREFIX
+    LTEXT           "",IDC_QUOTA_NONPAGED,202,106,59,8,SS_NOPREFIX
+    LTEXT           "Erzeugt:",IDC_STATIC,12,66,28,8
+    CTEXT           "",IDC_OBJ_CREATION_TIME,48,66,218,8,SS_NOPREFIX
+    GROUPBOX        "Objektspezifische grundlegende Informationen",IDC_GROUP_OBJSPECIFIC,7,129,265,71,BS_CENTER | NOT WS_VISIBLE
+    EDITTEXT        IDC_EXPLANATION_WHY,15,140,249,54,ES_CENTER | ES_MULTILINE | ES_READONLY | NOT WS_VISIBLE | NOT WS_BORDER | NOT WS_TABSTOP
+    RTEXT           "Static",IDC_STATIC_OBJSPEC_NAME1,15,147,67,8,NOT WS_VISIBLE
+    RTEXT           "Static",IDC_STATIC_OBJSPEC_NAME2,15,162,67,8,NOT WS_VISIBLE
+    RTEXT           "Static",IDC_STATIC_OBJSPEC_NAME3,15,177,67,8,NOT WS_VISIBLE
+    LTEXT           "Static",IDC_STATIC_OBJSPEC_ATTR1,95,147,169,8,NOT WS_VISIBLE
+    LTEXT           "Static",IDC_STATIC_OBJSPEC_ATTR2,95,162,169,8,NOT WS_VISIBLE
+    LTEXT           "Static",IDC_STATIC_OBJSPEC_ATTR3,95,177,169,8,NOT WS_VISIBLE
+END
+
+IDD_SECURITY_NOT_AVAILABLE DIALOGEX 0, 0, 279, 207
+STYLE DS_SETFONT | DS_FIXEDSYS | WS_CHILD | WS_DISABLED | WS_CAPTION
+CAPTION "Sicherheit (nicht verfügbar)"
+FONT 8, "MS Shell Dlg", 0, 0, 0x0
+BEGIN
+    CTEXT           "Keine Sicherheitsinformationen verfügbar",IDC_NO_SECURITY_CAPTION,7,74,265,8,SS_NOPREFIX
+    EDITTEXT        IDC_EXPLANATION_WHY,7,87,265,113,ES_CENTER | ES_MULTILINE | ES_READONLY | NOT WS_BORDER | NOT WS_TABSTOP
+END
+
+
+/////////////////////////////////////////////////////////////////////////////
+//
+// DESIGNINFO
+//
+
+#ifdef APSTUDIO_INVOKED
+GUIDELINES DESIGNINFO
+BEGIN
+    IDD_ABOUT, DIALOG
+    BEGIN
+        LEFTMARGIN, 7
+        RIGHTMARGIN, 248
+        TOPMARGIN, 7
+        BOTTOMMARGIN, 139
+    END
+
+    IDD_FIND_OBJECT, DIALOG
+    BEGIN
+        LEFTMARGIN, 7
+        RIGHTMARGIN, 232
+        TOPMARGIN, 7
+        BOTTOMMARGIN, 23
+    END
+
+    IDD_PROPERTIES, DIALOG
+    BEGIN
+        LEFTMARGIN, 7
+        RIGHTMARGIN, 272
+        TOPMARGIN, 7
+        BOTTOMMARGIN, 200
+    END
+
+    IDD_SECURITY_NOT_AVAILABLE, DIALOG
+    BEGIN
+        LEFTMARGIN, 7
+        RIGHTMARGIN, 272
+        TOPMARGIN, 7
+        BOTTOMMARGIN, 200
+    END
+END
+#endif    // APSTUDIO_INVOKED
+
+
+/////////////////////////////////////////////////////////////////////////////
+//
+// AFX_DIALOG_LAYOUT
+//
+
+IDD_ABOUT AFX_DIALOG_LAYOUT
+BEGIN
+    0
+END
+
+IDD_FIND_OBJECT AFX_DIALOG_LAYOUT
+BEGIN
+    0
+END
+
+IDD_PROPERTIES AFX_DIALOG_LAYOUT
+BEGIN
+    0
+END
+
+IDD_SECURITY_NOT_AVAILABLE AFX_DIALOG_LAYOUT
+BEGIN
+    0
+END
+
+
+/////////////////////////////////////////////////////////////////////////////
+//
+// String Table
+//
+
+STRINGTABLE
+BEGIN
+    IDR_MAINFRAME           "ntobjx - NT Objekte"
+    IDS_PROGRAM_DESCRIPTION "Inspiziert den Namensraum des NT-Objektmanagers"
+    IDS_ABOUT_MENUITEM      "Über ntobjx\tF12"
+    IDS_STATUSBAR_ADMIN     "admin"
+    IDS_STATUSBAR_NOTADMIN  "!admin"
+    IDS_STATUSBAR_ELEVATED  "erhöht"
+    IDS_OBJSPEC_NAME1_EVENT "Event-Zustand:"
+    IDS_OBJSPEC_NAME2_EVENT "Event-Typ:"
+    IDS_OBJSPEC_ATTR2_EVENT_SYNC "SynchronizationEvent"
+    IDS_OBJSPEC_ATTR2_EVENT_NOTIFY "NotificationEvent"
+    IDS_OBJSPEC_ERROR       "Fehler beim Ermitteln der %s-spezifischen grundlegenden Informationen"
+    IDS_OBJSPEC_INFO        "%s-spezifische grundlegende Informationen"
+    IDS_OBJSPEC_NAME1_SYMLINK "Linkziel:"
+    IDS_STATUSBAR_NOTELEVATED "!erhöht"
+    IDS_STATUSBAR_DIR_DETAILS "%s (Vrz: %u, Lnk: %u, Alle: %u)"
+END
+
+STRINGTABLE
+BEGIN
+    IDS_ABOUT_DESCRIPTION   "Über dieses Programm"
+    ID_SWITCHLANGUAGE_GERMAN 
+                            "Anwendungssprache für diese Sitzung auf Deutsch setzen"
+    ID_SWITCHLANGUAGE_ENGLISH 
+                            "Anwendungssprache für diese Sitzung auf Englisch setzen"
+END
+
+STRINGTABLE
+BEGIN
+    ID_APP_ABOUT            "Zeige Programminformationen, Versionsnummer und Copyright\nÜber"
+    ID_APP_EXIT             "Anwendung beenden\nBeenden"
+END
+
+STRINGTABLE
+BEGIN
+    ID_VIEW_PROPERTIES      "Zeige die Eigenschaften des ausgewählten Objekts\nEigenschaften"
+    ID_POPUPMENU_COPYNAME   "Kopiere Objektnamen in Zwischenablage"
+    ID_POPUPMENU_COPYFULLPATH 
+                            "Kopiere vollständigen Objektpfad in Zwischenablage"
+    ID_POPUPMENU_COPYSYMLINKTARGET "Kopiere Linkziel in Zwischenablage"
+    ID_POPUPMENU_PROPERTIES "Zeige die Eigenschaften des ausgewählten Objekts"
+    ID_COLNAME_OBJNAME      "Name"
+    ID_COLNAME_OBJTYPE      "Typ"
+    ID_COLNAME_OBJLNKTGT    "Ziel"
+END
+
+STRINGTABLE
+BEGIN
+    ID_VIEW_REFRESH         "Objektliste aktualisieren\nAktualisieren"
+END
+
+STRINGTABLE
+BEGIN
+    IDS_PROPERTIES          "Eigenschaften von"
+    ID_VIEW_FIND            "Suche Objekt"
+END
+
+STRINGTABLE
+BEGIN
+    ATL_IDS_SCSIZE          "Fenstergröße anpassen"
+    ATL_IDS_SCMOVE          "Fensterposition anpassen"
+    ATL_IDS_SCMINIMIZE      "Fenster zu einem Symbol in der Taskleiste minimieren"
+    ATL_IDS_SCMAXIMIZE      "Fenster maximal vergrößern"
+    ATL_IDS_SCNEXTWINDOW    "Zum nächsten Dokument springen"
+    ATL_IDS_SCPREVWINDOW    "Zum vorherigen Dokument springen"
+    ATL_IDS_SCCLOSE         "Schließt das aktive Fenster und fordert zum Abspeichern auf"
+END
+
+STRINGTABLE
+BEGIN
+    ATL_IDS_SCRESTORE       "Wiederherstellen der normalen Fenstergröße"
+    ATL_IDS_SCTASKLIST      "Aufgabenliste aktivieren"
+END
+
+STRINGTABLE
+BEGIN
+    ATL_IDS_IDLEMESSAGE     "Bereit"
+END
+
+STRINGTABLE
+BEGIN
+    ID_FILE_SAVE_AS         "Speichere Objektbaum als (UTF-8) Textdatei oder XML-Datei"
+END
+
+STRINGTABLE
+BEGIN
+    IDS_OBJSPEC_NAME1_IOCOMPLETION "Tiefe:"
+    IDS_OBJSPEC_NAME1_KEY   "Zuletzt geschrieben:"
+    IDS_OBJSPEC_NAME2_KEY   "Titelindex:"
+    IDS_OBJSPEC_NAME1_MUTANT "Stillgelegt:"
+    IDS_OBJSPEC_NAME2_MUTANT "Aktueller Zähler:"
+    IDS_OBJSPEC_NAME3_MUTANT "Aufrufer ist Besitzer:"
+    IDS_OBJSPEC_NAME1_SECTION "Basisadresse:"
+    IDS_OBJSPEC_NAME2_SECTION "Maximale Größe:"
+    IDS_OBJSPEC_NAME3_SECTION "Bereitstellungsattribute:"
+    IDS_OBJSPEC_NAME1_SEMAPHORE "Aktueller Zähler:"
+    IDS_OBJSPEC_NAME2_SEMAPHORE "Zählergrenze:"
+END
+
+STRINGTABLE
+BEGIN
+    IDS_OBJSPEC_NAME1_TIMER "Timer-Zustand:"
+    IDS_OBJSPEC_NAME2_TIMER "Verbleibende Zeit:"
+END
+
+STRINGTABLE
+BEGIN
+    IDS_TITLEBAR_FMTSTR     "%s: Version %s, Revision: %s"
+    IDS_FEATURE_UNAVAILABLE "Diese Funktion ist nicht verfügbar, da sie nicht in diese Programmversion eingebaut wurde."
+    IDS_NOT_AVAILABLE_SHORT "nicht verfügbar"
+    IDS_ABOUT               "Über "
+END
+
+#endif    // German (Germany) resources
+/////////////////////////////////////////////////////////////////////////////
+
+
+/////////////////////////////////////////////////////////////////////////////
 // English (United States) resources
 
 #if !defined(AFX_RESOURCE_DLL) || defined(AFX_TARG_ENU)
 LANGUAGE LANG_ENGLISH, SUBLANG_ENGLISH_US
 #pragma code_page(1252)
-
-#ifdef APSTUDIO_INVOKED
-/////////////////////////////////////////////////////////////////////////////
-//
-// TEXTINCLUDE
-//
-
-1 TEXTINCLUDE 
-BEGIN
-    "resource.h\0"
-END
-
-2 TEXTINCLUDE 
-BEGIN
-    "#include ""atlres.h""\r\n"
-    "\0"
-END
-
-3 TEXTINCLUDE 
-BEGIN
-    "\0"
-END
-
-#endif    // APSTUDIO_INVOKED
-
 
 /////////////////////////////////////////////////////////////////////////////
 //
@@ -63,8 +395,14 @@ BEGIN
         MENUITEM SEPARATOR
         MENUITEM "&Properties\tF10",            ID_VIEW_PROPERTIES
         MENUITEM "&Refresh\tF5",                ID_VIEW_REFRESH
+        MENUITEM SEPARATOR
+        POPUP "Switch &language"
+        BEGIN
+            MENUITEM "English",                     ID_SWITCHLANGUAGE_ENGLISH
+            MENUITEM "German (Deutsch)",            ID_SWITCHLANGUAGE_GERMAN
+        END
     END
-    MENUITEM "&About",                      ID_SHOW_ABOUT
+    MENUITEM "A&bout",                      ID_SHOW_ABOUT
 END
 
 IDR_POPUP_MENU1 MENU
@@ -104,16 +442,6 @@ BEGIN
         MENUITEM "Copy link URL",               ID_POPUPMENU_COPYURL
     END
 END
-
-
-/////////////////////////////////////////////////////////////////////////////
-//
-// Icon
-//
-
-// Icon with lowest ID value placed first to ensure application icon
-// remains consistent on all systems.
-IDR_MAINFRAME           ICON                    "res\\ntobjx.ico"
 
 
 /////////////////////////////////////////////////////////////////////////////
@@ -166,7 +494,7 @@ STYLE DS_SETFONT | DS_MODALFRAME | DS_FIXEDSYS | WS_POPUP | WS_CAPTION | WS_SYSM
 CAPTION "Find Object"
 FONT 8, "MS Shell Dlg", 400, 0, 0x1
 BEGIN
-    DEFPUSHBUTTON   "OK",IDOK,180,8,50,14
+    DEFPUSHBUTTON   "Find",IDOK,180,8,50,14
     EDITTEXT        IDC_EDIT_FINDTEXT,50,8,127,14,ES_AUTOHSCROLL
     LTEXT           "Text to find:",IDC_STATIC,7,11,41,8
 END
@@ -275,6 +603,41 @@ BEGIN
 END
 
 
+#ifdef APSTUDIO_INVOKED
+/////////////////////////////////////////////////////////////////////////////
+//
+// TEXTINCLUDE
+//
+
+1 TEXTINCLUDE 
+BEGIN
+    "resource.h\0"
+END
+
+2 TEXTINCLUDE 
+BEGIN
+    "#include ""atlres.h""\r\n"
+    "\0"
+END
+
+3 TEXTINCLUDE 
+BEGIN
+    "\0"
+END
+
+#endif    // APSTUDIO_INVOKED
+
+
+/////////////////////////////////////////////////////////////////////////////
+//
+// Icon
+//
+
+// Icon with lowest ID value placed first to ensure application icon
+// remains consistent on all systems.
+IDR_MAINFRAME           ICON                    "res\\ntobjx.ico"
+
+
 /////////////////////////////////////////////////////////////////////////////
 //
 // String Table
@@ -283,7 +646,7 @@ END
 STRINGTABLE
 BEGIN
     IDR_MAINFRAME           "ntobjx - NT Objects"
-    IDS_PROGRAM_DESCRIPTION "A program to explore the dark corners of NT"
+    IDS_PROGRAM_DESCRIPTION "Inspects the NT object manager namespace"
     IDS_ABOUT_MENUITEM      "About ntobjx\tF12"
     IDS_STATUSBAR_ADMIN     "admin"
     IDS_STATUSBAR_NOTADMIN  "!admin"
@@ -302,6 +665,10 @@ END
 STRINGTABLE
 BEGIN
     IDS_ABOUT_DESCRIPTION   "About this program"
+    ID_SWITCHLANGUAGE_GERMAN 
+                            "Set application language to German for this session"
+    ID_SWITCHLANGUAGE_ENGLISH 
+                            "Set application language to English for this session"
 END
 
 STRINGTABLE
@@ -341,7 +708,7 @@ BEGIN
     ATL_IDS_SCMAXIMIZE      "Enlarge the window to full size"
     ATL_IDS_SCNEXTWINDOW    "Switch to the next document window"
     ATL_IDS_SCPREVWINDOW    "Switch to the previous document window"
-    ATL_IDS_SCCLOSE         "Close the active window and prompts to save the documents"
+    ATL_IDS_SCCLOSE         "Closes the active window and prompts to save the documents"
 END
 
 STRINGTABLE
@@ -357,7 +724,7 @@ END
 
 STRINGTABLE
 BEGIN
-    ID_FILE_SAVE_AS         "Save object tree as flat (UTF-8) text file"
+    ID_FILE_SAVE_AS         "Save object tree as flat (UTF-8) text or XML file"
 END
 
 STRINGTABLE
@@ -379,6 +746,14 @@ STRINGTABLE
 BEGIN
     IDS_OBJSPEC_NAME1_TIMER "Timer state:"
     IDS_OBJSPEC_NAME2_TIMER "Remaining time:"
+END
+
+STRINGTABLE
+BEGIN
+    IDS_TITLEBAR_FMTSTR     "%s: version %s, rev: %s"
+    IDS_FEATURE_UNAVAILABLE "The feature has not been included in this build."
+    IDS_NOT_AVAILABLE_SHORT "N/A"
+    IDS_ABOUT               "About "
 END
 
 #endif    // English (United States) resources
