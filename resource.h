@@ -21,6 +21,9 @@
 #define IDS_FEATURE_UNAVAILABLE         17
 #define IDS_NOT_AVAILABLE_SHORT         18
 #define IDS_ABOUT                       19
+#define IDS_OBJ_OPEN_STATUS             20
+#define IDS_OBJ_QUERY_STATUS            21
+#define IDS_UNKNOWN_FMTSTR              22
 #define IDD_PROPERTIES                  107
 #define IDR_POPUP_MENU1                 202
 #define IDD_ABOUT                       205

@@ -132,7 +132,7 @@ int Run(LPTSTR /*lpstrCmdLine*/ = NULL, int nCmdShow = SW_SHOWDEFAULT)
 
     if(wndMain.CreateEx() == NULL)
     {
-        ATLTRACE(_T("Main window creation failed!\n"));
+        ATLTRACE2(_T("Main window creation failed!\n"));
         return 0;
     }
 

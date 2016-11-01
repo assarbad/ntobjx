@@ -775,7 +775,7 @@ class CObjectPropertySheet :
                     m_stcQuotaPaged.SetWindowText(na);
                     m_stcQuotaNonPaged.SetWindowText(na);
                     NTSTATUS status = m_objHdl.getQueryStatus();
-                    str.Format(_T("<Object query status: 0x%08X>"), status);
+                    str.Format(IDS_OBJ_QUERY_STATUS, status);
                     m_stcCreationTime.SetWindowText(str);
                 }
             }
@@ -787,7 +787,7 @@ class CObjectPropertySheet :
                 m_stcQuotaNonPaged.SetWindowText(na);
                 NTSTATUS status = m_objHdl.getOpenStatus();
                 CString str;
-                str.Format(_T("<Object open status: 0x%08X>"), status);
+                str.Format(IDS_OBJ_OPEN_STATUS, status);
                 m_stcCreationTime.SetWindowText(str);
             }
 
@@ -846,11 +846,12 @@ class CObjectPropertySheet :
                 FILETIME ft = { li.LowPart, static_cast<DWORD>(li.HighPart) };
                 SYSTEMTIME st;
                 ATLVERIFY(FileTimeToSystemTime(&ft, &st));
+                // DO NOT LOCALIZE THIS!
                 str.Format(_T("%04d-%02d-%02d %02d:%02d:%02d.%03d"), st.wYear, st.wMonth, st.wDay, st.wHour, st.wMinute, st.wSecond, st.wMilliseconds);
             }
             else
             {
-                str = _T("n/a");
+                ATLVERIFY(str.LoadString(IDS_NOT_AVAILABLE_SHORT));
             }
             return str;
         }
@@ -905,6 +906,7 @@ class CObjectPropertySheet :
 #endif
         CString ReadableAllocationAttributes_(ULONG aa)
         {
+            // TBD: should we localize these strings or rather not?
             CString str;
             if (PAGE_NOACCESS & aa)
             {
@@ -1025,7 +1027,7 @@ class CObjectPropertySheet :
                         ATLVERIFY(str.LoadString(IDS_OBJSPEC_ATTR2_EVENT_NOTIFY));
                         break;
                     default:
-                        str.Format(_T("<unknown=%d>"), info->EventType);
+                        str.Format(IDS_UNKNOWN_FMTSTR, info->EventType);
                         break;
                     }
                     m_stcObjSpecAttr2.SetWindowText(str);
