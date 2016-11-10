@@ -274,6 +274,156 @@ namespace
     }
 } // anonymous namespace
 
+// This class ensures on Windows XP and earlier that the SetThreadLocale()
+// function will get the exact LANGID of available resources matching a
+// given primary LANGID
+// Example:
+// If the app contains resources for
+class CLanguageSetter
+{
+    typedef LANGID(WINAPI * TFNSetThreadUILanguage)(LANGID LangId);
+
+    DWORD m_dwMajorVersion;
+    TFNSetThreadUILanguage m_pfnSetThreadUILanguage;
+    CSimpleStack<LANGID> m_langIDs;
+    LANGID m_fallback;
+    bool const m_bHasLists;
+public:
+    CLanguageSetter(LANGID fallback = MAKELANGID(LANG_ENGLISH, SUBLANG_ENGLISH_US), HMODULE hInstance = ModuleHelper::GetResourceInstance(), LPCTSTR lpType = RT_DIALOG, LPCTSTR lpName = MAKEINTRESOURCE(IDD_ABOUT))
+        : m_dwMajorVersion(0)
+        , m_pfnSetThreadUILanguage(0)
+        , m_langIDs()
+        , m_fallback(fallback)
+        , m_bHasLists(EnumAboutBoxLanguages_(hInstance, lpType, lpName))
+    {
+        OSVERSIONINFOEX osvix = { 0 };
+        osvix.dwMajorVersion = 6;
+        ULONGLONG dwlConditionMask = 0;
+        dwlConditionMask = ::VerSetConditionMask(dwlConditionMask, VER_MAJORVERSION, VER_GREATER_EQUAL);
+        m_dwMajorVersion = ::VerifyVersionInfo(&osvix, VER_MAJORVERSION, dwlConditionMask) ? 6 : 5;
+        ATLASSERT(m_dwMajorVersion != 0);
+
+        if (m_dwMajorVersion >= 6)
+        {
+            m_pfnSetThreadUILanguage = (TFNSetThreadUILanguage)(::GetProcAddress(::GetModuleHandle(_T("kernel32.dll")), "SetThreadUILanguage"));
+            ATLASSERT(m_pfnSetThreadUILanguage != 0);
+        }
+        else
+        {
+            ATLASSERT((m_dwMajorVersion < 6) && (m_pfnSetThreadUILanguage == 0));
+        }
+    }
+
+    inline bool operator !() const
+    {
+        return !operator bool();
+    }
+
+    inline operator bool() const
+    {
+        return m_bHasLists;
+    }
+
+    inline LANGID set(LANGID langID = ::GetUserDefaultLangID())
+    {
+        langID = matchResourceLang_(LANGIDFROMLCID(langID));
+        if (m_pfnSetThreadUILanguage) // Vista and newer
+        {
+            m_pfnSetThreadUILanguage(langID);
+            ATLTRACE2(_T("Using method for Vista and newer with SetThreadUILanguage(%04X)\n"), langID);
+        }
+        else // Windows XP, 2003 Server and older
+        {
+            ATLVERIFY(::SetThreadLocale(MAKELCID(langID, SORT_DEFAULT)));
+            ATLTRACE2(_T("Using method for older Windows versions SetThreadLocale(%04X) -- GetThreadLocale() returns %04X\n"), MAKELCID(langID, SORT_DEFAULT), ::GetThreadLocale());
+            ATLASSERT(::GetThreadLocale() == MAKELCID(langID, SORT_DEFAULT));
+        }
+        return langID;
+    }
+
+private:
+#   define RES_LANGID_LIST_LEN 0x10
+    typedef struct _RESLANGIDLIST
+    {
+        size_t size;
+        size_t index;
+        LANGID* list;
+    } RESLANGIDLIST;
+
+    inline LANGID matchResourceLang_(LANGID localeID) const
+    {
+        if (m_bHasLists)
+        {
+            LANGID const tomatch = PRIMARYLANGID(localeID);
+
+            for (int i = 0; i < m_langIDs.GetSize(); i++)
+            {
+                LANGID curr = PRIMARYLANGID(m_langIDs[i]);
+
+                if (tomatch == curr)
+                {
+                    ATLTRACE2(_T("Returning first match based on primary language identifier %04X (primary lang: %04X).\n"), m_langIDs[i], tomatch);
+                    return m_langIDs[i];
+                }
+            }
+        }
+        return m_fallback; // our fallback LANGID
+    }
+
+    static BOOL CALLBACK NtObjectsEnumResLangProc_(HMODULE /*hModule*/, LPCWSTR /*lpType*/, LPCWSTR /*lpName*/, WORD wLanguage, LONG_PTR lParam)
+    {
+        RESLANGIDLIST* lpResLangIdList = (RESLANGIDLIST*)lParam;
+        ATLASSERT(lpResLangIdList != NULL);
+
+        if (wLanguage == MAKELANGID(LANG_NEUTRAL, SUBLANG_NEUTRAL))
+        {
+            ATLTRACE2(_T("Skipping neutral language resource\n"));
+            return TRUE;
+        }
+
+        ATLASSERT(wLanguage != MAKELANGID(LANG_NEUTRAL, SUBLANG_NEUTRAL));
+        if (lpResLangIdList != NULL)
+        {
+            RESLANGIDLIST& resLangIdList = *lpResLangIdList;
+            size_t& index = resLangIdList.index;
+            if (index < resLangIdList.size)
+            {
+                resLangIdList.list[index] = wLanguage;
+                index++;
+            }
+        }
+        return TRUE;
+    }
+
+    bool EnumAboutBoxLanguages_(HMODULE hInstance, LPCTSTR lpType, LPCTSTR lpName)
+    {
+        bool retval = false;
+        CTempBuffer<LANGID, RES_LANGID_LIST_LEN> resLangIdListBuf;
+        LANGID* list = resLangIdListBuf.Allocate(RES_LANGID_LIST_LEN);
+        ATLASSERT(list != NULL);
+
+        if (list != NULL)
+        {
+            RESLANGIDLIST resLangIdList = { RES_LANGID_LIST_LEN, 0, list };
+            memset(list, 0, sizeof(LANGID) * RES_LANGID_LIST_LEN);
+
+            // We use the about box resource as our sentinel which languages are available
+            retval = FALSE != ::EnumResourceLanguages(hInstance, lpType, lpName, NtObjectsEnumResLangProc_, (LONG_PTR)(&resLangIdList));
+
+            if (retval)
+            {
+                for (size_t i = 0; i < resLangIdList.index; i++)
+                {
+                    ATLASSERT(i < resLangIdList.size);
+                    m_langIDs.Push(resLangIdList.list[i]);
+                    ATLTRACE2(_T("Found resource language #%i %04X (%u)\n"), (int)i+1, resLangIdList.list[i], resLangIdList.list[i]);
+                }
+            }
+        }
+        return retval;
+    }
+};
+
 class CSuppressRedraw
 {
     HWND m_hWnd;
@@ -470,7 +620,9 @@ class CObjectPropertySheet :
 
             if (m_bFeatureUnavailable)
             {
-                m_edtExplanation.SetWindowText(_T("The feature has not been included in this build."));
+                CString str;
+                ATLVERIFY(str.LoadString(IDS_FEATURE_UNAVAILABLE));
+                m_edtExplanation.SetWindowText(str);
             }
             else
             {
@@ -597,7 +749,8 @@ class CObjectPropertySheet :
                 m_edtType.SetWindowText(m_obj->type());
             }
 
-            LPCTSTR na = _T("n/a");
+            CString na;
+            ATLVERIFY(na.LoadString(IDS_NOT_AVAILABLE_SHORT));
             if (m_objHdl)
             {
                 CString str;
@@ -622,7 +775,7 @@ class CObjectPropertySheet :
                     m_stcQuotaPaged.SetWindowText(na);
                     m_stcQuotaNonPaged.SetWindowText(na);
                     NTSTATUS status = m_objHdl.getQueryStatus();
-                    str.Format(_T("<Object query status: 0x%08X>"), status);
+                    str.Format(IDS_OBJ_QUERY_STATUS, status);
                     m_stcCreationTime.SetWindowText(str);
                 }
             }
@@ -634,7 +787,7 @@ class CObjectPropertySheet :
                 m_stcQuotaNonPaged.SetWindowText(na);
                 NTSTATUS status = m_objHdl.getOpenStatus();
                 CString str;
-                str.Format(_T("<Object open status: 0x%08X>"), status);
+                str.Format(IDS_OBJ_OPEN_STATUS, status);
                 m_stcCreationTime.SetWindowText(str);
             }
 
@@ -693,11 +846,12 @@ class CObjectPropertySheet :
                 FILETIME ft = { li.LowPart, static_cast<DWORD>(li.HighPart) };
                 SYSTEMTIME st;
                 ATLVERIFY(FileTimeToSystemTime(&ft, &st));
+                // DO NOT LOCALIZE THIS!
                 str.Format(_T("%04d-%02d-%02d %02d:%02d:%02d.%03d"), st.wYear, st.wMonth, st.wDay, st.wHour, st.wMinute, st.wSecond, st.wMilliseconds);
             }
             else
             {
-                str = _T("n/a");
+                ATLVERIFY(str.LoadString(IDS_NOT_AVAILABLE_SHORT));
             }
             return str;
         }
@@ -752,6 +906,7 @@ class CObjectPropertySheet :
 #endif
         CString ReadableAllocationAttributes_(ULONG aa)
         {
+            // TBD: should we localize these strings or rather not?
             CString str;
             if (PAGE_NOACCESS & aa)
             {
@@ -872,7 +1027,7 @@ class CObjectPropertySheet :
                         ATLVERIFY(str.LoadString(IDS_OBJSPEC_ATTR2_EVENT_NOTIFY));
                         break;
                     default:
-                        str.Format(_T("<unknown=%d>"), info->EventType);
+                        str.Format(IDS_UNKNOWN_FMTSTR, info->EventType);
                         break;
                     }
                     m_stcObjSpecAttr2.SetWindowText(str);
@@ -1274,12 +1429,15 @@ public:
         ATLVERIFY(m_revisionurl.SetHyperLink(revisionurl));
         ATLVERIFY(m_revisionurl.SubclassWindow(GetDlgItem(IDC_STATIC_REVISION)));
 
+        CString str;
+        ATLVERIFY(str.LoadString(IDS_PROGRAM_DESCRIPTION));
         ATLVERIFY(SetDlgItemText(IDC_STATIC_COPYRIGHT, m_verinfo[_T("LegalCopyright")]));
-        ATLVERIFY(SetDlgItemText(IDC_STATIC_DESCRIPTION, m_verinfo[_T("FileDescription")]));
+        ATLVERIFY(SetDlgItemText(IDC_STATIC_DESCRIPTION, str));
         ATLVERIFY(SetDlgItemText(IDC_STATIC_PROGNAME, m_verinfo[_T("ProductName")]));
         ATLVERIFY(SetDlgItemText(IDC_STATIC_PORTIONSCOPYRIGHT, m_verinfo[_T("Portions Copyright")]));
 
-        CString caption(_T("About "));
+        CString caption;
+        ATLVERIFY(caption.LoadString(IDS_ABOUT));
         caption.Append(m_verinfo[_T("ProductName")]);
         caption.Append(_T(" "));
         caption.Append(m_verinfo[_T("FileVersion")]);
@@ -2095,6 +2253,7 @@ class CNtObjectsMainFrame :
 public:
     DECLARE_FRAME_WND_CLASS(_T("NtObjectsMainFrame"), IDR_MAINFRAME)
 
+    CLanguageSetter m_langSetter;
     CNtObjectsStatusBar m_status;
     CSplitterWindow m_vsplit;
     CNtObjectsTreeView m_treeview;
@@ -2110,9 +2269,11 @@ public:
     CAccessToken m_Token;
     const bool m_bIsAdmin;
     const bool m_bIsElevated;
+    LANGID m_currentLang;
 
     CNtObjectsMainFrame()
-        : m_bFirstOnIdle(true) // to force initial refresh
+        : m_langSetter()
+        , m_bFirstOnIdle(true) // to force initial refresh
         , m_bIsFindDialogOpen(false)
         , m_activeObject(0)
         , m_verinfo(ModuleHelper::GetResourceInstance())
@@ -2121,6 +2282,7 @@ public:
         , m_imagelist()
         , m_bIsAdmin(IsUserAdmin() != FALSE)
         , m_bIsElevated(IsElevated() != FALSE)
+        , m_currentLang(m_langSetter.set())
     {
         *(FARPROC*)&DllGetVersion = ::GetProcAddress(::GetModuleHandle(_T("shell32.dll")), "DllGetVersion");
     }
@@ -2129,13 +2291,14 @@ public:
     {
         if(CFrameWindowImpl<CNtObjectsMainFrame>::PreTranslateMessage(pMsg))
             return TRUE;
-        // We need this such that WS_TABSTOP takes effect
         if(IsDialogMessage(pMsg))
             return TRUE;
         return FALSE;
     }
 
     BEGIN_UPDATE_UI_MAP(CNtObjectsMainFrame)
+        UPDATE_ELEMENT(ID_SWITCHLANGUAGE_ENGLISH, UPDUI_MENUPOPUP)
+        UPDATE_ELEMENT(ID_SWITCHLANGUAGE_GERMAN, UPDUI_MENUPOPUP)
     END_UPDATE_UI_MAP()
 
     BEGIN_MSG_MAP(CNtObjectsMainFrame)
@@ -2157,12 +2320,16 @@ public:
         COMMAND_ID_HANDLER(ID_SHOW_ABOUT, OnShowAbout)
         COMMAND_ID_HANDLER(ID_FILE_SAVE_AS, OnSaveAs)
         COMMAND_ID_HANDLER(ID_VIEW_FIND, OnFindObject)
+        COMMAND_ID_HANDLER(ID_SWITCHLANGUAGE_ENGLISH, OnSwitchLanguage)
+        COMMAND_ID_HANDLER(ID_SWITCHLANGUAGE_GERMAN, OnSwitchLanguage)
         CHAIN_MSG_MAP(CUpdateUI<CNtObjectsMainFrame>)
         CHAIN_MSG_MAP(CFrameWindowImpl<CNtObjectsMainFrame>)
     END_MSG_MAP()
 
     LRESULT OnCreate(UINT /*uMsg*/, WPARAM /*wParam*/, LPARAM /*lParam*/, BOOL& /*bHandled*/)
     {
+        UpdateMainFormLanguage(m_currentLang);
+
         m_hWndStatusBar = m_status.Create(*this);
         m_status.InitializePanes(m_bIsAdmin, m_bIsElevated);
 
@@ -2225,7 +2392,7 @@ public:
         {
             ATLTRACE2(_T("Old title: %s\n"), oldDlgTitle.GetString());
             CString newDlgTitle;
-            newDlgTitle.Format(_T("%s: version %s, rev: %s"), oldDlgTitle.GetString(), m_verinfo[_T("ProductVersion")], m_verinfo[_T("Mercurial revision")]);
+            newDlgTitle.Format(IDS_TITLEBAR_FMTSTR, oldDlgTitle.GetString(), m_verinfo[_T("ProductVersion")], m_verinfo[_T("Mercurial revision")]);
             ATLTRACE2(_T("New title: %s\n"), newDlgTitle.GetString());
             ATLVERIFY(SetWindowText(newDlgTitle.GetString()));
         }
@@ -2324,6 +2491,46 @@ public:
         m_bIsFindDialogOpen = true;
 
         // Prepare the find dialog
+        return 0;
+    }
+
+    LANGID UpdateMainFormLanguage(LANGID langID, BOOL bRefreshAll = FALSE)
+    {
+        if(m_currentLang != langID)
+        {
+            m_currentLang = m_langSetter.set(langID);
+        }
+        ATLASSERT(ID_SWITCHLANGUAGE_GERMAN == MAKELANGID(LANG_GERMAN, SUBLANG_GERMAN));
+        ATLASSERT(ID_SWITCHLANGUAGE_ENGLISH == MAKELANGID(LANG_ENGLISH, SUBLANG_ENGLISH_US));
+        switch (m_currentLang)
+        {
+        case ID_SWITCHLANGUAGE_ENGLISH:
+            UISetCheck(ID_SWITCHLANGUAGE_ENGLISH, 1, bRefreshAll);
+            UISetCheck(ID_SWITCHLANGUAGE_GERMAN, 0, bRefreshAll);
+            break;
+        case ID_SWITCHLANGUAGE_GERMAN:
+            UISetCheck(ID_SWITCHLANGUAGE_GERMAN, 1, bRefreshAll);
+            UISetCheck(ID_SWITCHLANGUAGE_ENGLISH, 0, bRefreshAll);
+            break;
+        default:
+            ATLASSERT(!"This should never happen");
+            break;
+        }
+        return m_currentLang;
+    }
+
+    LRESULT OnSwitchLanguage(WORD /*wNotifyCode*/, WORD wID, HWND /*hWndCtl*/, BOOL& /*bHandled*/)
+    {
+        switch (wID)
+        {
+        case ID_SWITCHLANGUAGE_GERMAN:
+        case ID_SWITCHLANGUAGE_ENGLISH:
+            UpdateMainFormLanguage(wID, TRUE);
+            break;
+        default:
+            ATLTRACE2(_T("Oi! That language isn't implemented in the GUI!\n"));
+            break;
+        }
         return 0;
     }
 

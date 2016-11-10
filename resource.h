@@ -17,6 +17,13 @@
 #define IDS_OBJSPEC_NAME1_SYMLINK       13
 #define IDS_STATUSBAR_NOTELEVATED       14
 #define IDS_STATUSBAR_DIR_DETAILS       15
+#define IDS_TITLEBAR_FMTSTR             16
+#define IDS_FEATURE_UNAVAILABLE         17
+#define IDS_NOT_AVAILABLE_SHORT         18
+#define IDS_ABOUT                       19
+#define IDS_OBJ_OPEN_STATUS             20
+#define IDS_OBJ_QUERY_STATUS            21
+#define IDS_UNKNOWN_FMTSTR              22
 #define IDD_PROPERTIES                  107
 #define IDR_POPUP_MENU1                 202
 #define IDD_ABOUT                       205
@@ -62,6 +69,8 @@
 #define IDC_STATIC_OBJSPEC_ATTR1        1027
 #define IDC_STATIC_OBJSPEC_ATTR2        1028
 #define IDC_STATIC_OBJSPEC_ATTR3        1029
+#define ID_SWITCHLANGUAGE_GERMAN        1031
+#define ID_SWITCHLANGUAGE_ENGLISH       1033
 #define ID_VIEW_PROPERTIES              32774
 #define ID_POPUPMENU_COPYNAME           32775
 #define ID_POPUPMENU_COPYFULLPATH       32776
@@ -82,7 +91,7 @@
 #ifdef APSTUDIO_INVOKED
 #ifndef APSTUDIO_READONLY_SYMBOLS
 #define _APS_NEXT_RESOURCE_VALUE        218
-#define _APS_NEXT_COMMAND_VALUE         32788
+#define _APS_NEXT_COMMAND_VALUE         32790
 #define _APS_NEXT_CONTROL_VALUE         1028
 #define _APS_NEXT_SYMED_VALUE           108
 #endif
