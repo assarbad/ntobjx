@@ -2,6 +2,18 @@
  ntobjx: NT objects
 ====================
 
+Kurzer Hinweis
+--------------
+Dieses Programm gibt es jetzt auch auf Deutsch. Das funktioniert
+leider nur auf Windows Vista und neuer. Auf älteren Windowsversionen habe ich es
+noch nicht zuverlässig zum Laufen bekommen. Auf Vista und neuer wird ntobjx
+schon auf Deutsch gestartet, wenn euer System entsprechend konfiguriert ist.
+Ansonsten könnt ihr F11 oder das "View"-Menü zum Umschalten benutzen. Viel Spaß!
+
+Defekte könnt ihr mir gern auch auf Deutsch melden. Dokumentation auf Deutsch
+wird irgendwann nachgereicht, es sei denn jemand kommt mir zuvor und steuert es
+großzügig bei.
+
 About
 -----
 This utility is meant to be an open source replacement of WinObj_. I have

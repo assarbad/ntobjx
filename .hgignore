@@ -28,3 +28,5 @@ ntobjx.vs*.vcxproj.filters
 ntobjx.vs*.vcproj
 *.VC.db
 ntobjx.txt
+*.7z
+*.asc
