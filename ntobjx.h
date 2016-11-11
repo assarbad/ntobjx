@@ -106,6 +106,12 @@ using WTL::CFileDialog;
 
 namespace
 {
+    static const struct { UINT resId; } lvColumnDefaults[] = {
+        { ID_COLNAME_OBJNAME },
+        { ID_COLNAME_OBJTYPE },
+        { ID_COLNAME_OBJLNKTGT },
+    };
+
 #ifdef _DEBUG
     int const maxVisitedDepth = 5; // this is more practical in debug builds
 #else
@@ -329,7 +335,7 @@ public:
         langID = matchResourceLang_(LANGIDFROMLCID(langID));
         if (m_pfnSetThreadUILanguage) // Vista and newer
         {
-            m_pfnSetThreadUILanguage(langID);
+            ATLVERIFY(langID == m_pfnSetThreadUILanguage(langID));
             ATLTRACE2(_T("Using method for Vista and newer with SetThreadUILanguage(%04X)\n"), langID);
         }
         else // Windows XP, 2003 Server and older
@@ -630,7 +636,9 @@ class CObjectPropertySheet :
                 {
                     CLoadLibrary ntdll(_T("ntdll.dll"));
                     CSimpleBuf<TCHAR> status(ntdll.formatMessage<TCHAR>(ntdll.getHandle(), static_cast<DWORD>(m_objHdl.getOpenStatus())));
-                    m_edtExplanation.SetWindowText(status.Buffer());
+                    CString sStatus;
+                    sStatus.Format(IDS_STATUS_DESCRIPTION, m_objHdl.getOpenStatus(), status.Buffer());
+                    m_edtExplanation.SetWindowText(sStatus);
                 }
             }
             LONG oldStyle = m_edtExplanation.GetWindowLong(GWL_STYLE);
@@ -891,7 +899,9 @@ class CObjectPropertySheet :
         {
             CLoadLibrary ntdll(_T("ntdll.dll"));
             CSimpleBuf<TCHAR> status(ntdll.formatMessage<TCHAR>(ntdll.getHandle(), static_cast<DWORD>(statusCode)));
-            m_edtExplanation.SetWindowText(status.Buffer());
+            CString sStatus;
+            sStatus.Format(IDS_STATUS_DESCRIPTION, statusCode, status.Buffer());
+            m_edtExplanation.SetWindowText(sStatus);
             if (m_obj)
             {
                 CString str;
@@ -1335,36 +1345,45 @@ public:
 
         CMenu menu;
         ATLVERIFY(menu.LoadMenu(IDR_POPUP_HYPERLINK1));
-        // Get the popup menu at index 0 from the menu resource
-        CMenuHandle popup = menu.GetSubMenu(0);
+        ATLASSERT(menu.IsMenu());
 
-        // Let the user pick
-        int idCmd = popup.TrackPopupMenuEx(
-            TPM_LEFTALIGN | TPM_RETURNCMD | TPM_RIGHTBUTTON
-            , pt.x
-            , pt.y
-            , GetParent()
-            , NULL
-            );
-
-        if(idCmd)
+        if (menu.IsMenu())
         {
-            switch(idCmd)
+            // Get the popup menu at index 0 from the menu resource
+            CMenuHandle popup = menu.GetSubMenu(0);
+            ATLASSERT(popup.IsMenu());
+
+            if (popup.IsMenu())
             {
-            case ID_POPUPMENU_COPYURL:
-                if(m_lpstrHyperLink)
+                // Let the user pick
+                int idCmd = popup.TrackPopupMenuEx(
+                    TPM_LEFTALIGN | TPM_RETURNCMD | TPM_RIGHTBUTTON
+                    , pt.x
+                    , pt.y
+                    , GetParent()
+                    , NULL
+                );
+
+                if (idCmd)
                 {
-                    ATLTRACE2(_T("Copy URL\n"), idCmd);
-                    if(::OpenClipboard(GetParent()))
+                    switch (idCmd)
                     {
-                        ATLVERIFY(SetClipboardString(m_lpstrHyperLink));
-                        ATLVERIFY(::CloseClipboard());
+                    case ID_POPUPMENU_COPYURL:
+                        if (m_lpstrHyperLink)
+                        {
+                            ATLTRACE2(_T("Copy URL\n"), idCmd);
+                            if (::OpenClipboard(GetParent()))
+                            {
+                                ATLVERIFY(SetClipboardString(m_lpstrHyperLink));
+                                ATLVERIFY(::CloseClipboard());
+                            }
+                        }
+                        break;
+                    default:
+                        ATLTRACE2(_T("Chosen command: %i\n"), idCmd);
+                        break;
                     }
                 }
-                break;
-            default:
-                ATLTRACE2(_T("Chosen command: %i\n"), idCmd);
-                break;
             }
         }
 
@@ -1551,34 +1570,42 @@ public:
                 // Load menu resource
                 CMenu menu;
                 ATLVERIFY(menu.LoadMenu(IDR_POPUP_MENU1));
-                // Get the popup menu at index 0 from the menu resource
-                CMenuHandle popup = menu.GetSubMenu(0);
-
-                // Let the user pick
-                int idCmd = popup.TrackPopupMenuEx(
-                    TPM_LEFTALIGN | TPM_RETURNCMD | TPM_RIGHTBUTTON
-                    , spt.x
-                    , spt.y
-                    , GetParent()
-                    , NULL
-                    );
-
-                if(idCmd)
+                ATLASSERT(menu.IsMenu());
+                if (menu.IsMenu())
                 {
-                    switch(idCmd)
+                    // Get the popup menu at index 0 from the menu resource
+                    CMenuHandle popup = menu.GetSubMenu(0);
+                    ATLASSERT(popup.IsMenu());
+                    if (popup.IsMenu())
                     {
-                    case ID_POPUPMENU_COPYNAME:
-                    case ID_POPUPMENU_COPYFULLPATH:
-                    case ID_POPUPMENU_COPYASCSTRING:
-                    case ID_POPUPMENU_COPYSYMLINKTARGET:
-                        CopyItemToClipboard(m_hWnd, idCmd, dir);
-                        break;
-                    case ID_POPUPMENU_PROPERTIES:
-                        ::SendMessage(GetParent(), WM_COMMAND, MAKEWPARAM(ID_VIEW_PROPERTIES, 0), reinterpret_cast<LPARAM>(m_hWnd));
-                        break;
-                    default:
-                        ATLTRACE2(_T("Chosen command: %i\n"), idCmd);
-                        break;
+
+                        // Let the user pick
+                        int idCmd = popup.TrackPopupMenuEx(
+                            TPM_LEFTALIGN | TPM_RETURNCMD | TPM_RIGHTBUTTON
+                            , spt.x
+                            , spt.y
+                            , GetParent()
+                            , NULL
+                        );
+
+                        if (idCmd)
+                        {
+                            switch (idCmd)
+                            {
+                            case ID_POPUPMENU_COPYNAME:
+                            case ID_POPUPMENU_COPYFULLPATH:
+                            case ID_POPUPMENU_COPYASCSTRING:
+                            case ID_POPUPMENU_COPYSYMLINKTARGET:
+                                CopyItemToClipboard(m_hWnd, idCmd, dir);
+                                break;
+                            case ID_POPUPMENU_PROPERTIES:
+                                ::SendMessage(GetParent(), WM_COMMAND, MAKEWPARAM(ID_VIEW_PROPERTIES, 0), reinterpret_cast<LPARAM>(m_hWnd));
+                                break;
+                            default:
+                                ATLTRACE2(_T("Chosen command: %i\n"), idCmd);
+                                break;
+                            }
+                        }
                     }
                 }
             }
@@ -1948,40 +1975,48 @@ public:
             // Load menu resource
             CMenu menu;
             ATLVERIFY(menu.LoadMenu(IDR_POPUP_MENU1));
-            // Get the popup menu at index 0 from the menu resource
-            CMenuHandle popup = menu.GetSubMenu(submenuidx);
-
-            // Let the user pick
-            int idCmd = popup.TrackPopupMenuEx(
-                TPM_LEFTALIGN | TPM_RETURNCMD | TPM_RIGHTBUTTON
-                , pt.x
-                , pt.y
-                , GetParent()
-                , NULL
-                );
-
-            if(idCmd)
+            ATLASSERT(menu.IsMenu());
+            if (menu.IsMenu())
             {
-                switch(idCmd)
+                // Get the popup menu at index 0 from the menu resource
+                CMenuHandle popup = menu.GetSubMenu(submenuidx);
+                ATLASSERT(popup.IsMenu());
+
+                if (popup.IsMenu())
                 {
-                case ID_POPUPMENU_COPYNAME:
-                case ID_POPUPMENU_COPYFULLPATH:
-                case ID_POPUPMENU_COPYASCSTRING:
-                case ID_POPUPMENU_COPYSYMLINKTARGET:
-                    CopyItemToClipboard(m_hWnd, idCmd, itemobj);
-                    break;
-                case ID_POPUPMENU_PROPERTIES:
-                    ::SendMessage(GetParent(), WM_COMMAND, MAKEWPARAM(ID_VIEW_PROPERTIES, 0), reinterpret_cast<LPARAM>(m_hWnd));
-                    break;
-                case ID_POPUPMENU_OPENDIRECTORY:
-                    if(Directory* dir = dynamic_cast<Directory*>(itemobj))
+                    // Let the user pick
+                    int idCmd = popup.TrackPopupMenuEx(
+                        TPM_LEFTALIGN | TPM_RETURNCMD | TPM_RIGHTBUTTON
+                        , pt.x
+                        , pt.y
+                        , GetParent()
+                        , NULL
+                    );
+
+                    if (idCmd)
                     {
-                        OpenDirectory_(dir);
+                        switch (idCmd)
+                        {
+                        case ID_POPUPMENU_COPYNAME:
+                        case ID_POPUPMENU_COPYFULLPATH:
+                        case ID_POPUPMENU_COPYASCSTRING:
+                        case ID_POPUPMENU_COPYSYMLINKTARGET:
+                            CopyItemToClipboard(m_hWnd, idCmd, itemobj);
+                            break;
+                        case ID_POPUPMENU_PROPERTIES:
+                            ::SendMessage(GetParent(), WM_COMMAND, MAKEWPARAM(ID_VIEW_PROPERTIES, 0), reinterpret_cast<LPARAM>(m_hWnd));
+                            break;
+                        case ID_POPUPMENU_OPENDIRECTORY:
+                            if (Directory* dir = dynamic_cast<Directory*>(itemobj))
+                            {
+                                OpenDirectory_(dir);
+                            }
+                            break;
+                        default:
+                            ATLTRACE2(_T("Chosen command: %i\n"), idCmd);
+                            break;
+                        }
                     }
-                    break;
-                default:
-                    ATLTRACE2(_T("Chosen command: %i\n"), idCmd);
-                    break;
                 }
             }
         }
@@ -2131,6 +2166,25 @@ public:
         return _tcsicmp(pItem1->pszValue, pItem2->pszValue);
     }
 
+    void ReloadColumnNames()
+    {
+        if (static_cast<int>(_countof(lvColumnDefaults)) == GetColumnCount())
+        {
+            CString columnName;
+
+            for (int idx = 0; idx < static_cast<int>(_countof(lvColumnDefaults)); idx++)
+            {
+                ATLVERIFY(columnName.LoadString(lvColumnDefaults[idx].resId));
+
+                LVCOLUMN lvc = { 0 };
+                lvc.mask = LVCF_TEXT;
+                lvc.pszText = const_cast<LPTSTR>(columnName.GetString());
+                lvc.cchTextMax = columnName.GetLength() + 1;
+                SetColumn(idx, &lvc);
+            }
+        }
+    }
+
 private:
 
     void OpenDirectory_(Directory* dir) const
@@ -2187,20 +2241,13 @@ private:
 
     void ResetAllColumns_()
     {
-        static const struct { UINT resId; } columnDefaults[] = {
-            {ID_COLNAME_OBJNAME},
-            {ID_COLNAME_OBJTYPE},
-            {ID_COLNAME_OBJLNKTGT},
-        };
-
-        // FIXME|TODO: later we may want to reinitialize columns when switching UI languages
-        if(GetColumnCount() < static_cast<int>(_countof(columnDefaults)))
+        if(GetColumnCount() < static_cast<int>(_countof(lvColumnDefaults)))
         {
             DeleteAllColumns_();
             CString columnName;
-            for(int idx = 0; idx < static_cast<int>(_countof(columnDefaults)); idx++)
+            for(int idx = 0; idx < static_cast<int>(_countof(lvColumnDefaults)); idx++)
             {
-                ATLVERIFY(columnName.LoadString(columnDefaults[idx].resId));
+                ATLVERIFY(columnName.LoadString(lvColumnDefaults[idx].resId));
                 if(idx > (GetColumnCount() - 1))
                 {
                     InsertColumn(idx, columnName);
@@ -2236,10 +2283,23 @@ public:
     DECLARE_WND_SUPERCLASS(_T("NtObjectsStatusBar"), GetWndClassName())
     /*lint -restore */
 
-    void InitializePanes(bool bIsAdmin, bool bIsElevated)
+    void InitializePanes(bool bIsAdmin, bool bIsElevated, bool bSetText = true)
     {
+        ATLASSERT(!IsSimple());
+        ATLASSERT(m_nPanes == 0);
         int panes[] = { ID_DEFAULT_PANE, bIsAdmin ? IDS_STATUSBAR_ADMIN : IDS_STATUSBAR_NOTADMIN, bIsElevated ? IDS_STATUSBAR_ELEVATED : IDS_STATUSBAR_NOTELEVATED };
-        SetPanes(panes, _countof(panes));
+        ATLVERIFY(SetPanes(panes, _countof(panes), bSetText));
+    }
+
+    void ReloadPaneText(int idx)
+    {
+        ATLVERIFY(idx < m_nPanes);
+        if (idx < m_nPanes)
+        {
+            CString resStr;
+            ATLVERIFY(resStr.LoadString(m_pPane[idx]));
+            ATLVERIFY(SetPaneText(m_pPane[idx], resStr));
+        }
     }
 };
 
@@ -2270,6 +2330,7 @@ public:
     const bool m_bIsAdmin;
     const bool m_bIsElevated;
     LANGID m_currentLang;
+    OSVERSIONINFO m_osvi;
 
     CNtObjectsMainFrame()
         : m_langSetter()
@@ -2285,6 +2346,11 @@ public:
         , m_currentLang(m_langSetter.set())
     {
         *(FARPROC*)&DllGetVersion = ::GetProcAddress(::GetModuleHandle(_T("shell32.dll")), "DllGetVersion");
+        RtlZeroMemory(&m_osvi, sizeof(m_osvi));
+        m_osvi.dwOSVersionInfoSize = sizeof(m_osvi);
+#pragma warning(disable:4996)
+        ATLVERIFY(::GetVersionEx(&m_osvi));
+#pragma warning(default:4996)
     }
 
     virtual BOOL PreTranslateMessage(MSG* pMsg)
@@ -2322,14 +2388,13 @@ public:
         COMMAND_ID_HANDLER(ID_VIEW_FIND, OnFindObject)
         COMMAND_ID_HANDLER(ID_SWITCHLANGUAGE_ENGLISH, OnSwitchLanguage)
         COMMAND_ID_HANDLER(ID_SWITCHLANGUAGE_GERMAN, OnSwitchLanguage)
+        COMMAND_ID_HANDLER(ID_SWITCHLANGUAGE_POPUP, OnSwitchLanguage)
         CHAIN_MSG_MAP(CUpdateUI<CNtObjectsMainFrame>)
         CHAIN_MSG_MAP(CFrameWindowImpl<CNtObjectsMainFrame>)
     END_MSG_MAP()
 
     LRESULT OnCreate(UINT /*uMsg*/, WPARAM /*wParam*/, LPARAM /*lParam*/, BOOL& /*bHandled*/)
     {
-        UpdateMainFormLanguage(m_currentLang);
-
         m_hWndStatusBar = m_status.Create(*this);
         m_status.InitializePanes(m_bIsAdmin, m_bIsElevated);
 
@@ -2369,33 +2434,14 @@ public:
         m_treeview.SetFrameWindow(m_hWnd);
         m_listview.SetFrameWindow(m_hWnd);
 
-        CMenuHandle sysmenu(GetSystemMenu(FALSE));
-        if(sysmenu.IsMenu())
-        {
-            CString menuString;
-            if(menuString.LoadString(IDS_ABOUT_MENUITEM))
-            {
-                ATLVERIFY(sysmenu.AppendMenu(MF_SEPARATOR));
-                ATLVERIFY(sysmenu.AppendMenu(MF_STRING, IDS_ABOUT_DESCRIPTION, menuString));
-            }
-        }
+        RenewAboutInSystemMenu_(TRUE);
 
         m_vsplit.SetSplitterPanes(m_treeview, m_listview);
         UpdateLayout();
         m_vsplit.SetSplitterPosPct(20);
         m_vsplit.m_cxyMin = 180; //  minimum size of the treeview
 
-        CString oldDlgTitle;
-        BOOL b = GetWindowText(oldDlgTitle.GetBufferSetLength(MAX_PATH), MAX_PATH);
-        ATLTRACE2(_T("%u -> GetWindowText\n"), b);
-        if(b)
-        {
-            ATLTRACE2(_T("Old title: %s\n"), oldDlgTitle.GetString());
-            CString newDlgTitle;
-            newDlgTitle.Format(IDS_TITLEBAR_FMTSTR, oldDlgTitle.GetString(), m_verinfo[_T("ProductVersion")], m_verinfo[_T("Mercurial revision")]);
-            ATLTRACE2(_T("New title: %s\n"), newDlgTitle.GetString());
-            ATLVERIFY(SetWindowText(newDlgTitle.GetString()));
-        }
+        (void)UpdateMainFormLanguage(m_currentLang);
 
         // register object for message filtering and idle updates
         CMessageLoop* pLoop = _Module.GetMessageLoop();
@@ -2502,6 +2548,21 @@ public:
         }
         ATLASSERT(ID_SWITCHLANGUAGE_GERMAN == MAKELANGID(LANG_GERMAN, SUBLANG_GERMAN));
         ATLASSERT(ID_SWITCHLANGUAGE_ENGLISH == MAKELANGID(LANG_ENGLISH, SUBLANG_ENGLISH_US));
+
+        SetWindowTitle_();
+
+        RenewMainMenuAndAccelerators_();
+        m_listview.ReloadColumnNames();
+        RenewStatusBar_();
+        RenewAboutInSystemMenu_();
+
+        // We don't support switching the language on Windows versions below Vista
+        if (m_osvi.dwMajorVersion < 6)
+        {
+            DisableSwitchLanguageMenuItem_();
+            return m_currentLang;
+        }
+
         switch (m_currentLang)
         {
         case ID_SWITCHLANGUAGE_ENGLISH:
@@ -2519,16 +2580,102 @@ public:
         return m_currentLang;
     }
 
+    void SwitchLanguagePopup()
+    {
+        CPoint pt, spt;
+        ATLVERIFY(::GetCursorPos(&pt));
+        ATLTRACE2(_T("Point of click: %d/%d\n"), pt.x, pt.y);
+        spt = pt;
+
+        // Load menu resource
+        CMenu menu;
+        ATLVERIFY(menu.LoadMenu(IDR_MAINFRAME));
+        ATLASSERT(menu.IsMenu());
+
+        if (menu.IsMenu())
+        {
+            ATLTRACE2(_T("%hs: Main menu items %i\n"), __func__, menu.GetMenuItemCount());
+#ifdef _DEBUG
+            DumpMenuItems_(menu);
+#endif // _DEBUG
+            // Get the popup menu at index 0 from the menu resource
+            CMenuHandle viewmenu = menu.GetSubMenu(1);
+            ATLASSERT(viewmenu.IsMenu());
+
+            if (viewmenu.IsMenu())
+            {
+                ATLTRACE2(_T("%hs: View menu items %i\n"), __func__, viewmenu.GetMenuItemCount());
+#ifdef _DEBUG
+                DumpMenuItems_(viewmenu);
+#endif // _DEBUG
+                CMenuHandle popup = viewmenu.GetSubMenu(viewmenu.GetMenuItemCount() - 1);
+                ATLTRACE2(_T("%hs: %i == Switch language menu item\n"), __func__, viewmenu.GetMenuItemCount() - 1);
+                ATLASSERT(popup.IsMenu());
+
+                if (popup.IsMenu())
+                {
+                    ATLTRACE2(_T("%hs: Switch Language menu items %i\n"), __func__, popup.GetMenuItemCount());
+#ifdef _DEBUG
+                    DumpMenuItems_(popup);
+#endif // _DEBUG
+
+                    // Let the user pick
+                    int idCmd = popup.TrackPopupMenuEx(
+                        TPM_LEFTALIGN | TPM_RETURNCMD | TPM_RIGHTBUTTON | TPM_NONOTIFY
+                        , spt.x
+                        , spt.y
+                        , m_hWnd
+                        , NULL
+                    );
+
+                    if (idCmd)
+                    {
+                        switch (idCmd)
+                        {
+                        case ID_SWITCHLANGUAGE_ENGLISH:
+                        case ID_SWITCHLANGUAGE_GERMAN:
+                            ATLTRACE2(_T("Picked language %i\n"), idCmd);
+                            if (static_cast<LANGID>(idCmd) != m_currentLang)
+                            {
+                                SendMessage(WM_COMMAND, static_cast<WPARAM>(idCmd));
+                            }
+                            break;
+                        default:
+                            ATLTRACE2(_T("Oi! That language isn't implemented in the GUI!\n"));
+                            ATLASSERT(FALSE);
+                            break;
+                        }
+                    }
+#ifdef _DEBUG
+                    else
+                    {
+                        ATLTRACE2(_T("TrackPopupMenuEx failed with error %li\n"), GetLastError());
+                    }
+#endif // _DEBUG
+                }
+            }
+        }
+    }
+
     LRESULT OnSwitchLanguage(WORD /*wNotifyCode*/, WORD wID, HWND /*hWndCtl*/, BOOL& /*bHandled*/)
     {
+        // We don't support switching the language on Windows versions below Vista
+        if (m_osvi.dwMajorVersion < 6)
+        {
+            return 0;
+        }
         switch (wID)
         {
         case ID_SWITCHLANGUAGE_GERMAN:
         case ID_SWITCHLANGUAGE_ENGLISH:
-            UpdateMainFormLanguage(wID, TRUE);
+            (void)UpdateMainFormLanguage(wID, TRUE);
+            break;
+        case ID_SWITCHLANGUAGE_POPUP:
+            SwitchLanguagePopup();
             break;
         default:
             ATLTRACE2(_T("Oi! That language isn't implemented in the GUI!\n"));
+            ATLASSERT(FALSE);
             break;
         }
         return 0;
@@ -2628,8 +2775,11 @@ public:
                     break;
                 }
             }
-            ::SendMessage(m_hWndStatusBar, SB_SIMPLE, TRUE, 0L);
-            ::SendMessage(m_hWndStatusBar, SB_SETTEXT, (255 | SBT_NOBORDERS), (LPARAM)szBuff);
+            if (::IsWindow(m_status.m_hWnd))
+            {
+                ::SendMessage(m_status.m_hWnd, SB_SIMPLE, TRUE, 0L);
+                ::SendMessage(m_status.m_hWnd, SB_SETTEXT, (255 | SBT_NOBORDERS), (LPARAM)szBuff);
+            }
         }
         else
             bHandled = FALSE;
@@ -2702,10 +2852,145 @@ public:
     }
 
 private:
+#ifdef _DEBUG
+    template<typename T> void DumpMenuItems_(T& menu) const
+    {
+        ATLTRACE2(_T("%hs: ======================================\n"), __func__);
+        for (int i = 0; i < menu.GetMenuItemCount(); i++)
+        {
+            MENUITEMINFO mii = { 0 };
+            mii.cbSize = sizeof(mii);
+            mii.fMask = MIIM_FTYPE;
+            ATLVERIFY(menu.GetMenuItemInfo(static_cast<UINT>(i), TRUE, &mii));
+            if (mii.fType == MFT_SEPARATOR)
+            {
+                ATLTRACE2(_T("%hs: %i -> --------------[Separator]-------------\n"), __func__, i);
+            }
+            if (mii.fType == MFT_STRING)
+            {
+                CString s;
+                mii.fMask = MIIM_STRING;
+                mii.dwTypeData = s.GetBufferSetLength(MAX_PATH);
+                mii.cch = MAX_PATH;
+                if (menu.GetMenuItemInfo(static_cast<UINT>(i), TRUE, &mii))
+                {
+                    ATLTRACE2(_T("%hs: %i -> %s\n"), __func__, i, mii.dwTypeData);
+                }
+                else
+                {
+                    ATLTRACE2(_T("%hs: %i -> <error>\n"), __func__, i);
+                }
+            }
+        }
+    }
+#endif // _DEBUG
+
+    inline void DisableSwitchLanguageMenuItem_()
+    {
+        CMenuHandle mainmenu = GetMenu();
+        if (mainmenu.IsMenu())
+        {
+            CMenuHandle viewmenu = mainmenu.GetSubMenu(1);
+            if (viewmenu.IsMenu())
+            {
+                int const idx = viewmenu.GetMenuItemCount() - 1;
+                MENUITEMINFO mii = { 0 };
+                mii.cbSize = sizeof(mii);
+                mii.fMask = MIIM_STATE;
+                if (viewmenu.GetMenuItemInfo(static_cast<UINT>(idx), TRUE, &mii))
+                {
+                    mii.fState |= MFS_DISABLED;
+                    ATLVERIFY(viewmenu.SetMenuItemInfo(static_cast<UINT>(idx), TRUE, &mii));
+                }
+            }
+        }
+    }
+
+    inline void RenewAboutInSystemMenu_(BOOL bInitial = FALSE)
+    {
+        CMenuHandle sysmenu(GetSystemMenu(FALSE));
+        if (sysmenu.IsMenu())
+        {
+            CString menuString;
+            if (menuString.LoadString(IDS_ABOUT_MENUITEM))
+            {
+                if (bInitial) //append, not just set the text
+                {
+                    ATLVERIFY(sysmenu.AppendMenu(MF_SEPARATOR));
+                    ATLVERIFY(sysmenu.AppendMenu(MF_STRING, IDS_ABOUT_DESCRIPTION, menuString));
+                }
+                else // simply set the text
+                {
+                    MENUITEMINFO mii = {0};
+                    mii.cbSize = sizeof(mii);
+                    mii.fMask = MIIM_STRING;
+                    mii.dwTypeData = const_cast<LPTSTR>(menuString.GetString());
+                    mii.cch = menuString.GetLength();
+
+                    ATLVERIFY(sysmenu.SetMenuItemInfo(IDS_ABOUT_DESCRIPTION, FALSE, &mii));
+                }
+            }
+        }
+    }
+
+    inline void RenewStatusBar_()
+    {
+        if (::IsWindow(m_status.m_hWnd))
+        {
+            ATLASSERT(m_status.m_nPanes == 3); // in case I ever change this, that's the tripping wire to notice
+            m_status.ReloadPaneText(1);
+            m_status.ReloadPaneText(2);
+
+            if (m_activeObject)
+            {
+                SetStatusBarItem_(m_activeObject);
+            }
+        }
+    }
+
+    inline void RenewMainMenuAndAccelerators_()
+    {
+        HMENU hOldMenu = GetMenu();
+        ATLASSERT(hOldMenu != NULL);
+        HMENU hNewMenu = ::LoadMenu(ModuleHelper::GetResourceInstance(), MAKEINTRESOURCE(GetWndClassInfo().m_uCommonResourceID));
+        ATLASSERT(hNewMenu != NULL);
+        if (hNewMenu != NULL)
+        {
+            ATLVERIFY(SetMenu(hNewMenu));
+            ATLVERIFY(::DestroyMenu(hOldMenu));
+        }
+        if(m_hAccel)
+        {
+            HACCEL hOldAccel = m_hAccel;
+            HACCEL hNewAccel = ::LoadAccelerators(ModuleHelper::GetResourceInstance(), MAKEINTRESOURCE(GetWndClassInfo().m_uCommonResourceID));
+            ATLASSERT(hNewAccel != NULL);
+            if (hNewAccel)
+            {
+                m_hAccel = hNewAccel;
+                if (hOldAccel)
+                {
+                    ATLVERIFY(::DestroyAcceleratorTable(hOldAccel));
+                }
+            }
+        }
+    }
+
+    inline void SetWindowTitle_()
+    {
+        CString oldWndTitle, newDlgTitle;
+        ATLVERIFY(oldWndTitle.LoadString(IDR_MAINFRAME));
+        ATLTRACE2(_T("Old title: %s\n"), oldWndTitle.GetString());
+        newDlgTitle.Format(IDS_TITLEBAR_FMTSTR, oldWndTitle.GetString(), m_verinfo[_T("ProductVersion")], m_verinfo[_T("Mercurial revision")]);
+        ATLTRACE2(_T("New title: %s\n"), newDlgTitle.GetString());
+        ATLVERIFY(SetWindowText(newDlgTitle.GetString()));
+    }
 
     inline BOOL Navigate_(bool forward)
     {
         ATLTRACE2(_T("%hs: %s\n"), __func__, (forward) ? _T("forward") : _T("backward"));
+#ifndef _DEBUG
+        UNREFERENCED_PARAMETER(forward);
+#endif // _DEBUG
         if (m_visitedList.GetSize())
         {
             TrimVisitedList_();
@@ -2764,6 +3049,10 @@ private:
     inline void SetStatusBarItem_(GenericObject* obj)
     {
         ATLASSERT(obj != NULL);
+        if (!::IsWindow(m_status.m_hWnd))
+        {
+            return;
+        }
 
         LPCWSTR fullName = (obj) ? obj->fullname().GetString() : NULL;
         if (Directory* pdir = dynamic_cast<Directory*>(obj))

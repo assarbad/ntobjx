@@ -24,6 +24,7 @@
 #define IDS_OBJ_OPEN_STATUS             20
 #define IDS_OBJ_QUERY_STATUS            21
 #define IDS_UNKNOWN_FMTSTR              22
+#define IDS_STATUS_DESCRIPTION          23
 #define IDD_PROPERTIES                  107
 #define IDR_POPUP_MENU1                 202
 #define IDD_ABOUT                       205
@@ -85,13 +86,14 @@
 #define ID_POPUPMENU_OPENDIRECTORY      32785
 #define ID_POPUPMENU_COPYURL            32786
 #define ID_VIEW_FIND                    32787
+#define ID_SWITCHLANGUAGE_POPUP         32790
 
 // Next default values for new objects
 // 
 #ifdef APSTUDIO_INVOKED
 #ifndef APSTUDIO_READONLY_SYMBOLS
 #define _APS_NEXT_RESOURCE_VALUE        218
-#define _APS_NEXT_COMMAND_VALUE         32790
+#define _APS_NEXT_COMMAND_VALUE         32794
 #define _APS_NEXT_CONTROL_VALUE         1028
 #define _APS_NEXT_SYMED_VALUE           108
 #endif

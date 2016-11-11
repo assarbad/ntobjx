@@ -71,7 +71,7 @@ BEGIN
         MENUITEM "Objekt&namen kopieren",       ID_POPUPMENU_COPYNAME
         MENUITEM "Objekt&pfad kopieren",        ID_POPUPMENU_COPYFULLPATH
         MENUITEM "Objektpfad als C/C++ &String", ID_POPUPMENU_COPYASCSTRING
-        MENUITEM "Objekt&ziel kopieren",        ID_POPUPMENU_COPYSYMLINKTARGET
+        MENUITEM "&Ziel der Verknüpfung kopieren", ID_POPUPMENU_COPYSYMLINKTARGET
         MENUITEM SEPARATOR
         MENUITEM "&Eigenschaften\tF10",         ID_POPUPMENU_PROPERTIES
     END
@@ -96,9 +96,10 @@ IDR_MAINFRAME ACCELERATORS
 BEGIN
     "S",            ID_FILE_SAVE_AS,        VIRTKEY, CONTROL, NOINVERT
     VK_F12,         ID_SHOW_ABOUT,          VIRTKEY, NOINVERT
+    "F",            ID_VIEW_FIND,           VIRTKEY, CONTROL, NOINVERT
     VK_F10,         ID_VIEW_PROPERTIES,     VIRTKEY, NOINVERT
     VK_F5,          ID_VIEW_REFRESH,        VIRTKEY, NOINVERT
-    "F",            ID_VIEW_FIND,           VIRTKEY, CONTROL, NOINVERT
+    VK_F11,         ID_SWITCHLANGUAGE_POPUP, VIRTKEY, NOINVERT
 END
 
 
@@ -267,7 +268,8 @@ BEGIN
     IDS_OBJSPEC_INFO        "%s-spezifische grundlegende Informationen"
     IDS_OBJSPEC_NAME1_SYMLINK "Linkziel:"
     IDS_STATUSBAR_NOTELEVATED "!erhöht"
-    IDS_STATUSBAR_DIR_DETAILS "%s (Vrz: %u, Lnk: %u, Alle: %u)"
+    IDS_STATUSBAR_DIR_DETAILS 
+                            "%s (Verzeichnisse: %u, Verknüpfungen: %u, Alle: %u)"
 END
 
 STRINGTABLE
@@ -294,8 +296,8 @@ BEGIN
     ID_POPUPMENU_COPYSYMLINKTARGET "Kopiere Linkziel in Zwischenablage"
     ID_POPUPMENU_PROPERTIES "Zeige die Eigenschaften des ausgewählten Objekts"
     ID_COLNAME_OBJNAME      "Name"
-    ID_COLNAME_OBJTYPE      "Typ"
-    ID_COLNAME_OBJLNKTGT    "Ziel"
+    ID_COLNAME_OBJTYPE      "Objekttyp"
+    ID_COLNAME_OBJLNKTGT    "Ziel der Verknüpfung"
 END
 
 STRINGTABLE
@@ -366,6 +368,7 @@ BEGIN
     IDS_OBJ_OPEN_STATUS     "<Status beim Öffnen des Objekts: 0x%08X>"
     IDS_OBJ_QUERY_STATUS    "<Status beim Ermitteln der Objektdetails: 0x%08X>"
     IDS_UNKNOWN_FMTSTR      "<unbekannt=%d>"
+    IDS_STATUS_DESCRIPTION  "0x%08X\r\n%s"
 END
 
 #endif    // German (Germany) resources
@@ -456,9 +459,10 @@ IDR_MAINFRAME ACCELERATORS
 BEGIN
     "S",            ID_FILE_SAVE_AS,        VIRTKEY, CONTROL, NOINVERT
     VK_F12,         ID_SHOW_ABOUT,          VIRTKEY, NOINVERT
+    "F",            ID_VIEW_FIND,           VIRTKEY, CONTROL, NOINVERT
     VK_F10,         ID_VIEW_PROPERTIES,     VIRTKEY, NOINVERT
     VK_F5,          ID_VIEW_REFRESH,        VIRTKEY, NOINVERT
-    "F",            ID_VIEW_FIND,           VIRTKEY, CONTROL, NOINVERT
+    VK_F11,         ID_SWITCHLANGUAGE_POPUP, VIRTKEY, NOINVERT
 END
 
 
@@ -662,7 +666,7 @@ BEGIN
     IDS_OBJSPEC_INFO        "%s-specific basic information"
     IDS_OBJSPEC_NAME1_SYMLINK "Link target:"
     IDS_STATUSBAR_NOTELEVATED "!elevated"
-    IDS_STATUSBAR_DIR_DETAILS "%s (dir: %u, lnk: %u, all: %u)"
+    IDS_STATUSBAR_DIR_DETAILS "%s (directories: %u, links: %u, all: %u)"
 END
 
 STRINGTABLE
@@ -688,8 +692,8 @@ BEGIN
     ID_POPUPMENU_COPYSYMLINKTARGET "Copy target of symlink to clipboard"
     ID_POPUPMENU_PROPERTIES "Show the properties of the selected object"
     ID_COLNAME_OBJNAME      "Name"
-    ID_COLNAME_OBJTYPE      "Type"
-    ID_COLNAME_OBJLNKTGT    "Target"
+    ID_COLNAME_OBJTYPE      "Object type"
+    ID_COLNAME_OBJLNKTGT    "Link target"
 END
 
 STRINGTABLE
@@ -760,6 +764,7 @@ BEGIN
     IDS_OBJ_OPEN_STATUS     "<Object open status: 0x%08X>"
     IDS_OBJ_QUERY_STATUS    "<Object query status: 0x%08X>"
     IDS_UNKNOWN_FMTSTR      "<unknown=%d>"
+    IDS_STATUS_DESCRIPTION  "0x%08X\r\n%s"
 END
 
 #endif    // English (United States) resources
