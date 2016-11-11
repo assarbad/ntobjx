@@ -27,7 +27,7 @@
 ///////////////////////////////////////////////////////////////////////////////
 
 #ifndef __OBJMGR_HPP_VER__
-#define __OBJMGR_HPP_VER__ 2016102800
+#define __OBJMGR_HPP_VER__ 2016111123
 #if (defined(_MSC_VER) && (_MSC_VER >= 1020)) || defined(__MCPP)
 #pragma once
 #endif // Check for "#pragma once" support
@@ -36,6 +36,7 @@
 #include <atlstr.h>
 #include <atlcoll.h>
 #include "objtypes.h"
+#include <WinIoCtl.h>
 #ifdef _DEBUG // for textual NTSTATUS values in trace messages
 #   include "util/SimpleBuffer.h"
 #   ifndef VTRACE

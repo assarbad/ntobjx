@@ -30,15 +30,17 @@ UMENTRY=winmain
 C_DEFINES=$(C_DEFINES) /DMBCS /D_MBCS
 !ENDIF
 
-INCLUDES=$(DDK_INC_PATH);$(CRT_INC_PATH);$(SDK_INC_PATH);..;..\wtl\Include
+INCLUDES=$(DDK_INC_PATH);$(CRT_INC_PATH);$(SDK_INC_PATH);..;..\wtl\Include;..\pugixml;..\util;.
 
 TARGETLIBS=\
             $(SDK_LIB_PATH)\kernel32.lib \
             $(SDK_LIB_PATH)\user32.lib \
             $(SDK_LIB_PATH)\Comctl32.lib \
+            $(SDK_LIB_PATH)\Comdlg32.lib \
             $(SDK_LIB_PATH)\ole32.lib \
             $(SDK_LIB_PATH)\oleaut32.lib \
             $(SDK_LIB_PATH)\shell32.lib \
+            $(SDK_LIB_PATH)\Userenv.lib \
             $(SDK_LIB_PATH)\version.lib \
             $(SDK_LIB_PATH)\ntdll.lib
 

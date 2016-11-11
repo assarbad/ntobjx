@@ -29,7 +29,7 @@
 ///////////////////////////////////////////////////////////////////////////////
 
 #ifndef __NTNATIVE_H_VER__
-#define __NTNATIVE_H_VER__ 2016102722
+#define __NTNATIVE_H_VER__ 2016111123
 #if (defined(_MSC_VER) && (_MSC_VER >= 1020)) || defined(__MCPP)
 #pragma once
 #endif // Check for "#pragma once" support
@@ -136,7 +136,7 @@
         }
 #endif
 
-#if (_MSC_VER < 1400)
+#if (_MSC_VER < 1400) || defined(DDKBUILD)
 typedef enum _OBJECT_INFORMATION_CLASS {
     ObjectBasicInformation,
     ObjectNameInformation,
@@ -739,6 +739,29 @@ NtUnmapViewOfSection(
     __in HANDLE ProcessHandle,
     __in_opt PVOID BaseAddress
     );
+
+#if defined(DDKBUILD)
+NTSTATUS
+NTAPI
+NtQueryObject(
+   __in_opt HANDLE Handle,
+   __in OBJECT_INFORMATION_CLASS ObjectInformationClass,
+   __out_bcount_opt(ObjectInformationLength) PVOID ObjectInformation,
+   __in ULONG ObjectInformationLength,
+   __out_opt PULONG ReturnLength
+   );
+
+NTSTATUS
+NTAPI 
+NtOpenFile(
+    __out PHANDLE FileHandle,
+    __in ACCESS_MASK DesiredAccess,
+    __in POBJECT_ATTRIBUTES ObjectAttributes,
+    __out PIO_STATUS_BLOCK IoStatusBlock,
+    __in ULONG ShareAccess,
+    __in ULONG OpenOptions
+    );
+#endif // DDKBUILD
 
 #define ZwClose NtClose
 #define ZwCreateFile NtCreateFile
