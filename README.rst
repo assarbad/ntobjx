@@ -31,6 +31,12 @@ A code-signed version of the utility can be found in the `download section`_.
 Please be sure to verify the signature using either ``signtool`` or ``sigcheck``
 from live.sysinternals.com_ (both from Microsoft).
 
+There is also a PGP-signed ``.7z`` archive. The signature is detached and carries
+the file extension ``.asc``. These archives contain the debug symbols (``.pdb``)
+alongside the executables. The name contains the revision number and the short
+changeset ID, so I don't need to remove old builds all the time due to name
+clashes.
+
 State of affairs and compatibility
 ----------------------------------
 The utility already duplicates the functionality of WinObj_ and surpasses it.
