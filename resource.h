@@ -25,6 +25,9 @@
 #define IDS_OBJ_QUERY_STATUS            21
 #define IDS_UNKNOWN_FMTSTR              22
 #define IDS_STATUS_DESCRIPTION          23
+#define IDS_OBJSPEC_NAME1_WINSTA        24
+#define IDS_OBJSPEC_NAME2_WINSTA        25
+#define IDS_OBJSPEC_NAME3_WINSTA        26
 #define IDD_PROPERTIES                  107
 #define IDR_POPUP_MENU1                 202
 #define IDD_ABOUT                       205
@@ -44,6 +47,32 @@
 #define IDS_OBJSPEC_NAME2_SEMAPHORE     223
 #define IDS_OBJSPEC_NAME1_TIMER         224
 #define IDS_OBJSPEC_NAME2_TIMER         225
+#define IDS_OBJTT_ARCNAME               226
+#define IDS_OBJTT_BASENAMEDOBJECTS      227
+#define IDS_OBJTT_CALLBACK              228
+#define IDS_OBJTT_DEVICE                229
+#define IDS_OBJTT_DOSDEVICES            230
+#define IDS_OBJTT_DRIVER                231
+#define IDS_OBJTT_FILESYSTEM            232
+#define IDS_OBJTT_GLOBALDOSDEV          233
+#define IDS_OBJTT_KERNELOBJECTS         234
+#define IDS_OBJTT_KNOWNDLLS             235
+#define IDS_OBJTT_KNOWNDLLS32           236
+#define IDS_OBJTT_NLS                   237
+#define IDS_OBJTT_OBJECTTYPES           238
+#define IDS_OBJTT_PSXSS                 239
+#define IDS_OBJTT_RPCCTL                240
+#define IDS_OBJTT_SECURITY              241
+#define IDS_OBJTT_SESSIONS              242
+#define IDS_OBJTT_UDFCOMMPORTS          243
+#define IDS_OBJTT_WINDOWS               244
+#define IDS_OBJTT_WINDOWSTATIONS        245
+#define IDS_OBJTT_DOSDEV                246
+#define IDS_OBJTT_SYSTEMROOT            247
+#define IDS_OBJTT_MAILSLOT              248
+#define IDS_OBJTT_NAMEDPIPE             249
+#define IDS_OBJTT_PHYSMEM               250
+#define IDS_OBJTT_REGISTRY              251
 #define IDC_STATIC_PROGNAME             1000
 #define IDC_STATIC_COPYRIGHT            1001
 #define IDC_STATIC_DESCRIPTION          1002
@@ -92,7 +121,7 @@
 // 
 #ifdef APSTUDIO_INVOKED
 #ifndef APSTUDIO_READONLY_SYMBOLS
-#define _APS_NEXT_RESOURCE_VALUE        218
+#define _APS_NEXT_RESOURCE_VALUE        252
 #define _APS_NEXT_COMMAND_VALUE         32794
 #define _APS_NEXT_CONTROL_VALUE         1028
 #define _APS_NEXT_SYMED_VALUE           108

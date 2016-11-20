@@ -115,7 +115,7 @@ namespace
 #ifdef _DEBUG
     int const maxVisitedDepth = 5; // this is more practical in debug builds
 #else
-    int const maxVisitedDepth = 50;
+    int const maxVisitedDepth = 0x400;
 #endif // _DEBUG
     int const imgListElemWidth = 16;
     int const imgListElemHeight = 16;
@@ -236,6 +236,20 @@ namespace
             }
             ATLVERIFY(SetClipboardString(s.GetString()));
             ATLVERIFY(::CloseClipboard());
+        }
+    }
+
+    CSimpleBuf<TCHAR> StatusToString(LONG status)
+    {
+        if (HRESULT_FACILITY(status) == FACILITY_WIN32)
+        {
+            CLoadLibrary kernel32;
+            return CSimpleBuf<TCHAR>(kernel32.formatSystemMessage<TCHAR>(static_cast<DWORD>(status)));
+        }
+        else
+        {
+            CLoadLibrary ntdll(_T("ntdll.dll"));
+            return CSimpleBuf<TCHAR>(ntdll.formatMessage<TCHAR>(ntdll.getHandle(), static_cast<DWORD>(status)));
         }
     }
 
@@ -634,8 +648,7 @@ class CObjectPropertySheet :
             {
                 if (!m_objHdl)
                 {
-                    CLoadLibrary ntdll(_T("ntdll.dll"));
-                    CSimpleBuf<TCHAR> status(ntdll.formatMessage<TCHAR>(ntdll.getHandle(), static_cast<DWORD>(m_objHdl.getOpenStatus())));
+                    CSimpleBuf<TCHAR> status(StatusToString(m_objHdl.getOpenStatus()));
                     CString sStatus;
                     sStatus.Format(IDS_STATUS_DESCRIPTION, m_objHdl.getOpenStatus(), status.Buffer());
                     m_edtExplanation.SetWindowText(sStatus);
@@ -897,8 +910,7 @@ class CObjectPropertySheet :
 
         void ShowObjectSpecificError_(NTSTATUS statusCode)
         {
-            CLoadLibrary ntdll(_T("ntdll.dll"));
-            CSimpleBuf<TCHAR> status(ntdll.formatMessage<TCHAR>(ntdll.getHandle(), static_cast<DWORD>(statusCode)));
+            CSimpleBuf<TCHAR> status(StatusToString(m_objHdl.getOpenStatus()));
             CString sStatus;
             sStatus.Format(IDS_STATUS_DESCRIPTION, statusCode, status.Buffer());
             m_edtExplanation.SetWindowText(sStatus);
@@ -1162,6 +1174,30 @@ class CObjectPropertySheet :
                 else
                     ShowObjectSpecificError_(info->getQueryStatus());
             }
+
+            if (ObjectHandle::CWinStaInformation const* info = m_objHdl.getWinStaInfo())
+            {
+                ATLTRACE2(_T("info = %p\n"), info);
+                if (*info)
+                {
+                    SetAttributesVisible_(3);
+                    ATLVERIFY(str.LoadString(IDS_OBJSPEC_NAME1_WINSTA));
+                    m_stcObjSpecName1.SetWindowText(str);
+                    ATLVERIFY(str.LoadString(IDS_OBJSPEC_NAME2_WINSTA));
+                    m_stcObjSpecName2.SetWindowText(str);
+                    ATLVERIFY(str.LoadString(IDS_OBJSPEC_NAME3_WINSTA));
+                    m_stcObjSpecName3.SetWindowText(str);
+                    ATLVERIFY(str.LoadString(IDS_NOT_AVAILABLE_SHORT));
+                    m_stcObjSpecAttr1.SetWindowText(info->username.GetLength() ? info->username : str);
+                    m_stcObjSpecAttr2.SetWindowText(info->sid.GetLength() ? info->sid : str);
+                    m_stcObjSpecAttr3.SetWindowText(info->flags.GetLength() ? info->flags : str);
+                }
+                else
+                {
+                    ATLTRACE2(_T("error = %p\n"), info);
+                    ShowObjectSpecificError_(info->getQueryStatus());
+                }
+            }
         }
     };
 
@@ -1397,7 +1433,6 @@ public:
     DECLARE_WND_CLASS(_T("WTL_CHyperLinkCtxMenu"))
 };
 
-
 class CAboutDlg :
     public CDialogImpl<CAboutDlg>
 {
@@ -1460,7 +1495,7 @@ public:
         caption.Append(m_verinfo[_T("ProductName")]);
         caption.Append(_T(" "));
         caption.Append(m_verinfo[_T("FileVersion")]);
-        caption.AppendFormat(_T(" (%d-bit)"), sizeof(void*) == 4 ? 32 : 64);
+        caption.AppendFormat(_T(" (%d-bit)"), sizeof(void*) * 8);
         SetWindowText(caption);
 
         m_appicon.LoadIcon(IDR_MAINFRAME);
@@ -1647,8 +1682,8 @@ public:
         bHandled = FALSE;
         if(dir)
         {
-            LPCTSTR comment = findComment(dir->fullname());
-            if(comment)
+            CString comment;
+            if(comment.LoadString(findComment(dir->fullname())))
             {
                 CString tip;
                 tip.Preallocate(pnmtv->cchTextMax);
@@ -1880,6 +1915,7 @@ public:
         }
         ResetAllColumns_();
         ATLASSERT(!m_pimagelist->IsNull());
+        ATLTRACE2(_T("%hs: %s\n"), __func__, current.fullname().GetString());
         // To determine the required width for each column
         int widths[] = {-1, -1, -1};
         for(size_t i = 0; i < current.size(); i++)
@@ -1902,7 +1938,7 @@ public:
                 );
             int const typeWidth = GetStringWidth(current[i]->type());
             widths[1] = max(typeWidth, widths[1]);
-            ATLTRACE2(_T("%s:%i [%s:%i] / %i:%i\n"), current[i]->name().GetString(), GetStringWidth(current[i]->name()), current[i]->type().GetString(), GetStringWidth(current[i]->type()), widths[0], widths[1]);
+            //ATLTRACE2(_T("%s:%i [%s:%i] / %i:%i\n"), current[i]->name().GetString(), GetStringWidth(current[i]->name()), current[i]->type().GetString(), GetStringWidth(current[i]->type()), widths[0], widths[1]);
             SymbolicLink* symlink = dynamic_cast<SymbolicLink*>(current[i]);
             if(symlink)
             {
@@ -1913,7 +1949,7 @@ public:
                     );
                 int const targetWidth = GetStringWidth(symlink->target());
                 widths[2] = max(targetWidth, widths[2]);
-                ATLTRACE2(_T("    %s:%i [%i]\n"), symlink->target().GetString(), GetStringWidth(symlink->target()), widths[2]);
+                //ATLTRACE2(_T("    %s:%i [%i]\n"), symlink->target().GetString(), GetStringWidth(symlink->target()), widths[2]);
             }
         }
         CRect rect;
@@ -2126,8 +2162,8 @@ public:
             ATLASSERT(NULL != obj);
             if (obj)
             {
-                LPCTSTR comment = findComment(obj->fullname());
-                if (comment)
+                CString comment;
+                if (comment.LoadString(findComment(obj->fullname())))
                 {
                     CString tip;
                     tip.Preallocate(pnmlv->cchTextMax);
@@ -2303,6 +2339,140 @@ public:
     }
 };
 
+template <typename T> class CVisitedListT
+    : protected CSimpleArray<T>
+{
+    typedef CSimpleArray<T> baseClass;
+    int const m_maxDepth;
+    int m_cursorIdx;
+
+    CVisitedListT(const CSimpleArray<T>& src);
+public:
+    CVisitedListT(int const maxDepth = maxVisitedDepth)
+        : baseClass()
+        , m_maxDepth(maxDepth)
+        , m_cursorIdx(-1)
+    {
+    }
+
+    virtual ~CVisitedListT()
+    {
+    }
+
+    inline T Navigate(bool forward)
+    {
+        ATLASSERT(m_cursorIdx < 0);
+        if (forward)
+        {
+            if (m_cursorIdx + 1 == 0)
+            {
+                ATLTRACE2(_T("Navigating forward doesn't work. Cursor already at the end of the list: %i (size == %i).\n"), m_cursorIdx, GetSize());
+                return NULL; // must be able to convert to NULL
+            }
+            m_cursorIdx++;
+        }
+        else
+        {
+            if (GetSize() + m_cursorIdx - 1 < 0)
+            {
+                ATLTRACE2(_T("Navigating backward doesn't work. Cursor already at the start of the list: %i (size == %i).\n"), m_cursorIdx, GetSize());
+                return NULL; // must be able to convert to NULL
+            }
+            m_cursorIdx--;
+        }
+        ATLASSERT(GetSize() + m_cursorIdx >= 0);
+        ATLASSERT(GetSize() + m_cursorIdx < GetSize());
+        ATLTRACE2(_T("New cursor position: %i (size == %i).\n"), m_cursorIdx, GetSize());
+        return baseClass::operator [](GetSize() + m_cursorIdx);
+    }
+
+    inline BOOL Push(T t)
+    {
+        int const nLast = GetSize() - 1;
+        if (nLast >= 0)
+        {
+            if (baseClass::operator [](nLast) == t)
+            {
+                return TRUE; // do not add dupes if the previous entry contained the same item
+            }
+        }
+        // Trim the list to maximum depth
+        while (GetSize() >= m_maxDepth)
+        {
+            (void)Shift();
+        }
+        BOOL retval = baseClass::Add(t);
+#ifdef _DEBUG
+        for (int i = 0; i < GetSize(); i++)
+        {
+            T item = baseClass::operator [](i);
+            ATLASSERT(item != NULL);
+            if (i == GetSize() + m_cursorIdx)
+            {
+                ATLTRACE2(_T("->  [%i] %s\n"), i, item->fullname().GetString());
+            }
+            else
+            {
+                ATLTRACE2(_T("    [%i] %s\n"), i, item->fullname().GetString());
+            }
+        }
+#endif // _DEBUG
+        return retval;
+    }
+
+    inline T Pop()
+    {
+        int const nLast = GetSize() - 1;
+        if (nLast < 0)
+            return NULL; // must be able to convert to NULL
+        T t = m_aT[nLast];
+        if (!RemoveAt(nLast))
+            return NULL;
+        return t;
+    }
+
+    inline T Shift()
+    {
+        if (GetSize() <= 0)
+            return NULL; // must be able to convert to NULL
+        T t = m_aT[0];
+        if (!RemoveAt(0))
+            return NULL;
+        return t;
+    }
+
+    inline const T& operator[] (int nIndex) const
+    {
+        return baseClass::operator [](nIndex);
+    }
+
+    inline T& operator[] (int nIndex)
+    {
+        return baseClass::operator [](nIndex);
+    }
+
+    inline void ResetList()
+    {
+        baseClass::RemoveAll();
+        m_cursorIdx = -1;
+    }
+
+    inline int GetSize() const
+    {
+        return baseClass::GetSize();
+    }
+
+    inline operator bool() const
+    {
+        return (0 < baseClass::GetSize());
+    }
+
+    inline bool operator!() const
+    {
+        return !operator bool();
+    }
+};
+
 /*lint -esym(1509, CNtObjectsMainFrame) */
 class CNtObjectsMainFrame :
     public CFrameWindowImpl<CNtObjectsMainFrame>,
@@ -2322,8 +2492,7 @@ public:
     bool m_bIsFindDialogOpen;
     GenericObject* m_activeObject;
     CVersionInfo m_verinfo;
-    CSimpleStack<Directory*> m_visitedList;
-    int m_visitedListIndex;
+    CVisitedListT<Directory*> m_visitedList;
     HRESULT (CALLBACK* DllGetVersion)(DLLVERSIONINFO *);
     CObjectImageList m_imagelist;
     CAccessToken m_Token;
@@ -2338,7 +2507,6 @@ public:
         , m_bIsFindDialogOpen(false)
         , m_activeObject(0)
         , m_verinfo(ModuleHelper::GetResourceInstance())
-        , m_visitedListIndex(-1)
         , DllGetVersion(0)
         , m_imagelist()
         , m_bIsAdmin(IsUserAdmin() != FALSE)
@@ -2493,8 +2661,7 @@ public:
         if(m_treeview.EmptyAndRefill())
         {
             // Invalidate the cached items
-            m_visitedList.RemoveAll();
-            m_visitedListIndex = -1;
+            m_visitedList.ResetList();
             // The following triggers TVN_SELCHANGED which in turn fills the listview
             m_treeview.SelectRoot();
         }
@@ -2695,9 +2862,8 @@ public:
     {
         bHandled = FALSE;
         SHORT cmd  = GET_APPCOMMAND_LPARAM(lParam);
-        if(int sz = m_visitedList.GetSize())
+        if(m_visitedList)
         {
-            ATLASSERT(sz > 0);
             switch(cmd)
             {
             case APPCOMMAND_BROWSER_BACKWARD:
@@ -2985,19 +3151,6 @@ private:
         ATLVERIFY(SetWindowText(newDlgTitle.GetString()));
     }
 
-    inline BOOL Navigate_(bool forward)
-    {
-        ATLTRACE2(_T("%hs: %s\n"), __func__, (forward) ? _T("forward") : _T("backward"));
-#ifndef _DEBUG
-        UNREFERENCED_PARAMETER(forward);
-#endif // _DEBUG
-        if (m_visitedList.GetSize())
-        {
-            TrimVisitedList_();
-        }
-        return FALSE;
-    }
-
     inline void SetActiveObject_(GenericObject* obj)
     {
         m_activeObject = obj;
@@ -3017,33 +3170,26 @@ private:
 #endif // _DEBUG
         m_listview.FillFromDirectory(*dir);
         // Keep a list of visited directories
-        AddToVisitedList_(dir);
+        ATLVERIFY(m_visitedList.Push(dir));
     }
 
-    inline void AddToVisitedList_(Directory* dir)
+    inline BOOL Navigate_(bool forward)
     {
-        if(dir)
+        ATLTRACE2(_T("%hs: Navigating %s\n"), __func__, (forward) ? _T("forward") : _T("backward"));
+        Directory* dir = static_cast<Directory*>(m_visitedList.Navigate(forward));
+        if (!dir)
         {
-            ATLASSERT(maxVisitedDepth > 0);
-            TrimVisitedList_();
+            ATLTRACE2(_T("No valid Directory* returned.\n"));
+            ::MessageBeep(MB_ICONEXCLAMATION);
+            return FALSE;
+        }
+        m_treeview.SelectDirectory(dir);
+        if (forward)
+        {
+            // Keep a list of visited directories
             ATLVERIFY(m_visitedList.Push(dir));
-#ifdef _DEBUG
-            for (int i = 0; i < m_visitedList.GetSize(); i++)
-            {
-                ATLTRACE2(_T("  [%i] %s\n"), i, m_visitedList[i]->fullname().GetString());
-            }
-#endif // _DEBUG
         }
-    }
-
-    inline void TrimVisitedList_()
-    {
-        // Should we trim the list?
-        while (m_visitedList.GetSize() > maxVisitedDepth)
-        {
-            ATLVERIFY(m_visitedList.RemoveAt(0));
-            ATLTRACE2(_T("Trimmed visited list. New size: %i\n"), m_visitedList.GetSize());
-        }
+        return TRUE;
     }
 
     inline void SetStatusBarItem_(GenericObject* obj)

@@ -27,7 +27,7 @@
 ///////////////////////////////////////////////////////////////////////////////
 
 #ifndef __OBJMGR_HPP_VER__
-#define __OBJMGR_HPP_VER__ 2016111123
+#define __OBJMGR_HPP_VER__ 2016112122
 #if (defined(_MSC_VER) && (_MSC_VER >= 1020)) || defined(__MCPP)
 #pragma once
 #endif // Check for "#pragma once" support
@@ -36,7 +36,6 @@
 #include <atlstr.h>
 #include <atlcoll.h>
 #include "objtypes.h"
-#include <WinIoCtl.h>
 #ifdef _DEBUG // for textual NTSTATUS values in trace messages
 #   include "util/SimpleBuffer.h"
 #   ifndef VTRACE
@@ -48,9 +47,18 @@
 #   define TRACE_NTSTATUS(x) \
         do \
         { \
-            CLoadLibrary ntdll(_T("ntdll.dll")); \
-            CSimpleBuf<TCHAR> status(ntdll.formatMessage<TCHAR>(ntdll.getHandle(), static_cast<DWORD>(x))); \
-            ATLTRACE2(_T("  NTSTATUS was '%s'\n"), status.Buffer()); \
+            if (HRESULT_FACILITY(x) == FACILITY_WIN32) \
+            { \
+                CLoadLibrary kernel32; \
+                CSimpleBuf<TCHAR> status(kernel32.formatSystemMessage<TCHAR>(static_cast<DWORD>(x))); \
+                ATLTRACE2(_T("  Win32 status was '%s'\n"), status.Buffer()); \
+            } \
+            else \
+            { \
+                CLoadLibrary ntdll(_T("ntdll.dll")); \
+                CSimpleBuf<TCHAR> status(ntdll.formatMessage<TCHAR>(ntdll.getHandle(), static_cast<DWORD>(x))); \
+                ATLTRACE2(_T("  NTSTATUS was '%s'\n"), status.Buffer()); \
+            } \
         } while (0)
 #else
 #   define TRACE_NTSTATUS(x) do {} while (0)
@@ -649,6 +657,138 @@ namespace NtObjMgr{
                 return NT_ERROR(m_queryStatus);
             }
         };
+
+        struct CWinStaInformation
+        {
+            ATL::CString flags;
+            ATL::CString sid;
+            ATL::CString username;
+        private:
+            CWinStaInformation();
+            CWinStaInformation& operator=(CWinStaInformation&);
+            HRESULT m_queryStatus;
+        public:
+            CWinStaInformation(HANDLE hObject)
+            {
+                DWORD dwLen = 0;
+                USEROBJECTFLAGS uoflags = {0};
+                if (!::GetUserObjectInformation(hObject, UOI_FLAGS, &uoflags, sizeof(uoflags), &dwLen))
+                {
+                    m_queryStatus = HRESULT_FROM_WIN32(GetLastError());
+                    ATLTRACE2(_T("Win32 error: %d [GetUserObjectInformation]\n"), GetLastError());
+                    return;
+                }
+                if (uoflags.dwFlags & WSF_VISIBLE)
+                {
+                    flags.Format(_T("0x%08X == visible"), uoflags.dwFlags);
+                }
+                if (!::GetUserObjectInformation(hObject, UOI_USER_SID, NULL, 0, &dwLen))
+                {
+                    CSimpleBuf<BYTE> buf(dwLen+1);
+                    if (PSID psid = (PSID)buf.Buffer())
+                    {
+                        if (!::GetUserObjectInformation(hObject, UOI_USER_SID, psid, dwLen, &dwLen))
+                        {
+                            m_queryStatus = HRESULT_FROM_WIN32(GetLastError());
+                            ATLTRACE2(_T("Win32 error: %d [GetUserObjectInformation]\n"), GetLastError());
+                            return;
+                        }
+                        SID_NAME_USE sidnu = SidTypeInvalid;
+                        DWORD dwNameLen = 0, dwDomainLen = 0;
+                        if (!::LookupAccountSid(NULL, psid, NULL, &dwNameLen, NULL, &dwDomainLen, &sidnu))
+                        {
+                            CSimpleBuf<TCHAR> bufName(dwNameLen + 1);
+                            CSimpleBuf<TCHAR> bufDomain(dwDomainLen + 1);
+                            if (::LookupAccountSid(NULL, psid, NULL, &dwNameLen, NULL, &dwDomainLen, &sidnu))
+                            {
+                                username.Format(_T("%s\\%s"), bufDomain.Buffer(), bufName.Buffer());
+                            }
+#ifdef _DEBUG
+                            else
+                            {
+                                ATLTRACE2(_T("Win32 error: %d [LookupAccountSid]\n"), GetLastError());
+                            }
+#endif // _DEBUG
+                            LPTSTR lpszSid = NULL;
+                            if(::ConvertSidToStringSid(psid, &lpszSid))
+                            {
+                                LPCTSTR sidtype = NULL;
+                                switch (sidnu)
+                                {
+                                case SidTypeUser:
+                                    sidtype = _T("User");
+                                    break;
+                                case SidTypeGroup:
+                                    sidtype = _T("Group");
+                                    break;
+                                case SidTypeDomain:
+                                    sidtype = _T("Domain");
+                                    break;
+                                case SidTypeAlias:
+                                    sidtype = _T("Alias");
+                                    break;
+                                case SidTypeWellKnownGroup:
+                                    sidtype = _T("WellKnownGroup");
+                                    break;
+                                case SidTypeDeletedAccount:
+                                    sidtype = _T("DeletedAccount");
+                                    break;
+                                case SidTypeInvalid:
+                                    sidtype = _T("Invalid");
+                                    break;
+                                case SidTypeUnknown:
+                                    sidtype = _T("Unknown");
+                                    break;
+                                case SidTypeComputer:
+                                    sidtype = _T("Computer");
+                                    break;
+                                case SidTypeLabel:
+                                    sidtype = _T("Label");
+                                    break;
+                                default:
+                                    break;
+                                }
+                                if (sidtype)
+                                {
+                                    sid.Format(_T("%s [%s]"), lpszSid, sidtype);
+                                }
+                                else
+                                {
+                                    sid = lpszSid;
+                                }
+                            }
+#ifdef _DEBUG
+                            else
+                            {
+                                ATLTRACE2(_T("Win32 error: %d\n"), GetLastError());
+                            }
+#endif // _DEBUG
+                            if (lpszSid)
+                            {
+                                ::LocalFree((HLOCAL)lpszSid);
+                            }
+                            ATLTRACE2(_T("WindowStation user: %s (%s)\n"), username.GetString(), sid.GetString());
+                        }
+                    }
+                }
+                m_queryStatus = STATUS_SUCCESS;
+            }
+
+            inline HRESULT getQueryStatus() const
+            {
+                return m_queryStatus;
+            }
+
+            inline operator bool() const
+            {
+                return !this->operator!();
+            }
+
+            inline bool operator!() const
+            {
+                return NT_ERROR(m_queryStatus);
+            }
+        };
     private:
         typedef NTSTATUS(NTAPI *openobj_fct_t)(PHANDLE, ACCESS_MASK, POBJECT_ATTRIBUTES);
 
@@ -659,13 +799,14 @@ namespace NtObjMgr{
         openobj_fct_t m_openObjectFunction; // cached for reopen
         OBJECT_BASIC_INFORMATION m_obi;
         HANDLE m_hObject;
-        CEventBasicInformation* m_eventBasicInfo;
-        CIoCompletionBasicInformation* m_ioCompletionBasicInfo;
-        CKeyBasicInformation* m_keyBasicInfo;
-        CMutantBasicInformation* m_mutantBasicInfo;
-        CSectionBasicInformation* m_sectionBasicInfo;
-        CSemaphoreBasicInformation* m_semaphoreBasicInfo;
-        CTimerBasicInformation* m_timerBasicInfo;
+        ATL::CAutoPtr<CEventBasicInformation> m_eventBasicInfo;
+        ATL::CAutoPtr<CIoCompletionBasicInformation> m_ioCompletionBasicInfo;
+        ATL::CAutoPtr<CKeyBasicInformation> m_keyBasicInfo;
+        ATL::CAutoPtr<CMutantBasicInformation> m_mutantBasicInfo;
+        ATL::CAutoPtr<CSectionBasicInformation> m_sectionBasicInfo;
+        ATL::CAutoPtr<CSemaphoreBasicInformation> m_semaphoreBasicInfo;
+        ATL::CAutoPtr<CTimerBasicInformation> m_timerBasicInfo;
+        ATL::CAutoPtr<CWinStaInformation> m_winStaInfo;
     public:
         ObjectHandleT(GenericObjectT<T>* obj, ACCESS_MASK DesiredAccess = READ_CONTROL | GENERIC_READ, ACCESS_MASK FallbackAccess1 = READ_CONTROL | FILE_READ_ATTRIBUTES | FILE_READ_ACCESS, ACCESS_MASK FallbackAccess2 = READ_CONTROL)
             : m_openStatus(STATUS_SUCCESS)
@@ -681,6 +822,7 @@ namespace NtObjMgr{
             , m_sectionBasicInfo(0)
             , m_semaphoreBasicInfo(0)
             , m_timerBasicInfo(0)
+            , m_winStaInfo(0)
         {
             if(!m_obj || (INVALID_HANDLE_VALUE == m_hObject))
             {
@@ -691,43 +833,54 @@ namespace NtObjMgr{
             if (0 == _tcsicmp(_T(OBJTYPESTR_EVENT), m_obj->type()))
             {
                 ATLTRACE2(_T("Attempting to query object-specific info for %s\n"), m_obj->type().GetString());
-                m_eventBasicInfo = new CEventBasicInformation(m_hObject);
+                m_eventBasicInfo.Attach(new CEventBasicInformation(m_hObject));
             }
 
             if (0 == _tcsicmp(_T(OBJTYPESTR_IOCOMPLETION), m_obj->type()))
             {
                 ATLTRACE2(_T("Attempting to query object-specific info for %s\n"), m_obj->type().GetString());
-                m_ioCompletionBasicInfo = new CIoCompletionBasicInformation(m_hObject);
+                m_ioCompletionBasicInfo.Attach(new CIoCompletionBasicInformation(m_hObject));
             }
 
             if (0 == _tcsicmp(_T(OBJTYPESTR_KEY), m_obj->type()))
             {
                 ATLTRACE2(_T("Attempting to query object-specific info for %s\n"), m_obj->type().GetString());
-                m_keyBasicInfo = new CKeyBasicInformation(m_hObject);
+                m_keyBasicInfo.Attach(new CKeyBasicInformation(m_hObject));
             }
 
             if (0 == _tcsicmp(_T(OBJTYPESTR_MUTANT), m_obj->type()))
             {
                 ATLTRACE2(_T("Attempting to query object-specific info for %s\n"), m_obj->type().GetString());
-                m_mutantBasicInfo = new CMutantBasicInformation(m_hObject);
+                m_mutantBasicInfo.Attach(new CMutantBasicInformation(m_hObject));
             }
 
             if (0 == _tcsicmp(_T(OBJTYPESTR_SECTION), m_obj->type()))
             {
                 ATLTRACE2(_T("Attempting to query object-specific info for %s\n"), m_obj->type().GetString());
-                m_sectionBasicInfo = new CSectionBasicInformation(m_hObject);
+                m_sectionBasicInfo.Attach(new CSectionBasicInformation(m_hObject));
             }
 
             if (0 == _tcsicmp(_T(OBJTYPESTR_SEMAPHORE), m_obj->type()))
             {
                 ATLTRACE2(_T("Attempting to query object-specific info for %s\n"), m_obj->type().GetString());
-                m_semaphoreBasicInfo = new CSemaphoreBasicInformation(m_hObject);
+                m_semaphoreBasicInfo.Attach(new CSemaphoreBasicInformation(m_hObject));
             }
 
             if (0 == _tcsicmp(_T(OBJTYPESTR_TIMER), m_obj->type()))
             {
                 ATLTRACE2(_T("Attempting to query object-specific info for %s\n"), m_obj->type().GetString());
-                m_timerBasicInfo = new CTimerBasicInformation(m_hObject);
+                m_timerBasicInfo.Attach(new CTimerBasicInformation(m_hObject));
+            }
+
+            if (0 == _tcsicmp(_T(OBJTYPESTR_WINDOWSTATION), m_obj->type()))
+            {
+                ATLTRACE2(_T("Attempting to query object-specific info for %s\n"), m_obj->type().GetString());
+                CWinStaInformation* winfo = new CWinStaInformation(m_hObject);
+                m_winStaInfo.Attach(winfo);
+                if (winfo && *winfo)
+                {
+                    m_bHasObjectInfo = true;
+                }
             }
         }
 
@@ -735,6 +888,11 @@ namespace NtObjMgr{
         {
             if(INVALID_HANDLE_VALUE != m_hObject)
             {
+                if (m_winStaInfo)
+                {
+                    ATLVERIFY(::CloseWindowStation(static_cast<HWINSTA>(m_hObject)));
+                    return;
+                }
                 ::NtClose(m_hObject);
             }
         }
@@ -781,7 +939,9 @@ namespace NtObjMgr{
         inline CMutantBasicInformation const* getMutantBasicInfo() const { return m_mutantBasicInfo;  };
         inline CSectionBasicInformation const* getSectionBasicInfo() const { return m_sectionBasicInfo; };
         inline CSemaphoreBasicInformation const* getSemaphoreBasicInfo() const { return m_semaphoreBasicInfo;  };
-        inline CTimerBasicInformation const* getTimerBasicInfo() const { return m_timerBasicInfo;  };
+        inline CTimerBasicInformation const* getTimerBasicInfo() const { return m_timerBasicInfo; };
+        // this one is actually a Win32 object
+        inline CWinStaInformation const* getWinStaInfo() const { return m_winStaInfo; };
 
     private:
         static NTSTATUS NTAPI OpenObjectAsFile_(__out PHANDLE Handle, __in ACCESS_MASK DesiredAccess, __in POBJECT_ATTRIBUTES ObjectAttributes)
@@ -857,6 +1017,24 @@ namespace NtObjMgr{
 
             ATLASSERT(lpszTypeName != NULL);
             ATLASSERT(OpenObjectFunc != NULL);
+
+            if (0 == _tcsnicmp(lpszTypeName, _T(OBJTYPESTR_WINDOWSTATION), _tcslen(_T(OBJTYPESTR_WINDOWSTATION))))
+            {
+                LPCTSTR lpszName = obj->name().GetString();
+                ATLASSERT(lpszName != NULL);
+                HWINSTA hWinSta = ::OpenWindowStation(lpszName, FALSE, GENERIC_READ);
+                if (!hWinSta)
+                {
+                    hWinSta = ::OpenWindowStation(lpszName, FALSE, WINSTA_READATTRIBUTES);
+                    if (!hWinSta)
+                    {
+                        openStatus = HRESULT_FROM_WIN32(GetLastError());
+                        return INVALID_HANDLE_VALUE;
+                    }
+                }
+
+                return static_cast<HANDLE>(hWinSta);
+            }
 
             ATLTRACE2(_T("Trying to open %s as type %s.\n"), lpszFullName, lpszTypeName);
             openStatus = OpenObjectFunc(&hObject, DesiredAccess, &oa);

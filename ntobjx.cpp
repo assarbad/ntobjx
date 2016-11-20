@@ -57,48 +57,43 @@ CNtObjectsAppModule _Module;
 #   endif //(_ATL_VER < 0x0700)
 #endif // DDKBUILD
 
-#define PATTERN_ENTRY(match, comment) { _T(match), _T(comment), 0x2 }
-#define EXACT_ENTRY(match, comment)   { _T(match), _T(comment), 0x0 }
-#define EXACTI_ENTRY(match, comment)   { _T(match), _T(comment), 0x1 }
+#define EXACTI_ENTRY(match, comment)   { _T(match), comment, 0x1 }
 
 /*lint -save -e651 */
-// FIXME: this needs to go into the resource section
 const objtype_comment_t comments[] = {
-    EXACTI_ENTRY("\\ArcName", "Symlinks mapping ARC-style (Advanced RISC Computing) names to NT-style names; used during early boot stages"),
-    EXACTI_ENTRY("\\BaseNamedObjects", "This is where global ALPC port, event, job, mutex (mutant), semaphore, symbolic link, section (memory mapped file) and waitable timer objects live"),
-    EXACTI_ENTRY("\\Callback", "Callback objects"),
-    EXACTI_ENTRY("\\Device", "Where drivers conventionally create and look for device objects"),
-    EXACTI_ENTRY("\\DosDevices", "Legacy name and alias for the local \\\?\?\nAlso see: \\GLOBAL\?\?"),
-    EXACTI_ENTRY("\\Driver", "Contains instances of driver objects"),
-    EXACTI_ENTRY("\\FileSystem", "Available FS, FS filter and FS recognizer device and driver objects"),
-    EXACTI_ENTRY("\\GLOBAL\?\?", "Global (across all sessions) 'DOS' device names on a machine with terminal services enabled"),
-    EXACTI_ENTRY("\\KernelObjects", "Contains event objects that signal low resource conditions, memory errors, the completion of certain operating system tasks, as well as objects representing sessions\nSource: Windows Internals, 6th ed."),
-    EXACTI_ENTRY("\\KnownDlls", "Section objects of preloaded known DLLs and Win32-path to known DLLs\nAlso see: HKLM\\SYSTEM\\CurrentControlSet\\Control\\Session Manager\\KnownDLLs\\DllDirectory"),
-    EXACTI_ENTRY("\\KnownDlls32", "Section objects of preloaded known 32-bit DLLs on 64-bit systems\nAlso see: HKLM\\SYSTEM\\CurrentControlSet\\Control\\Session Manager\\KnownDLLs\\DllDirectory32"),
-    EXACTI_ENTRY("\\NLS", "Section names for NLS tables"),
-    EXACTI_ENTRY("\\ObjectTypes", "Catalog of available object types\nHint: names correspond to Type column"),
-    EXACTI_ENTRY("\\PSXSS", "Objects relating to the POSIX subsystem (Subsystem for UNIX Applications)"),
-    EXACTI_ENTRY("\\RPC Control", "ALPC ports used by remote procedure calls (RPCs), and events used by Conhost .exe as part of the console isolation mechanism\nSource: Windows Internals, 6th ed."),
-    EXACTI_ENTRY("\\Security", "ALPC ports and events used by names of objects specific to the security subsystem\nSource: Windows Internals, 6th ed."),
-    EXACTI_ENTRY("\\Sessions", "Contains session-local objects, e.g. network-drive mappings\nCombines several object directories to provide a per-session namespace\nSource: 'Session Namespace', chapter 3, Windows Internals, 6th ed."),
-    EXACTI_ENTRY("\\UMDFCommunicationPorts", "ALPC ports used by the User-Mode Driver Framework (UMDF)\nSource: Windows Internals, 6th ed."),
-    EXACTI_ENTRY("\\Windows", "Contains window station objects"),
-    EXACTI_ENTRY("\\Windows\\WindowStations", "Catalog of window stations\nA WindowStation is the container for a Desktop, which in turn hosts the visible windows"),
+    EXACTI_ENTRY("\\ArcName", IDS_OBJTT_ARCNAME),
+    EXACTI_ENTRY("\\BaseNamedObjects", IDS_OBJTT_BASENAMEDOBJECTS),
+    EXACTI_ENTRY("\\Callback", IDS_OBJTT_CALLBACK),
+    EXACTI_ENTRY("\\Device", IDS_OBJTT_DEVICE),
+    EXACTI_ENTRY("\\DosDevices", IDS_OBJTT_DOSDEVICES),
+    EXACTI_ENTRY("\\Driver", IDS_OBJTT_DRIVER),
+    EXACTI_ENTRY("\\FileSystem", IDS_OBJTT_FILESYSTEM),
+    EXACTI_ENTRY("\\GLOBAL\?\?", IDS_OBJTT_GLOBALDOSDEV),
+    EXACTI_ENTRY("\\KernelObjects", IDS_OBJTT_KERNELOBJECTS),
+    EXACTI_ENTRY("\\KnownDlls", IDS_OBJTT_KNOWNDLLS),
+    EXACTI_ENTRY("\\KnownDlls32", IDS_OBJTT_KNOWNDLLS32),
+    EXACTI_ENTRY("\\NLS", IDS_OBJTT_NLS),
+    EXACTI_ENTRY("\\ObjectTypes", IDS_OBJTT_OBJECTTYPES),
+    EXACTI_ENTRY("\\PSXSS", IDS_OBJTT_PSXSS),
+    EXACTI_ENTRY("\\RPC Control", IDS_OBJTT_RPCCTL),
+    EXACTI_ENTRY("\\Security", IDS_OBJTT_SECURITY),
+    EXACTI_ENTRY("\\Sessions", IDS_OBJTT_SESSIONS),
+    EXACTI_ENTRY("\\UMDFCommunicationPorts", IDS_OBJTT_UDFCOMMPORTS),
+    EXACTI_ENTRY("\\Windows", IDS_OBJTT_WINDOWS),
+    EXACTI_ENTRY("\\Windows\\WindowStations", IDS_OBJTT_WINDOWSTATIONS),
     // Non-Directory objects
-    EXACTI_ENTRY("\\\?\?", "Contains session-local 'DOS' device names, such as drive letters ('C:', ...) and 'NUL'; also see \\GLOBAL\?\?"),
-    EXACTI_ENTRY("\\REGISTRY", "The root of the registry as seen outside the Win32 subsystem"),
-    EXACTI_ENTRY("\\SystemRoot", "The device path to your %SystemRoot%; e.g. the true path of C:\\Windows"),
-    EXACTI_ENTRY("\\Device\\Mailslot", "The device that offers mailslots in their own 'DOS' namespace"),
-    EXACTI_ENTRY("\\Device\\NamedPipe", "The device that offers pipes in their own 'DOS' namespace"),
-    EXACTI_ENTRY("\\Device\\PhysicalMemory", "Section allows reresenting 'physical' memory"),
-    //PATTERN_ENTRY("\\Device\\HarddiskVolume*", "Device object that represents a volume, i.e. partition, on a disk"),
+    EXACTI_ENTRY("\\\?\?", IDS_OBJTT_DOSDEV),
+    EXACTI_ENTRY("\\REGISTRY", IDS_OBJTT_REGISTRY),
+    EXACTI_ENTRY("\\SystemRoot", IDS_OBJTT_SYSTEMROOT),
+    EXACTI_ENTRY("\\Device\\Mailslot", IDS_OBJTT_MAILSLOT),
+    EXACTI_ENTRY("\\Device\\NamedPipe", IDS_OBJTT_NAMEDPIPE),
+    EXACTI_ENTRY("\\Device\\PhysicalMemory", IDS_OBJTT_PHYSMEM),
 };
 /*lint -restore */
 
-#undef PATTERN_ENTRY
-#undef EXACT_ENTRY
+#undef EXACTI_ENTRY
 
-LPCTSTR findComment(LPCTSTR matchString)
+WORD findComment(LPCTSTR matchString)
 {
     for(size_t i = 0; i < sizeof(comments)/sizeof(comments[0]); i++)
     {
@@ -112,7 +107,7 @@ LPCTSTR findComment(LPCTSTR matchString)
                 found = (0 == _tcscmp(comments[i].match.exact, matchString));
 
             if(found)
-                return comments[i].comment;
+                return comments[i].resId;
         }
         else
         {

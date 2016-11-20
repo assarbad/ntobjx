@@ -357,6 +357,21 @@ STRINGTABLE
 BEGIN
     IDS_OBJSPEC_NAME1_TIMER "Timer-Zustand:"
     IDS_OBJSPEC_NAME2_TIMER "Verbleibende Zeit:"
+    IDS_OBJTT_ARCNAME       "Symbolische Verknüpfungen welche ARC-Namen (Advanced RISC Computing) auf NT-Namen abbilden; wird während des Bootvorgangs benutzt"
+    IDS_OBJTT_BASENAMEDOBJECTS 
+                            "Hier werden globale ALPC-Ports, Events, Jobs, Mutexe (Mutanten), Semaphoren, Symbolische Verknüpfungen, Sections (MMFs) und Timer-Objekte untergebracht sind"
+    IDS_OBJTT_CALLBACK      "Callback-Objekte"
+    IDS_OBJTT_DEVICE        "Wo Treiber üblicherweise Geräte-Objekte anlegen und suchen"
+    IDS_OBJTT_DOSDEVICES    "Alter Name und Alias für das lokale \\??\nSiehe auch: \\GLOBAL??"
+    IDS_OBJTT_DRIVER        "Enthält Instanzen von Treiber-Objekten"
+    IDS_OBJTT_FILESYSTEM    "Verfügbare Dateissystem-, Dateisystemfilter- und Dateisystemerkennungsgeräte/-treiberobjekte"
+    IDS_OBJTT_GLOBALDOSDEV  "Globaler (sitzungsübergreifende) 'DOS'-Gerätenamen auf einem System mit Terminaldiensten"
+    IDS_OBJTT_KERNELOBJECTS "Enthält Event-Objekte welche Ressourcenmangel, Speicherfehler und den Abschluß bestimmter Betriebssystemaufgaben anzeigen, als auch Sitzungs-Objekte\nQuelle:: Windows Internals, 6te Auflage"
+    IDS_OBJTT_KNOWNDLLS     "Section-Objekte von vorab geladenen bekannten DLLs und dem Win32-Pfad zu bekannten DLLs\nSiehe auch: HKLM\\SYSTEM\\CurrentControlSet\\Control\\Session Manager\\KnownDLLs\\DllDirectory"
+    IDS_OBJTT_KNOWNDLLS32   "Section-Objekte von vorab geladenen bekannten 32-bittigen DLLs auf einem 64-bittigen System\nSiehe auch: HKLM\\SYSTEM\\CurrentControlSet\\Control\\Session Manager\\KnownDLLs\\DllDirectory32"
+    IDS_OBJTT_NLS           "Section-Namen für NLS-Tabellen"
+    IDS_OBJTT_OBJECTTYPES   "Katalog verfügbarer Objekttypen\nHinweis: die Namen entsprechen der Typ-Spalte"
+    IDS_OBJTT_PSXSS         "Objekte mit Bezug zum POSIX Subsystem(Subsystem für UNIX-Anwendungen)"
 END
 
 STRINGTABLE
@@ -369,6 +384,26 @@ BEGIN
     IDS_OBJ_QUERY_STATUS    "<Status beim Ermitteln der Objektdetails: 0x%08X>"
     IDS_UNKNOWN_FMTSTR      "<unbekannt=%d>"
     IDS_STATUS_DESCRIPTION  "0x%08X\r\n%s"
+    IDS_OBJSPEC_NAME1_WINSTA "Benutzer:"
+    IDS_OBJSPEC_NAME2_WINSTA "Sicherheits-ID:"
+    IDS_OBJSPEC_NAME3_WINSTA "Kennzeichen:"
+END
+
+STRINGTABLE
+BEGIN
+    IDS_OBJTT_RPCCTL        "ALPC-Ports die von RPC-Aufrufen benutzt werden, sowie Events welche Conhost .exe als Teil des Isolierungsmechanismus der Konsole benutzt\nQuelle:: Windows Internals, 6te Auflage"
+    IDS_OBJTT_SECURITY      "ALPC-Ports und Events die von dem Sicherheitssubsystem zugehörigen Objekten benutzt werden\nQuelle:: Windows Internals, 6te Auflage"
+    IDS_OBJTT_SESSIONS      "Enthält sitzungslokale Objekte, beispielsweise eingebundene Netzwerkfreigaben\nKombiniert mehrere Objektverzeichnisse um einen sitzungsspezifischen Namensraum zu erzeugen\nQuelle:: 'Session Namespace', Kapitel 3, Windows Internals, 6te Auflage"
+    IDS_OBJTT_UDFCOMMPORTS  "ALPC-Ports die vom User-Mode Driver Framework (UMDF) benutzt werden\nQuelle: Windows Internals, 6te Auflage"
+    IDS_OBJTT_WINDOWS       "Enthält WindowsStation-Objekte"
+    IDS_OBJTT_WINDOWSTATIONS 
+                            "Katalog von Window Stations\nEine WindowStation ist ein Behälter für Desktops, welche wiederum sichtbare und unsichtbare Fenster enthalten"
+    IDS_OBJTT_DOSDEV        "Enthält sitzungslokale 'DOS'-Gerätenamen, so wie Laufwerksbuchstaben ('C:', ...) und 'NUL'; siehe auch \\GLOBAL??"
+    IDS_OBJTT_SYSTEMROOT    "Der Gerätepfad zu eurem %SystemRoot%; und also der wahre Pfad von C:\\Windows"
+    IDS_OBJTT_MAILSLOT      "Das Gerät welches Mailslots ihren eigenen 'DOS'-Namensraum bietet"
+    IDS_OBJTT_NAMEDPIPE     "Das Gerät welches Pipes ihren eigenen 'DOS'-Namensraum bietet"
+    IDS_OBJTT_PHYSMEM       "Section welche 'physischen' Speicher repräsentiert; nur vom Kernelmodus aus zugreifbar (war auf älteren Windowsversionen zugreifbar)"
+    IDS_OBJTT_REGISTRY      "Die Wurzel der Registrierdatenbank (Registry) außerhalb des Win32-Subsystems"
 END
 
 #endif    // German (Germany) resources
@@ -753,6 +788,21 @@ STRINGTABLE
 BEGIN
     IDS_OBJSPEC_NAME1_TIMER "Timer state:"
     IDS_OBJSPEC_NAME2_TIMER "Remaining time:"
+    IDS_OBJTT_ARCNAME       "Symlinks mapping ARC-style (Advanced RISC Computing) names to NT-style names; used during early boot stages"
+    IDS_OBJTT_BASENAMEDOBJECTS 
+                            "This is where global ALPC port, event, job, mutex (mutant), semaphore, symbolic link, section (memory mapped file) and waitable timer objects live"
+    IDS_OBJTT_CALLBACK      "Callback objects"
+    IDS_OBJTT_DEVICE        "Where drivers conventionally create and look for device objects"
+    IDS_OBJTT_DOSDEVICES    "Legacy name and alias for the local \\??\nAlso see: \\GLOBAL??"
+    IDS_OBJTT_DRIVER        "Contains instances of driver objects"
+    IDS_OBJTT_FILESYSTEM    "Available FS, FS filter and FS recognizer device and driver objects"
+    IDS_OBJTT_GLOBALDOSDEV  "Global (across all sessions) 'DOS' device names on a machine with terminal services enabled"
+    IDS_OBJTT_KERNELOBJECTS "Contains event objects that signal low resource conditions, memory errors, the completion of certain operating system tasks, as well as objects representing sessions\nSource: Windows Internals, 6th ed."
+    IDS_OBJTT_KNOWNDLLS     "Section objects of preloaded known DLLs and Win32-path to known DLLs\nAlso see: HKLM\\SYSTEM\\CurrentControlSet\\Control\\Session Manager\\KnownDLLs\\DllDirectory"
+    IDS_OBJTT_KNOWNDLLS32   "Section objects of preloaded known 32-bit DLLs on 64-bit systems\nAlso see: HKLM\\SYSTEM\\CurrentControlSet\\Control\\Session Manager\\KnownDLLs\\DllDirectory32"
+    IDS_OBJTT_NLS           "Section names for NLS tables"
+    IDS_OBJTT_OBJECTTYPES   "Catalog of available object types\nHint: names correspond to Type column"
+    IDS_OBJTT_PSXSS         "Objects relating to the POSIX subsystem (Subsystem for UNIX Applications)"
 END
 
 STRINGTABLE
@@ -765,6 +815,26 @@ BEGIN
     IDS_OBJ_QUERY_STATUS    "<Object query status: 0x%08X>"
     IDS_UNKNOWN_FMTSTR      "<unknown=%d>"
     IDS_STATUS_DESCRIPTION  "0x%08X\r\n%s"
+    IDS_OBJSPEC_NAME1_WINSTA "User:"
+    IDS_OBJSPEC_NAME2_WINSTA "SID:"
+    IDS_OBJSPEC_NAME3_WINSTA "Flags:"
+END
+
+STRINGTABLE
+BEGIN
+    IDS_OBJTT_RPCCTL        "ALPC ports used by remote procedure calls (RPCs), and events used by Conhost .exe as part of the console isolation mechanism\nSource: Windows Internals, 6th ed."
+    IDS_OBJTT_SECURITY      "ALPC ports and events used by objects specific to the security subsystem\nSource: Windows Internals, 6th ed."
+    IDS_OBJTT_SESSIONS      "Contains session-local objects, e.g. network-drive mappings\nCombines several object directories to provide a per-session namespace\nSource: 'Session Namespace', chapter 3, Windows Internals, 6th ed."
+    IDS_OBJTT_UDFCOMMPORTS  "ALPC ports used by the User-Mode Driver Framework (UMDF)\nSource: Windows Internals, 6th ed."
+    IDS_OBJTT_WINDOWS       "Contains window station objects"
+    IDS_OBJTT_WINDOWSTATIONS 
+                            "Catalog of window stations\nA WindowStation is the container for Desktop objects, which in turn host the visible and invisible windows"
+    IDS_OBJTT_DOSDEV        "Contains session-local 'DOS' device names, such as drive letters ('C:', ...) and 'NUL'; also see \\GLOBAL??"
+    IDS_OBJTT_SYSTEMROOT    "The device path to your %SystemRoot%; e.g. the true path of C:\\Windows"
+    IDS_OBJTT_MAILSLOT      "The device that offers mailslots in their own 'DOS' namespace"
+    IDS_OBJTT_NAMEDPIPE     "The device that offers pipes in their own 'DOS' namespace"
+    IDS_OBJTT_PHYSMEM       "Section representing 'physical' memory; only accessible from kernel mode (used to be accessible on older Windows versions)"
+    IDS_OBJTT_REGISTRY      "The root of the registry as seen outside the Win32 subsystem"
 END
 
 #endif    // English (United States) resources

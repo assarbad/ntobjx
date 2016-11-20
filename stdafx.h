@@ -119,13 +119,13 @@ typedef struct _objtype_comment_t
         LPCTSTR pattern;
         LPCTSTR exact;
     } match;
-    LPCTSTR comment;
+    WORD resId;
     unsigned int case_insensitive:1;
     unsigned int pattern_match:1;
 } objtype_comment_t;
 
 extern const objtype_comment_t comments[];
-LPCTSTR findComment(LPCTSTR matchString);
+WORD findComment(LPCTSTR matchString);
 
 // Compatibility for VS2003
 #if (_MSC_VER < 1400)
