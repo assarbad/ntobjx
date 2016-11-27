@@ -29,6 +29,9 @@ EXPORTS
     RtlConvertSidToUnicodeString
     ; locally declared symbols (not in winternl.h)
     RtlGetVersion
+    RtlImageNtHeader
+    RtlImageDirectoryEntryToData
+    RtlImageRvaToVa
     NtQueryEvent
     NtQueryIoCompletion
     NtQueryKey

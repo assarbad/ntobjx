@@ -29,7 +29,7 @@
 ///////////////////////////////////////////////////////////////////////////////
 
 #ifndef __NTNATIVE_H_VER__
-#define __NTNATIVE_H_VER__ 2016111123
+#define __NTNATIVE_H_VER__ 2016112722
 #if (defined(_MSC_VER) && (_MSC_VER >= 1020)) || defined(__MCPP)
 #pragma once
 #endif // Check for "#pragma once" support
@@ -111,14 +111,14 @@
         NTAPI
         NtClose (
         __in HANDLE Handle
-        );
+    );
 
     VOID
         NTAPI
         RtlInitUnicodeString (
         PUNICODE_STRING DestinationString,
         PCWSTR SourceString
-        );
+    );
 
 #   if defined(__cplusplus)
     }
@@ -457,8 +457,32 @@ typedef GENERATE_NAME_CONTEXT *PGENERATE_NAME_CONTEXT;
 NTSTATUS
 NTAPI
 RtlGetVersion(
-    PRTL_OSVERSIONINFOW lpVersionInformation
-    );
+    LPOSVERSIONINFOEXW lpVersionInformation
+);
+
+PIMAGE_NT_HEADERS
+NTAPI
+RtlImageNtHeader(
+    IN PVOID Base
+);
+
+PVOID
+NTAPI
+RtlImageDirectoryEntryToData(
+    __in PVOID Base,
+    __in BOOLEAN MappedAsImage,
+    __in USHORT DirectoryEntry,
+    __out PULONG Size
+);
+
+PVOID
+NTAPI
+RtlImageRvaToVa(
+    __in PIMAGE_NT_HEADERS NtHeaders,
+    __in PVOID Base,
+    __in ULONG Rva,
+    __inout_opt PIMAGE_SECTION_HEADER *LastRvaSection
+);
 
 NTSTATUS
 NTAPI
@@ -468,7 +492,7 @@ NtQueryEvent(
     __out_bcount(EventInformationLength) PVOID EventInformation,
     __in ULONG EventInformationLength,
     __out_opt PULONG ReturnLength
-    );
+);
 
 NTSTATUS
 NTAPI
@@ -488,7 +512,7 @@ NtQueryMutant(
     __out_bcount(MutantInformationLength) PVOID MutantInformation,
     __in ULONG MutantInformationLength,
     __out_opt PULONG ReturnLength
-    );
+);
 
 NTSTATUS
 NTAPI
@@ -498,7 +522,7 @@ NtQuerySemaphore(
     __out_bcount(SemaphoreInformationLength) PVOID SemaphoreInformation,
     __in ULONG SemaphoreInformationLength,
     __out_opt PULONG ReturnLength
-    );
+);
 
 NTSTATUS
 NTAPI
@@ -508,7 +532,7 @@ NtQuerySection(
     __out PVOID SectionInformation,
     __in ULONG SectionInformationLength,
     __out PULONG ReturnLength OPTIONAL
-     );
+ );
 
 NTSTATUS
 NTAPI
@@ -526,7 +550,7 @@ NtOpenDirectoryObject(
     __out PHANDLE DirectoryHandle,
     __in ACCESS_MASK DesiredAccess,
     __in POBJECT_ATTRIBUTES ObjectAttributes
-    );
+);
 
 NTSTATUS
 NTAPI
@@ -538,7 +562,7 @@ NtQueryDirectoryObject(
     __in BOOLEAN RestartScan,
     __inout PULONG Context,
     __out_opt PULONG ReturnLength
-    );
+);
 
 NTSTATUS
 NTAPI
@@ -546,7 +570,7 @@ NtOpenSymbolicLinkObject(
     __out PHANDLE LinkHandle,
     __in ACCESS_MASK DesiredAccess,
     __in POBJECT_ATTRIBUTES ObjectAttributes
-    );
+);
 
 NTSTATUS
 NTAPI
@@ -554,7 +578,7 @@ NtQuerySymbolicLinkObject(
     __in HANDLE LinkHandle,
     __inout PUNICODE_STRING LinkTarget,
     __out_opt PULONG ReturnedLength
-    );
+);
 
 NTSTATUS
 NTAPI
@@ -562,7 +586,7 @@ NtOpenEvent(
     __out PHANDLE EventHandle,
     __in ACCESS_MASK DesiredAccess,
     __in POBJECT_ATTRIBUTES ObjectAttributes
-    );
+);
 
 NTSTATUS
 NTAPI
@@ -570,7 +594,7 @@ NtOpenMutant(
     __out PHANDLE MutantHandle,
     __in ACCESS_MASK DesiredAccess,
     __in POBJECT_ATTRIBUTES ObjectAttributes
-    );
+);
 
 NTSTATUS
 NTAPI
@@ -578,7 +602,7 @@ NtOpenSection(
     __out PHANDLE SectionHandle,
     __in ACCESS_MASK DesiredAccess,
     __in POBJECT_ATTRIBUTES ObjectAttributes
-    );
+);
 
 NTSTATUS
 NTAPI
@@ -594,7 +618,7 @@ NtOpenSemaphore(
     __out PHANDLE SemaphoreHandle,
     __in ACCESS_MASK DesiredAccess,
     __in POBJECT_ATTRIBUTES ObjectAttributes
-    );
+);
 
 NTSTATUS
 NTAPI
@@ -602,7 +626,7 @@ NtOpenEventPair(
     __out PHANDLE EventPairHandle,
     __in ACCESS_MASK DesiredAccess,
     __in POBJECT_ATTRIBUTES ObjectAttributes
-    );
+);
 
 NTSTATUS
 NTAPI
@@ -610,7 +634,7 @@ NtOpenIoCompletion(
     __out PHANDLE IoCompletionHandle,
     __in ACCESS_MASK DesiredAccess,
     __in POBJECT_ATTRIBUTES ObjectAttributes
-    );
+);
 
 NTSTATUS
 NTAPI
@@ -618,7 +642,7 @@ NtOpenKey(
     __out PHANDLE KeyHandle,
     __in ACCESS_MASK DesiredAccess,
     __in POBJECT_ATTRIBUTES ObjectAttributes
-    );
+);
 
 NTSTATUS
 NTAPI
@@ -630,7 +654,7 @@ NtCreateKey(
     __in_opt PUNICODE_STRING Class,
     __in ULONG CreateOptions,
     __out_opt PULONG Disposition
-    );
+);
 
 NTSTATUS
 NTAPI
@@ -641,7 +665,7 @@ NtEnumerateKey(
     __out_bcount_opt(Length) PVOID KeyInformation,
     __in ULONG Length,
     __out PULONG ResultLength
-    );
+);
 
 NTSTATUS
 NTAPI
@@ -652,7 +676,7 @@ NtEnumerateValueKey(
     __out_bcount_opt(Length) PVOID KeyValueInformation,
     __in ULONG Length,
     __out PULONG ResultLength
-    );
+);
 
 NTSTATUS
 NTAPI
@@ -662,7 +686,7 @@ NtQueryKey(
     __out_bcount_opt(Length) PVOID KeyInformation,
     __in ULONG Length,
     __out PULONG ResultLength
-    );
+);
 
 NTSTATUS
 NTAPI
@@ -673,14 +697,14 @@ NtQueryValueKey(
     __out_bcount_opt(Length) PVOID KeyValueInformation,
     __in ULONG Length,
     __out PULONG ResultLength
-    );
+);
 
 NTSTATUS
 NTAPI
 RtlValidateUnicodeString(
     __in __reserved ULONG Flags,
     __in PCUNICODE_STRING String
-    );
+);
 
 NTSTATUS
 NTAPI
@@ -688,7 +712,7 @@ RtlDowncaseUnicodeString(
          PUNICODE_STRING DestinationString,
     __in PCUNICODE_STRING SourceString,
     __in BOOLEAN AllocateDestinationString
-    );
+);
 
 NTSTATUS /* VOID in pre-Vista*/
 NTAPI
@@ -697,14 +721,14 @@ RtlGenerate8dot3Name(
     __in    BOOLEAN AllowExtendedCharacters,
     __inout PGENERATE_NAME_CONTEXT Context,
     __inout PUNICODE_STRING Name8dot3
-    );
+);
 
 NTSTATUS
 NTAPI
 RtlVolumeDeviceToDosName(
     __in PVOID VolumeDeviceObject,
     __out PUNICODE_STRING DosName
-    );
+);
 
 NTSTATUS
 NTAPI
@@ -716,7 +740,7 @@ NtCreateSection(
     __in ULONG SectionPageProtection,
     __in ULONG AllocationAttributes,
     __in_opt HANDLE FileHandle
-    );
+);
 
 NTSTATUS
 NTAPI
@@ -731,14 +755,14 @@ NtMapViewOfSection(
     __in SECTION_INHERIT InheritDisposition,
     __in ULONG AllocationType,
     __in ULONG Win32Protect
-    );
+);
 
 NTSTATUS
 NTAPI
 NtUnmapViewOfSection(
     __in HANDLE ProcessHandle,
     __in_opt PVOID BaseAddress
-    );
+);
 
 #if defined(DDKBUILD)
 NTSTATUS
@@ -760,7 +784,7 @@ NtOpenFile(
     __out PIO_STATUS_BLOCK IoStatusBlock,
     __in ULONG ShareAccess,
     __in ULONG OpenOptions
-    );
+);
 #endif // DDKBUILD
 
 #define ZwClose NtClose

@@ -33,13 +33,15 @@
 #include <atlframe.h>
 #include <atlctrls.h>
 #include <atldlgs.h>
-#include <atlctrlw.h>
 #include <atlctrlx.h>
+#include <atlctrlw.h>
 #include <atlsplit.h>
 #include <atlsecurity.h>
 #include <stdarg.h>
 
 #include "resource.h"
+#include "reslang.h"
+#include "ntnative.h"
 
 #include "objmgr.hpp"
 #include "objtypes.h"
@@ -117,13 +119,25 @@ WORD findComment(LPCTSTR matchString)
     return NULL;
 }
 
+OSVERSIONINFOEXW const& GetOSVersionInfo()
+{
+    static OSVERSIONINFOEXW osvix = { sizeof(OSVERSIONINFOEXW), 0, 0, 0, 0,{ 0 } }; // not an error, this has to be the W variety!
+    if (osvix.dwMajorVersion == 0)
+    {
+        ATLVERIFY(NT_SUCCESS(RtlGetVersion(&osvix)));
+    }
+    return osvix;
+}
 
 int Run(LPTSTR /*lpstrCmdLine*/ = NULL, int nCmdShow = SW_SHOWDEFAULT)
 {
+    OSVERSIONINFOEXW const& osvix = GetOSVersionInfo();
+    HookFindResource();
+
     CMessageLoop theLoop;
     _Module.AddMessageLoop(&theLoop);
 
-    CNtObjectsMainFrame wndMain;
+    CNtObjectsMainFrame wndMain(osvix);
 
     if(wndMain.CreateEx() == NULL)
     {

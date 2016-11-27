@@ -42,6 +42,10 @@
 #   error ntobjx.h requires atlctrlx.h to be included first
 #endif
 
+#ifndef __ATLCTRLW_H__
+#   error ntobjx.h requires atlctrlw.h to be included first
+#endif
+
 #ifndef __ATLSPLIT_H__
 #   error ntobjx.h requires atlsplit.h to be included first
 #endif
@@ -293,156 +297,6 @@ namespace
         return bResult;
     }
 } // anonymous namespace
-
-// This class ensures on Windows XP and earlier that the SetThreadLocale()
-// function will get the exact LANGID of available resources matching a
-// given primary LANGID
-// Example:
-// If the app contains resources for
-class CLanguageSetter
-{
-    typedef LANGID(WINAPI * TFNSetThreadUILanguage)(LANGID LangId);
-
-    DWORD m_dwMajorVersion;
-    TFNSetThreadUILanguage m_pfnSetThreadUILanguage;
-    CSimpleStack<LANGID> m_langIDs;
-    LANGID m_fallback;
-    bool const m_bHasLists;
-public:
-    CLanguageSetter(LANGID fallback = MAKELANGID(LANG_ENGLISH, SUBLANG_ENGLISH_US), HMODULE hInstance = ModuleHelper::GetResourceInstance(), LPCTSTR lpType = RT_DIALOG, LPCTSTR lpName = MAKEINTRESOURCE(IDD_ABOUT))
-        : m_dwMajorVersion(0)
-        , m_pfnSetThreadUILanguage(0)
-        , m_langIDs()
-        , m_fallback(fallback)
-        , m_bHasLists(EnumAboutBoxLanguages_(hInstance, lpType, lpName))
-    {
-        OSVERSIONINFOEX osvix = { 0 };
-        osvix.dwMajorVersion = 6;
-        ULONGLONG dwlConditionMask = 0;
-        dwlConditionMask = ::VerSetConditionMask(dwlConditionMask, VER_MAJORVERSION, VER_GREATER_EQUAL);
-        m_dwMajorVersion = ::VerifyVersionInfo(&osvix, VER_MAJORVERSION, dwlConditionMask) ? 6 : 5;
-        ATLASSERT(m_dwMajorVersion != 0);
-
-        if (m_dwMajorVersion >= 6)
-        {
-            m_pfnSetThreadUILanguage = (TFNSetThreadUILanguage)(::GetProcAddress(::GetModuleHandle(_T("kernel32.dll")), "SetThreadUILanguage"));
-            ATLASSERT(m_pfnSetThreadUILanguage != 0);
-        }
-        else
-        {
-            ATLASSERT((m_dwMajorVersion < 6) && (m_pfnSetThreadUILanguage == 0));
-        }
-    }
-
-    inline bool operator !() const
-    {
-        return !operator bool();
-    }
-
-    inline operator bool() const
-    {
-        return m_bHasLists;
-    }
-
-    inline LANGID set(LANGID langID = ::GetUserDefaultLangID())
-    {
-        langID = matchResourceLang_(LANGIDFROMLCID(langID));
-        if (m_pfnSetThreadUILanguage) // Vista and newer
-        {
-            ATLVERIFY(langID == m_pfnSetThreadUILanguage(langID));
-            ATLTRACE2(_T("Using method for Vista and newer with SetThreadUILanguage(%04X)\n"), langID);
-        }
-        else // Windows XP, 2003 Server and older
-        {
-            ATLVERIFY(::SetThreadLocale(MAKELCID(langID, SORT_DEFAULT)));
-            ATLTRACE2(_T("Using method for older Windows versions SetThreadLocale(%04X) -- GetThreadLocale() returns %04X\n"), MAKELCID(langID, SORT_DEFAULT), ::GetThreadLocale());
-            ATLASSERT(::GetThreadLocale() == MAKELCID(langID, SORT_DEFAULT));
-        }
-        return langID;
-    }
-
-private:
-#   define RES_LANGID_LIST_LEN 0x10
-    typedef struct _RESLANGIDLIST
-    {
-        size_t size;
-        size_t index;
-        LANGID* list;
-    } RESLANGIDLIST;
-
-    inline LANGID matchResourceLang_(LANGID localeID) const
-    {
-        if (m_bHasLists)
-        {
-            LANGID const tomatch = PRIMARYLANGID(localeID);
-
-            for (int i = 0; i < m_langIDs.GetSize(); i++)
-            {
-                LANGID curr = PRIMARYLANGID(m_langIDs[i]);
-
-                if (tomatch == curr)
-                {
-                    ATLTRACE2(_T("Returning first match based on primary language identifier %04X (primary lang: %04X).\n"), m_langIDs[i], tomatch);
-                    return m_langIDs[i];
-                }
-            }
-        }
-        return m_fallback; // our fallback LANGID
-    }
-
-    static BOOL CALLBACK NtObjectsEnumResLangProc_(HMODULE /*hModule*/, LPCWSTR /*lpType*/, LPCWSTR /*lpName*/, WORD wLanguage, LONG_PTR lParam)
-    {
-        RESLANGIDLIST* lpResLangIdList = (RESLANGIDLIST*)lParam;
-        ATLASSERT(lpResLangIdList != NULL);
-
-        if (wLanguage == MAKELANGID(LANG_NEUTRAL, SUBLANG_NEUTRAL))
-        {
-            ATLTRACE2(_T("Skipping neutral language resource\n"));
-            return TRUE;
-        }
-
-        ATLASSERT(wLanguage != MAKELANGID(LANG_NEUTRAL, SUBLANG_NEUTRAL));
-        if (lpResLangIdList != NULL)
-        {
-            RESLANGIDLIST& resLangIdList = *lpResLangIdList;
-            size_t& index = resLangIdList.index;
-            if (index < resLangIdList.size)
-            {
-                resLangIdList.list[index] = wLanguage;
-                index++;
-            }
-        }
-        return TRUE;
-    }
-
-    bool EnumAboutBoxLanguages_(HMODULE hInstance, LPCTSTR lpType, LPCTSTR lpName)
-    {
-        bool retval = false;
-        CTempBuffer<LANGID, RES_LANGID_LIST_LEN> resLangIdListBuf;
-        LANGID* list = resLangIdListBuf.Allocate(RES_LANGID_LIST_LEN);
-        ATLASSERT(list != NULL);
-
-        if (list != NULL)
-        {
-            RESLANGIDLIST resLangIdList = { RES_LANGID_LIST_LEN, 0, list };
-            memset(list, 0, sizeof(LANGID) * RES_LANGID_LIST_LEN);
-
-            // We use the about box resource as our sentinel which languages are available
-            retval = FALSE != ::EnumResourceLanguages(hInstance, lpType, lpName, NtObjectsEnumResLangProc_, (LONG_PTR)(&resLangIdList));
-
-            if (retval)
-            {
-                for (size_t i = 0; i < resLangIdList.index; i++)
-                {
-                    ATLASSERT(i < resLangIdList.size);
-                    m_langIDs.Push(resLangIdList.list[i]);
-                    ATLTRACE2(_T("Found resource language #%i %04X (%u)\n"), (int)i+1, resLangIdList.list[i], resLangIdList.list[i]);
-                }
-            }
-        }
-        return retval;
-    }
-};
 
 class CSuppressRedraw
 {
@@ -2499,9 +2353,9 @@ public:
     const bool m_bIsAdmin;
     const bool m_bIsElevated;
     LANGID m_currentLang;
-    OSVERSIONINFO m_osvi;
+    OSVERSIONINFOEXW const& m_osvix;
 
-    CNtObjectsMainFrame()
+    CNtObjectsMainFrame(OSVERSIONINFOEXW const& osvix)
         : m_langSetter()
         , m_bFirstOnIdle(true) // to force initial refresh
         , m_bIsFindDialogOpen(false)
@@ -2512,13 +2366,9 @@ public:
         , m_bIsAdmin(IsUserAdmin() != FALSE)
         , m_bIsElevated(IsElevated() != FALSE)
         , m_currentLang(m_langSetter.set())
+        , m_osvix(osvix)
     {
         *(FARPROC*)&DllGetVersion = ::GetProcAddress(::GetModuleHandle(_T("shell32.dll")), "DllGetVersion");
-        RtlZeroMemory(&m_osvi, sizeof(m_osvi));
-        m_osvi.dwOSVersionInfoSize = sizeof(m_osvi);
-#pragma warning(disable:4996)
-        ATLVERIFY(::GetVersionEx(&m_osvi));
-#pragma warning(default:4996)
     }
 
     virtual BOOL PreTranslateMessage(MSG* pMsg)
@@ -2724,7 +2574,7 @@ public:
         RenewAboutInSystemMenu_();
 
         // We don't support switching the language on Windows versions below Vista
-        if (m_osvi.dwMajorVersion < 6)
+        if (m_osvix.dwMajorVersion < 6)
         {
             DisableSwitchLanguageMenuItem_();
             return m_currentLang;
@@ -2827,7 +2677,7 @@ public:
     LRESULT OnSwitchLanguage(WORD /*wNotifyCode*/, WORD wID, HWND /*hWndCtl*/, BOOL& /*bHandled*/)
     {
         // We don't support switching the language on Windows versions below Vista
-        if (m_osvi.dwMajorVersion < 6)
+        if (m_osvix.dwMajorVersion < 6)
         {
             return 0;
         }

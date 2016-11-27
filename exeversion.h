@@ -22,7 +22,7 @@
 ///
 ///////////////////////////////////////////////////////////////////////////////
 #ifndef __EXEVERSION_H_VERSION__
-#define __EXEVERSION_H_VERSION__ 2016111023
+#define __EXEVERSION_H_VERSION__ 2016112722
 
 #if defined(_MSC_VER) && (_MSC_VER >= 1020)
 #pragma once
@@ -36,7 +36,7 @@
 #define TEXT_AUTHOR            Oliver Schneider // author (optional value)
 #define PRD_MAJVER             1 // major product version
 #define PRD_MINVER             3 // minor product version
-#define PRD_PATCH              0 // patch number
+#define PRD_PATCH              2 // patch number
 #define PRD_BUILD              HG_REV_NO // build number for product
 #define PRD_BUILD_NUMERIC      HG_REV_NO_NUMERIC // build number for product
 #define FILE_MAJVER            PRD_MAJVER // major file version
@@ -71,6 +71,6 @@
 
 #define CREATE_XVER(maj,min,patch,build) maj ## , ## min ## , ## patch ## , ## build
 #define CREATE_FVER(maj,min,patch,build) maj ## . ## min ## . ## patch ## . ## build
-#define CREATE_PVER(maj,min,patch,build) maj ## . ## min
+#define CREATE_PVER(maj,min,patch,build) maj ## . ## min ## . ## patch
 
 #endif // __EXEVERSION_H_VERSION__

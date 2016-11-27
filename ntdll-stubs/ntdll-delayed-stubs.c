@@ -231,8 +231,32 @@ RtlConvertSidToUnicodeString (
 NTSTATUS
 NTAPI
 RtlGetVersion (
-    PRTL_OSVERSIONINFOW lpVersionInformation
+    LPOSVERSIONINFOW lpVersionInformation
     ) { return 0; }
+
+PIMAGE_NT_HEADERS
+NTAPI
+RtlImageNtHeader(
+    IN PVOID Base
+    ) { return NULL; }
+
+PVOID
+NTAPI
+RtlImageDirectoryEntryToData(
+    __in PVOID Base,
+    __in BOOLEAN MappedAsImage,
+    __in USHORT DirectoryEntry,
+    __out PULONG Size
+    ) { return NULL; }
+
+PVOID
+NTAPI
+RtlImageRvaToVa(
+    __in PIMAGE_NT_HEADERS NtHeaders,
+    __in PVOID Base,
+    __in ULONG Rva,
+    __inout_opt PIMAGE_SECTION_HEADER *LastRvaSection
+    ) { return NULL; }
 
 NTSTATUS
 NTAPI
