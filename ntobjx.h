@@ -2223,7 +2223,7 @@ public:
                 ATLTRACE2(_T("Navigating forward doesn't work. Cursor already at the end of the list: %i (size == %i).\n"), m_cursorIdx, GetSize());
                 return NULL; // must be able to convert to NULL
             }
-            m_cursorIdx++;
+            m_cursorIdx = -1;
         }
         else
         {
@@ -2234,6 +2234,21 @@ public:
             }
             m_cursorIdx--;
         }
+#ifdef _DEBUG
+        for (int i = 0; i < GetSize(); i++)
+        {
+            T item = baseClass::operator [](i);
+            ATLASSERT(item != NULL);
+            if (i == GetSize() + m_cursorIdx)
+            {
+                ATLTRACE2(_T("->  [%i] %s\n"), i, item->fullname().GetString());
+            }
+            else
+            {
+                ATLTRACE2(_T("    [%i] %s\n"), i, item->fullname().GetString());
+            }
+        }
+#endif // _DEBUG
         ATLASSERT(GetSize() + m_cursorIdx >= 0);
         ATLASSERT(GetSize() + m_cursorIdx < GetSize());
         ATLTRACE2(_T("New cursor position: %i (size == %i).\n"), m_cursorIdx, GetSize());
@@ -2256,6 +2271,7 @@ public:
             (void)Shift();
         }
         BOOL retval = baseClass::Add(t);
+        m_cursorIdx = -1;
 #ifdef _DEBUG
         for (int i = 0; i < GetSize(); i++)
         {

@@ -521,6 +521,10 @@
 				>
 			</File>
 			<File
+				RelativePath="reslang.h"
+				>
+			</File>
+			<File
 				RelativePath="resource.h"
 				>
 			</File>
@@ -564,6 +568,10 @@
 			</File>
 			<File
 				RelativePath="ntobjx.cpp"
+				>
+			</File>
+			<File
+				RelativePath="reslang.cpp"
 				>
 			</File>
 			<File

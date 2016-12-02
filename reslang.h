@@ -38,7 +38,7 @@
 #include <atlctrlw.h>
 #include "resource.h"
 
-EXTERN_C void HookFindResource();
+EXTERN_C void HookLdrFindResource_U();
 
 // This class ensures on Windows XP and earlier that the SetThreadLocale()
 // function will get the exact LANGID of available resources matching a

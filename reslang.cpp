@@ -46,7 +46,6 @@
 /// someone will perhaps be nice enough to point it out in a defect report.
 ///////////////////////////////////////////////////////////////////////////////
 
-#if 0
 typedef struct _LDR_RESOURCE_INFO
 {
     ULONG_PTR Type;
@@ -67,53 +66,75 @@ LocalLdrFindResource_U(
 )
 {
     ATLASSERT(realLdrFindResource_U != NULL);
-    return STATUS_INVALID_PARAMETER;
+    ATLTRACE2(_T("Hooked LdrFindResource_U(%p, %p, %u, %p)\n"), BaseAddress, ResourceIdPath, ResourceIdPathLength, ResourceDataEntry);
+    return realLdrFindResource_U(BaseAddress, ResourceIdPath, ResourceIdPathLength, ResourceDataEntry);
 }
-#endif // 0
 
-void HookFindResource()
+void HookLdrFindResource_U()
 {
-#if 0
-    HMODULE hKrnlBase = ::GetModuleHandle(_T("kernel32.dll"));
+    if (realLdrFindResource_U)
+    {
+        ATLTRACE2(_T("LdrFindResource_U already hooked\n"));
+        return;
+    }
+    LPCTSTR lpszKernel32 = _T("kernel32.dll");
+    LPCSTR lpszNtdll = "ntdll.dll";
+    HMODULE hKrnlBase = ::GetModuleHandle(lpszKernel32);
     ATLASSERT(hKrnlBase != NULL);
-    PVOID lpKrnlBase = static_cast<PVOID>(hKrnlBase);
-    ATLTRACE2(_T("kernel32.dll = %p\n"), lpKrnlBase);
+    PVOID lpKrnlBase = (PVOID)hKrnlBase;
+    ATLTRACE2(_T("%s = %p\n"), lpszKernel32, lpKrnlBase);
+    ULONG_PTR origLdrFindResource_U = (ULONG_PTR)::GetProcAddress(::GetModuleHandleA(lpszNtdll), "LdrFindResource_U");
+    ATLASSERT(origLdrFindResource_U != NULL);
     if (PIMAGE_NT_HEADERS nthdrs = RtlImageNtHeader(lpKrnlBase))
     {
         ATLTRACE2(_T("nthdrs[%p]\n"), nthdrs);
+        ATLASSERT(nthdrs->OptionalHeader.NumberOfRvaAndSizes >= IMAGE_DIRECTORY_ENTRY_IMPORT);
         ULONG whatever;
-        if (PIMAGE_IMPORT_DESCRIPTOR piid = static_cast<PIMAGE_IMPORT_DESCRIPTOR>(RtlImageDirectoryEntryToData(lpKrnlBase, TRUE, IMAGE_DIRECTORY_ENTRY_IMPORT, &whatever)))
+        if (PIMAGE_IMPORT_DESCRIPTOR piid = (PIMAGE_IMPORT_DESCRIPTOR)RtlImageDirectoryEntryToData(lpKrnlBase, TRUE, IMAGE_DIRECTORY_ENTRY_IMPORT, &whatever))
         {
-            ATLTRACE2(_T("piid[%p]; piid->Name[%p]\n"), piid, piid->Name);
-            int idx = 0;
             while(piid->Name)
             {
-                
-                LPCSTR dllname = (LPCSTR)RtlImageRvaToVa(nthdrs, lpKrnlBase, piid->Name, NULL);
-                ATLTRACE2(_T("{%p} piid[%i].Name = %08X == %u == %hs\n"), piid, idx, piid->Name, piid->Name, dllname);
-                if (0 == _strcmpi(dllname, "ntdll.dll"))
+                LPCSTR dllname = (LPCSTR)(piid->Name + (LPSTR)lpKrnlBase);
+                if (0 == _strcmpi(dllname, lpszNtdll))
                 {
-                    PULONG ft = (PULONG)RtlImageRvaToVa(nthdrs, lpKrnlBase, piid->FirstThunk, NULL);
-                    PULONG oft = (PULONG)RtlImageRvaToVa(nthdrs, lpKrnlBase, piid->OriginalFirstThunk, NULL);
-                    for (size_t i = 0; oft[i] && ft[i]; i++)
+                    // Since we don't have the OriginalFirstThunk info, we need
+                    // to specify the "real" function address to search for.
+                    ATLTRACE2(_T("Matched DLL name: %hs\n"), dllname);
+                    // FirstThunk must be a valid RVA
+                    if(piid->FirstThunk)
                     {
-                        ATLASSERT(oft[i] != 0);
-                        ATLASSERT(ft[i] != 0);
-                        PIMAGE_THUNK_DATA oitd = (PIMAGE_THUNK_DATA)RtlImageRvaToVa(nthdrs, lpKrnlBase, oft[i], NULL);
-                        ATLASSERT(oitd != NULL);
-                        ATLASSERT(oitd->u1.AddressOfData != 0);
-                        ATLASSERT(0 == (oitd->u1.Ordinal & IMAGE_ORDINAL_FLAG));
-                        PIMAGE_IMPORT_BY_NAME oiibn = (PIMAGE_IMPORT_BY_NAME)oitd->u1.AddressOfData;
-                        ATLTRACE2(_T("PIMAGE_IMPORT_BY_NAME[%p] = %p; .name = %p\n"), oiibn, &oiibn->Name);
-                        ATLASSERT(oiibn != NULL);
+                        PULONG_PTR FirstThunk = (PULONG_PTR)(piid->FirstThunk + (LPSTR)(lpKrnlBase));
+                        // Go through the list until we reach both RVAs with zero
+                        while(*FirstThunk)
+                        {
+                            // Go through the IAT searching for the specific function
+                            if(*FirstThunk == origLdrFindResource_U)
+                            {
+                                ATLTRACE2(_T("Found LdrFindResource_U function pointer\n"));
+                                // Got it ...
+                                DWORD dwOldProtect = 0;
+                                // Un-protect the memory (i.e. make it writable)
+                                if (::VirtualProtect(FirstThunk, sizeof(ULONG_PTR), PAGE_READWRITE, &dwOldProtect))
+                                __try
+                                {
+                                    // Exchange the pointer with ours, retrieving the old one ...
+                                    realLdrFindResource_U = (TFNLdrFindResource_U)(InterlockedExchangePointer((PVOID*)FirstThunk, (PVOID)LocalLdrFindResource_U));
+                                }
+                                __finally
+                                {
+                                    // Re-protect the memory (i.e. make it writable)
+                                    ::VirtualProtect(FirstThunk, sizeof(ULONG_PTR), dwOldProtect, &dwOldProtect);
+                                }
+                                break;
+                            }
+                            FirstThunk++;
+                        }
                     }
                 }
                 piid++;
-                idx++;
             }
         }
     }
-#endif // 0
 }
 
 bool CLanguageSetter::operator!() const
@@ -121,7 +142,8 @@ bool CLanguageSetter::operator!() const
     return !operator bool();
 }
 
-CLanguageSetter::CLanguageSetter(LANGID fallback /*= MAKELANGID(LANG_ENGLISH, SUBLANG_ENGLISH_US)*/, HMODULE hInstance /*= ModuleHelper::GetResourceInstance()*/, LPCTSTR lpType /*= RT_DIALOG*/, LPCTSTR lpName /*= MAKEINTRESOURCE(IDD_ABOUT)*/) : m_dwMajorVersion(0)
+CLanguageSetter::CLanguageSetter(LANGID fallback /*= MAKELANGID(LANG_ENGLISH, SUBLANG_ENGLISH_US)*/, HMODULE hInstance /*= ModuleHelper::GetResourceInstance()*/, LPCTSTR lpType /*= RT_DIALOG*/, LPCTSTR lpName /*= MAKEINTRESOURCE(IDD_ABOUT)*/)
+    : m_dwMajorVersion(0)
     , m_pfnSetThreadUILanguage(0)
     , m_langIDs()
     , m_fallback(fallback)
