@@ -122,12 +122,12 @@ at the same time complying with the requirements of the MS-PL.
 The texts for both licenses can be found in ``LICENSE.txt`` and ``wtl/MS-PL.txt``
 respectively.
 
-.. _file a ticket: /assarbad/ntobjx/issues?status=new&status=open
-.. _auf Deutsch melden: /assarbad/ntobjx/issues?status=new&status=open
-.. _documentation: /assarbad/ntobjx/wiki/help/English
-.. _download section: /assarbad/ntobjx/downloads
+.. _file a ticket: https://bitbucket.org/assarbad/ntobjx/issues?status=new&status=open
+.. _auf Deutsch melden: https://bitbucket.org/assarbad/ntobjx/issues?status=new&status=open
+.. _documentation: https://bitbucket.org/assarbad/ntobjx/wiki/help/English
+.. _download section: https://bitbucket.org/assarbad/ntobjx/downloads
 .. _live.sysinternals.com: https://live.sysinternals.com/sigcheck.exe
-.. _premake4 flavor: /windirstat/premake-stable
+.. _premake4 flavor: https://bitbucket.org/windirstat/premake-stable
 .. _WinObj: https://technet.microsoft.com/en-us/sysinternals/winobj.aspx
 .. _Why Programs Fail: http://www.whyprogramsfail.com/
 .. _MS-PL: https://opensource.org/licenses/MS-PL
