@@ -74,7 +74,7 @@ namespace
         if (hResModule == BaseAddress) // we only filter our own resource module (this .exe)
         {
             ATLTRACE2(_T("Hooked LdrFindResource_U(%p, %p, %u, %p): "), BaseAddress, ResourceIdPath, ResourceIdPathLength, ResourceDataEntry);
-            if (ResourceIdPath && (3 == ResourceIdPathLength))
+            if (ResourceIdPath && (ResourceIdPathLength >= 2))
             {
 #ifdef _DEBUG
                 if (IS_INTRESOURCE(ResourceIdPath->Type))
@@ -174,9 +174,19 @@ namespace
 #endif // _DEBUG
                 if (!ResourceIdPath->Language) // Neutral?
                 {
-                    LDR_RESOURCE_INFO lri = *ResourceIdPath;
+                    LDR_RESOURCE_INFO lri = { ResourceIdPath->Type, ResourceIdPath->Name, 0 };
                     lri.Language = gLangSetter.picked();
-                    return realLdrFindResource_U(BaseAddress, &lri, ResourceIdPathLength, ResourceDataEntry);
+                    NTSTATUS status = realLdrFindResource_U(BaseAddress, &lri, ResourceIdPathLength, ResourceDataEntry);
+                    if (NT_ERROR(status))
+                    {
+                        ATLTRACE2(_T("LdrFindResource_U failed with %08X and manipulated ResourceIdPath. Retrying with original values.\n"), status);
+                        status = realLdrFindResource_U(BaseAddress, ResourceIdPath, ResourceIdPathLength, ResourceDataEntry);
+                        if (NT_ERROR(status))
+                        {
+                            ATLTRACE2(_T("LdrFindResource_U failed (again) with %08X even with original ResourceIdPath.\n"), status);
+                        }
+                    }
+                    return status;
                 }
             }
             else
