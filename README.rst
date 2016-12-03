@@ -2,18 +2,6 @@
  ntobjx: NT objects
 ====================
 
-Kurzer Hinweis
---------------
-Dieses Programm gibt es jetzt auch auf Deutsch. Das funktioniert
-leider nur auf Windows Vista und neuer. Auf älteren Windowsversionen habe ich es
-noch nicht zuverlässig zum Laufen bekommen. Auf Vista und neuer wird ntobjx
-schon auf Deutsch gestartet, wenn euer System entsprechend konfiguriert ist.
-Ansonsten könnt ihr F11 oder das "View"-Menü zum Umschalten benutzen. Viel Spaß!
-
-Defekte könnt ihr mir gern auch auf Deutsch melden. Dokumentation auf Deutsch
-wird irgendwann nachgereicht, es sei denn jemand kommt mir zuvor und steuert es
-großzügig bei.
-
 About
 -----
 This utility is meant to be an open source replacement of WinObj_. I have
@@ -24,6 +12,29 @@ Win32-APIs.
 This utility aims to shed some light into these dark corners of Windows systems.
 
 You can find screenshots in the documentation_.
+
+Kurzer Hinweis: deutsche Version
+--------------------------------
+Dieses Programm gibt es jetzt auch auf Deutsch. Das funktioniert
+leider nur auf Windows Vista und neuer. Auf älteren Windowsversionen habe ich es
+inzwischen zum Laufen bekommen, es muß aber nochmal gründlich durchgetestet
+werden. Auf Vista und neuer wird ntobjx schon auf Deutsch gestartet, wenn euer
+System (bzw. euer Benutzerkonto) entsprechend konfiguriert ist.
+Ansonsten könnt ihr F11 oder das "View"-Menü zum Umschalten benutzen. Viel Spaß!
+
+Das Fählertoifelchen
+~~~~~~~~~~~~~~~~~~~~
+
+Defekte könnt ihr mir gern auch `auf Deutsch melden`_. Dokumentation auf Deutsch
+wird irgendwann nachgereicht, es sei denn jemand kommt mir zuvor und steuert es
+großzügig bei (bitte als Pull-Request schicken).
+
+Call to action
+--------------
+Hey there. Yes, you. Want to see this program in your native language? Feel
+confident enough to translate any existing translation into your native tongue?
+If so, please send a pull request with the translated ``.rc`` file or
+alternately `file a ticket`_ here to get in touch.
 
 Download
 --------
@@ -79,6 +90,18 @@ Visual Studio and therefore won't clash.
 Personally I currently use VS 2005 to _build_ release versions, but VS 2015 to
 develop the utility.
 
+Defects
+-------
+Some people call them "bugs", but "bug" misses the distinction between cause
+(the defect), propagation of the defective program state and symptom (the
+defective behavior exhibited). I prefer the terminology as proposed by Andreas
+Zeller in his book `Why Programs Fail`_ (2nd ed.). Therefore I call them defects.
+
+Now, if you find one of those, please report them here. Feel free to use German,
+English or - if absolutely necessary - Russian to describe the erratic behavior.
+Please make sure to provide some way to contact you for more feedback. One easy
+way is to log into Bitbucket and `file a ticket`_ as logged on user.
+
 License
 -------
 The GUI utility itself is released under Microsoft Public License (MS-PL_), the
@@ -99,10 +122,13 @@ at the same time complying with the requirements of the MS-PL.
 The texts for both licenses can be found in ``LICENSE.txt`` and ``wtl/MS-PL.txt``
 respectively.
 
-.. _documentation: https://bitbucket.org/assarbad/ntobjx/wiki/help/English
-.. _download section: https://bitbucket.org/assarbad/ntobjx/downloads
+.. _file a ticket: /assarbad/ntobjx/issues?status=new&status=open
+.. _auf Deutsch melden: /assarbad/ntobjx/issues?status=new&status=open
+.. _documentation: /assarbad/ntobjx/wiki/help/English
+.. _download section: /assarbad/ntobjx/downloads
 .. _live.sysinternals.com: https://live.sysinternals.com/sigcheck.exe
-.. _premake4 flavor: https://bitbucket.org/windirstat/premake-stable
+.. _premake4 flavor: /windirstat/premake-stable
 .. _WinObj: https://technet.microsoft.com/en-us/sysinternals/winobj.aspx
+.. _Why Programs Fail: http://www.whyprogramsfail.com/
 .. _MS-PL: https://opensource.org/licenses/MS-PL
 .. _WTL: https://sourceforge.net/projects/wtl/
