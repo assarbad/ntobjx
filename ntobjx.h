@@ -1345,11 +1345,7 @@ public:
         ATLVERIFY(SetDlgItemText(IDC_STATIC_PORTIONSCOPYRIGHT, m_verinfo[_T("Portions Copyright")]));
 
         CString caption;
-        ATLVERIFY(caption.LoadString(IDS_ABOUT));
-        caption.Append(m_verinfo[_T("ProductName")]);
-        caption.Append(_T(" "));
-        caption.Append(m_verinfo[_T("FileVersion")]);
-        caption.AppendFormat(_T(" (%d-bit)"), sizeof(void*) * 8);
+        caption.Format(IDS_ABOUT, m_verinfo[_T("FileVersion")], sizeof(void*) * 8);
         SetWindowText(caption);
 
         m_appicon.LoadIcon(IDR_MAINFRAME);
@@ -3000,7 +2996,7 @@ private:
         CString oldWndTitle, newDlgTitle;
         ATLVERIFY(oldWndTitle.LoadString(IDR_MAINFRAME));
         ATLTRACE2(_T("Old title: %s\n"), oldWndTitle.GetString());
-        newDlgTitle.Format(IDS_TITLEBAR_FMTSTR, oldWndTitle.GetString(), m_verinfo[_T("ProductVersion")], m_verinfo[_T("Mercurial revision")]);
+        newDlgTitle.Format(IDS_TITLEBAR_FMTSTR, oldWndTitle.GetString(), m_verinfo[_T("FileVersion")], sizeof(void*) * 8);
         ATLTRACE2(_T("New title: %s\n"), newDlgTitle.GetString());
         ATLVERIFY(SetWindowText(newDlgTitle.GetString()));
     }

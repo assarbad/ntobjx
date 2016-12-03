@@ -376,10 +376,10 @@ END
 
 STRINGTABLE
 BEGIN
-    IDS_TITLEBAR_FMTSTR     "%s: Version %s, Revision: %s"
+    IDS_TITLEBAR_FMTSTR     "%s: Version %s, %d-Bit"
     IDS_FEATURE_UNAVAILABLE "Diese Funktion ist nicht verfügbar, da sie nicht in diese Programmversion eingebaut wurde."
     IDS_NOT_AVAILABLE_SHORT "nicht verfügbar"
-    IDS_ABOUT               "Über "
+    IDS_ABOUT               "Über ntobjx %s, %d-Bit"
     IDS_OBJ_OPEN_STATUS     "<Status beim Öffnen des Objekts: 0x%08X>"
     IDS_OBJ_QUERY_STATUS    "<Status beim Ermitteln der Objektdetails: 0x%08X>"
     IDS_UNKNOWN_FMTSTR      "<unbekannt=%d>"
@@ -807,10 +807,10 @@ END
 
 STRINGTABLE
 BEGIN
-    IDS_TITLEBAR_FMTSTR     "%s: version %s, rev: %s"
+    IDS_TITLEBAR_FMTSTR     "%s: version %s, %d-bit"
     IDS_FEATURE_UNAVAILABLE "The feature has not been included in this build."
     IDS_NOT_AVAILABLE_SHORT "N/A"
-    IDS_ABOUT               "About "
+    IDS_ABOUT               "About ntobjx %s, %d-bit"
     IDS_OBJ_OPEN_STATUS     "<Object open status: 0x%08X>"
     IDS_OBJ_QUERY_STATUS    "<Object query status: 0x%08X>"
     IDS_UNKNOWN_FMTSTR      "<unknown=%d>"
