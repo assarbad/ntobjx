@@ -135,7 +135,7 @@ int Run(LPTSTR /*lpstrCmdLine*/ = NULL, int nCmdShow = SW_SHOWDEFAULT)
 
     if (osvix.dwMajorVersion < 6) /* language handling for resources works starting with Vista (SetThreadUILanguage), but not before that */
     {
-        HookLdrFindResource_U();
+        HookLdrFindResource_U(_Module.GetModuleInstance());
     }
 
     CMessageLoop theLoop;

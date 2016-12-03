@@ -231,7 +231,7 @@ RtlConvertSidToUnicodeString (
 NTSTATUS
 NTAPI
 RtlGetVersion (
-    LPOSVERSIONINFOW lpVersionInformation
+    LPOSVERSIONINFOEXW lpVersionInformation
     ) { return 0; }
 
 PIMAGE_NT_HEADERS

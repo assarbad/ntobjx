@@ -46,31 +46,62 @@
 /// someone will perhaps be nice enough to point it out in a defect report.
 ///////////////////////////////////////////////////////////////////////////////
 
-typedef struct _LDR_RESOURCE_INFO
+namespace
 {
-    ULONG_PTR Type;
-    ULONG_PTR Name;
-    ULONG_PTR Language;
-} LDR_RESOURCE_INFO, *PLDR_RESOURCE_INFO;
+    typedef struct _LDR_RESOURCE_INFO
+    {
+        ULONG_PTR Type;
+        ULONG_PTR Name;
+        ULONG_PTR Language;
+    } LDR_RESOURCE_INFO, *PLDR_RESOURCE_INFO;
 
-typedef NTSTATUS(NTAPI * TFNLdrFindResource_U)(PVOID, PLDR_RESOURCE_INFO, ULONG, PIMAGE_RESOURCE_DATA_ENTRY *);
-static TFNLdrFindResource_U realLdrFindResource_U = NULL;
+    typedef NTSTATUS(NTAPI * TFNLdrFindResource_U)(PVOID, PLDR_RESOURCE_INFO, ULONG, PIMAGE_RESOURCE_DATA_ENTRY *);
+    static TFNLdrFindResource_U realLdrFindResource_U = NULL;
+    static PVOID hResModule = NULL;
 
-NTSTATUS
-NTAPI
-LocalLdrFindResource_U(
-    __in PVOID BaseAddress,
-    __in PLDR_RESOURCE_INFO ResourceIdPath,
-    __in ULONG ResourceIdPathLength,
-    __out PIMAGE_RESOURCE_DATA_ENTRY *ResourceDataEntry
-)
-{
-    ATLASSERT(realLdrFindResource_U != NULL);
-    ATLTRACE2(_T("Hooked LdrFindResource_U(%p, %p, %u, %p)\n"), BaseAddress, ResourceIdPath, ResourceIdPathLength, ResourceDataEntry);
-    return realLdrFindResource_U(BaseAddress, ResourceIdPath, ResourceIdPathLength, ResourceDataEntry);
+    NTSTATUS
+        NTAPI
+        LocalLdrFindResource_U(
+        __in PVOID BaseAddress,
+        __in PLDR_RESOURCE_INFO ResourceIdPath,
+        __in ULONG ResourceIdPathLength,
+        __out PIMAGE_RESOURCE_DATA_ENTRY *ResourceDataEntry
+        )
+    {
+        ATLASSERT(realLdrFindResource_U != NULL);
+        if (hResModule == BaseAddress)
+        {
+            ATLTRACE2(_T("Hooked LdrFindResource_U(%p, %p, %u, %p)\n"), BaseAddress, ResourceIdPath, ResourceIdPathLength, ResourceDataEntry);
+            if (ResourceIdPath && (3 == ResourceIdPathLength))
+            {
+                if (IS_INTRESOURCE(ResourceIdPath->Type))
+                {
+                    ATLTRACE2(_T("Resource type: %u (%08X); "), ResourceIdPath->Type, ResourceIdPath->Type);
+                }
+                else
+                {
+                    ATLTRACE2(_T("Resource type: %s; "), (LPCWSTR)ResourceIdPath->Type);
+                }
+                if (IS_INTRESOURCE(ResourceIdPath->Name))
+                {
+                    ATLTRACE2(_T("name: %u (%08X); "), ResourceIdPath->Name, ResourceIdPath->Name);
+                }
+                else
+                {
+                    ATLTRACE2(_T("name: %s; "), (LPCWSTR)ResourceIdPath->Name);
+                }
+                ATLTRACE2(_T("language: %08X (%u)\n"), ResourceIdPath->Language, ResourceIdPath->Language);
+            }
+            else
+            {
+                ATLTRACE2(_T("Not implemented for ResourceIdPathLength{%u} != 3\n"), ResourceIdPathLength);
+            }
+        }
+        return realLdrFindResource_U(BaseAddress, ResourceIdPath, ResourceIdPathLength, ResourceDataEntry);
+    }
 }
 
-void HookLdrFindResource_U()
+void HookLdrFindResource_U(HINSTANCE resmodule)
 {
     if (realLdrFindResource_U)
     {
@@ -115,15 +146,19 @@ void HookLdrFindResource_U()
                                 DWORD dwOldProtect = 0;
                                 // Un-protect the memory (i.e. make it writable)
                                 if (::VirtualProtect(FirstThunk, sizeof(ULONG_PTR), PAGE_READWRITE, &dwOldProtect))
-                                __try
                                 {
-                                    // Exchange the pointer with ours, retrieving the old one ...
-                                    realLdrFindResource_U = (TFNLdrFindResource_U)(InterlockedExchangePointer((PVOID*)FirstThunk, (PVOID)LocalLdrFindResource_U));
-                                }
-                                __finally
-                                {
-                                    // Re-protect the memory (i.e. make it writable)
-                                    ::VirtualProtect(FirstThunk, sizeof(ULONG_PTR), dwOldProtect, &dwOldProtect);
+                                    __try
+                                    {
+                                        // Exchange the pointer with ours, retrieving the old one ...
+                                        realLdrFindResource_U = (TFNLdrFindResource_U)(InterlockedExchangePointer((PVOID*)FirstThunk, (PVOID)LocalLdrFindResource_U));
+                                        ATLTRACE2(_T("Hooked the LdrFindResource_U function\n"));
+                                        hResModule = resmodule;
+                                    }
+                                    __finally
+                                    {
+                                        // Re-protect the memory (i.e. make it writable)
+                                        ::VirtualProtect(FirstThunk, sizeof(ULONG_PTR), dwOldProtect, &dwOldProtect);
+                                    }
                                 }
                                 break;
                             }
