@@ -132,6 +132,8 @@ OSVERSIONINFOEXW const& GetOSVersionInfo()
 int Run(LPTSTR /*lpstrCmdLine*/ = NULL, int nCmdShow = SW_SHOWDEFAULT)
 {
     OSVERSIONINFOEXW const& osvix = GetOSVersionInfo();
+    // Set the default language
+    gLangSetter.set();
 
     if (osvix.dwMajorVersion < 6) /* language handling for resources works starting with Vista (SetThreadUILanguage), but not before that */
     {

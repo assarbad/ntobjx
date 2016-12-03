@@ -2353,7 +2353,7 @@ class CNtObjectsMainFrame :
 public:
     DECLARE_FRAME_WND_CLASS(_T("NtObjectsMainFrame"), IDR_MAINFRAME)
 
-    CLanguageSetter m_langSetter;
+    CLanguageSetter& m_langSetter;
     CNtObjectsStatusBar m_status;
     CSplitterWindow m_vsplit;
     CNtObjectsTreeView m_treeview;
@@ -2372,7 +2372,7 @@ public:
     OSVERSIONINFOEXW const& m_osvix;
 
     CNtObjectsMainFrame(OSVERSIONINFOEXW const& osvix)
-        : m_langSetter()
+        : m_langSetter(gLangSetter)
         , m_bFirstOnIdle(true) // to force initial refresh
         , m_bIsFindDialogOpen(false)
         , m_activeObject(0)
@@ -2589,13 +2589,6 @@ public:
         RenewStatusBar_();
         RenewAboutInSystemMenu_();
 
-        // We don't support switching the language on Windows versions below Vista
-        if (m_osvix.dwMajorVersion < 6)
-        {
-            DisableSwitchLanguageMenuItem_();
-            return m_currentLang;
-        }
-
         switch (m_currentLang)
         {
         case ID_SWITCHLANGUAGE_ENGLISH:
@@ -2692,11 +2685,6 @@ public:
 
     LRESULT OnSwitchLanguage(WORD /*wNotifyCode*/, WORD wID, HWND /*hWndCtl*/, BOOL& /*bHandled*/)
     {
-        // We don't support switching the language on Windows versions below Vista
-        if (m_osvix.dwMajorVersion < 6)
-        {
-            return 0;
-        }
         switch (wID)
         {
         case ID_SWITCHLANGUAGE_GERMAN:

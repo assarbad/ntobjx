@@ -46,6 +46,8 @@
 /// someone will perhaps be nice enough to point it out in a defect report.
 ///////////////////////////////////////////////////////////////////////////////
 
+CLanguageSetter gLangSetter = CLanguageSetter();
+
 namespace
 {
     typedef struct _LDR_RESOURCE_INFO
@@ -69,14 +71,88 @@ namespace
         )
     {
         ATLASSERT(realLdrFindResource_U != NULL);
-        if (hResModule == BaseAddress)
+        if (hResModule == BaseAddress) // we only filter our own resource module (this .exe)
         {
-            ATLTRACE2(_T("Hooked LdrFindResource_U(%p, %p, %u, %p)\n"), BaseAddress, ResourceIdPath, ResourceIdPathLength, ResourceDataEntry);
+            ATLTRACE2(_T("Hooked LdrFindResource_U(%p, %p, %u, %p): "), BaseAddress, ResourceIdPath, ResourceIdPathLength, ResourceDataEntry);
             if (ResourceIdPath && (3 == ResourceIdPathLength))
             {
+#ifdef _DEBUG
                 if (IS_INTRESOURCE(ResourceIdPath->Type))
                 {
-                    ATLTRACE2(_T("Resource type: %u (%08X); "), ResourceIdPath->Type, ResourceIdPath->Type);
+                    LPCTSTR rt = NULL;
+                    switch(ResourceIdPath->Type)
+                    {
+                    case RT_CURSOR:
+                        rt = _T("RT_CURSOR");
+                        break;
+                    case RT_BITMAP:
+                        rt = _T("RT_BITMAP");
+                        break;
+                    case RT_ICON:
+                        rt = _T("RT_ICON");
+                        break;
+                    case RT_MENU:
+                        rt = _T("RT_MENU");
+                        break;
+                    case RT_DIALOG:
+                        rt = _T("RT_DIALOG");
+                        break;
+                    case RT_STRING:
+                        rt = _T("RT_STRING");
+                        break;
+                    case RT_FONTDIR:
+                        rt = _T("RT_FONTDIR");
+                        break;
+                    case RT_FONT:
+                        rt = _T("RT_FONT");
+                        break;
+                    case RT_ACCELERATOR:
+                        rt = _T("RT_ACCELERATOR");
+                        break;
+                    case RT_RCDATA:
+                        rt = _T("RT_RCDATA");
+                        break;
+                    case RT_MESSAGETABLE:
+                        rt = _T("RT_MESSAGETABLE");
+                        break;
+                    case RT_GROUP_CURSOR:
+                        rt = _T("RT_GROUP_CURSOR");
+                        break;
+                    case RT_GROUP_ICON:
+                        rt = _T("RT_GROUP_ICON");
+                        break;
+                    case RT_VERSION:
+                        rt = _T("RT_VERSION");
+                        break;
+                    case RT_DLGINCLUDE:
+                        rt = _T("RT_DLGINCLUDE");
+                        break;
+                    case RT_PLUGPLAY:
+                        rt = _T("RT_PLUGPLAY");
+                        break;
+                    case RT_VXD:
+                        rt = _T("RT_VXD");
+                        break;
+                    case RT_ANICURSOR:
+                        rt = _T("RT_ANICURSOR");
+                        break;
+                    case RT_ANIICON:
+                        rt = _T("RT_ANIICON");
+                        break;
+                    case RT_HTML:
+                        rt = _T("RT_HTML");
+                        break;
+                    case RT_MANIFEST:
+                        rt = _T("RT_MANIFEST");
+                        break;
+                    default:
+                        rt = NULL;
+                        break;
+                    }
+                    if (rt)
+                        ATLTRACE2(_T("type: %15s; "), rt);
+                    else
+                        ATLTRACE2(_T("type: % 15u; "), ResourceIdPath->Type);
                 }
                 else
                 {
@@ -84,17 +160,28 @@ namespace
                 }
                 if (IS_INTRESOURCE(ResourceIdPath->Name))
                 {
-                    ATLTRACE2(_T("name: %u (%08X); "), ResourceIdPath->Name, ResourceIdPath->Name);
+                    ATLTRACE2(_T("name: % 5u; "), ResourceIdPath->Name);
                 }
                 else
                 {
                     ATLTRACE2(_T("name: %s; "), (LPCWSTR)ResourceIdPath->Name);
                 }
-                ATLTRACE2(_T("language: %08X (%u)\n"), ResourceIdPath->Language, ResourceIdPath->Language);
+                WCHAR name[MAX_PATH] = {0};
+                if (::GetLocaleInfo((LCID)ResourceIdPath->Language, LOCALE_SENGLANGUAGE, name, sizeof(name)))
+                    ATLTRACE2(_T("language: %s (%u)\n"), (ResourceIdPath->Language) ? name : _T("Neutral"), ResourceIdPath->Language);
+                else
+                    ATLTRACE2(_T("language: %04X (%u)\n"), ResourceIdPath->Language, ResourceIdPath->Language);
+#endif // _DEBUG
+                if (!ResourceIdPath->Language) // Neutral?
+                {
+                    LDR_RESOURCE_INFO lri = *ResourceIdPath;
+                    lri.Language = gLangSetter.picked();
+                    return realLdrFindResource_U(BaseAddress, &lri, ResourceIdPathLength, ResourceDataEntry);
+                }
             }
             else
             {
-                ATLTRACE2(_T("Not implemented for ResourceIdPathLength{%u} != 3\n"), ResourceIdPathLength);
+                ATLTRACE2(_T("not implemented for ResourceIdPathLength{%u} != 3\n"), ResourceIdPathLength);
             }
         }
         return realLdrFindResource_U(BaseAddress, ResourceIdPath, ResourceIdPathLength, ResourceDataEntry);
@@ -182,6 +269,7 @@ CLanguageSetter::CLanguageSetter(LANGID fallback /*= MAKELANGID(LANG_ENGLISH, SU
     , m_pfnSetThreadUILanguage(0)
     , m_langIDs()
     , m_fallback(fallback)
+    , m_pickedLangID(fallback)
     , m_bHasLists(EnumAboutBoxLanguages_(hInstance, lpType, lpName))
 {
     OSVERSIONINFOEX osvix = { 0 };
@@ -196,10 +284,6 @@ CLanguageSetter::CLanguageSetter(LANGID fallback /*= MAKELANGID(LANG_ENGLISH, SU
         m_pfnSetThreadUILanguage = (TFNSetThreadUILanguage)(::GetProcAddress(::GetModuleHandle(_T("kernel32.dll")), "SetThreadUILanguage"));
         ATLASSERT(m_pfnSetThreadUILanguage != 0);
     }
-    else
-    {
-        ATLASSERT((m_dwMajorVersion < 6) && (m_pfnSetThreadUILanguage == 0));
-    }
 }
 
 CLanguageSetter::operator bool() const
@@ -209,19 +293,13 @@ CLanguageSetter::operator bool() const
 
 LANGID CLanguageSetter::set(LANGID langID /*= ::GetUserDefaultLangID()*/)
 {
-    langID = matchResourceLang_(LANGIDFROMLCID(langID));
+    m_pickedLangID = matchResourceLang_(LANGIDFROMLCID(langID));
     if (m_pfnSetThreadUILanguage) // Vista and newer
     {
-        ATLVERIFY(langID == m_pfnSetThreadUILanguage(langID));
-        ATLTRACE2(_T("Using method for Vista and newer with SetThreadUILanguage(%04X)\n"), langID);
+        ATLVERIFY(m_pickedLangID == m_pfnSetThreadUILanguage(m_pickedLangID));
+        ATLTRACE2(_T("Using method for Vista and newer with SetThreadUILanguage(%04X)\n"), m_pickedLangID);
     }
-    else // Windows XP, 2003 Server and older
-    {
-        ATLVERIFY(::SetThreadLocale(MAKELCID(langID, SORT_DEFAULT)));
-        ATLTRACE2(_T("Using method for older Windows versions SetThreadLocale(%04X) -- GetThreadLocale() returns %04X\n"), MAKELCID(langID, SORT_DEFAULT), ::GetThreadLocale());
-        ATLASSERT(::GetThreadLocale() == MAKELCID(langID, SORT_DEFAULT));
-    }
-    return langID;
+    return m_pickedLangID;
 }
 
 LANGID CLanguageSetter::matchResourceLang_(LANGID localeID) const
@@ -295,4 +373,9 @@ bool CLanguageSetter::EnumAboutBoxLanguages_(HMODULE hInstance, LPCTSTR lpType, 
         }
     }
     return retval;
+}
+
+LANGID CLanguageSetter::picked() const
+{
+    return m_pickedLangID;
 }

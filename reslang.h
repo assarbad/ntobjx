@@ -53,12 +53,14 @@ class CLanguageSetter
     TFNSetThreadUILanguage m_pfnSetThreadUILanguage;
     WTL::CSimpleStack<LANGID> m_langIDs;
     LANGID m_fallback;
+    LANGID m_pickedLangID;
     bool const m_bHasLists;
 public:
     CLanguageSetter(LANGID fallback = MAKELANGID(LANG_ENGLISH, SUBLANG_ENGLISH_US), HMODULE hInstance = ModuleHelper::GetResourceInstance(), LPCTSTR lpType = RT_DIALOG, LPCTSTR lpName = MAKEINTRESOURCE(IDD_ABOUT));
     bool operator !() const;
     operator bool() const;
     LANGID set(LANGID langID = ::GetUserDefaultLangID());
+    LANGID picked() const;
 
 private:
 #   define RES_LANGID_LIST_LEN 0x10
@@ -73,5 +75,7 @@ private:
     static BOOL CALLBACK NtObjectsEnumResLangProc_(HMODULE /*hModule*/, LPCWSTR /*lpType*/, LPCWSTR /*lpName*/, WORD wLanguage, LONG_PTR lParam);
     bool EnumAboutBoxLanguages_(HMODULE hInstance, LPCTSTR lpType, LPCTSTR lpName);
 };
+
+extern CLanguageSetter gLangSetter;
 
 #endif // __RESLANG_H_VER__
