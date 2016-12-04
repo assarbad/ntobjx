@@ -2414,6 +2414,7 @@ public:
         COMMAND_ID_HANDLER(ID_VIEW_PROPERTIES, OnViewProperties)
         COMMAND_ID_HANDLER(ID_VIEW_REFRESH, OnViewRefresh)
         COMMAND_ID_HANDLER(ID_SHOW_ABOUT, OnShowAbout)
+        COMMAND_ID_HANDLER(ID_SHOW_ONLINEHELP, OnShowOnlineHelp)
         COMMAND_ID_HANDLER(ID_FILE_SAVE_AS, OnSaveAs)
         COMMAND_ID_HANDLER(ID_VIEW_FIND, OnFindObject)
         COMMAND_ID_HANDLER(ID_SWITCHLANGUAGE_ENGLISH, OnSwitchLanguage)
@@ -2534,6 +2535,19 @@ public:
     {
         CAboutDlg dlg(m_verinfo);
         dlg.DoModal(m_hWnd);
+        return 0;
+    }
+
+    LRESULT OnShowOnlineHelp(WORD /*wNotifyCode*/, WORD /*wID*/, HWND /*hWndCtl*/, BOOL& /*bHandled*/)
+    {
+        SHELLEXECUTEINFO sei = {0};
+        sei.cbSize = sizeof(sei);
+        sei.fMask = SEE_MASK_FLAG_NO_UI;
+        sei.lpVerb = _T("open");
+        CString url;
+        ATLVERIFY(url.LoadString(IDS_URL_ONLINEHELP));
+        sei.lpFile = url.GetString();
+        ATLVERIFY(::ShellExecuteEx(&sei));
         return 0;
     }
 

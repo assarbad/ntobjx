@@ -46,6 +46,7 @@ BEGIN
         END
     END
     MENUITEM "Ü&ber",                       ID_SHOW_ABOUT
+    MENUITEM "Online&hilfe",                ID_SHOW_ONLINEHELP
 END
 
 IDR_POPUP_HYPERLINK1 MENU
@@ -387,6 +388,7 @@ BEGIN
     IDS_OBJSPEC_NAME1_WINSTA "Benutzer:"
     IDS_OBJSPEC_NAME2_WINSTA "Sicherheits-ID:"
     IDS_OBJSPEC_NAME3_WINSTA "Kennzeichen:"
+    IDS_URL_ONLINEHELP      "https://bitbucket.org/assarbad/ntobjx/wiki/help/Deutsch"
 END
 
 STRINGTABLE
@@ -444,6 +446,7 @@ BEGIN
         END
     END
     MENUITEM "A&bout",                      ID_SHOW_ABOUT
+    MENUITEM "Online &help",                ID_SHOW_ONLINEHELP
 END
 
 IDR_POPUP_MENU1 MENU
@@ -818,6 +821,7 @@ BEGIN
     IDS_OBJSPEC_NAME1_WINSTA "User:"
     IDS_OBJSPEC_NAME2_WINSTA "SID:"
     IDS_OBJSPEC_NAME3_WINSTA "Flags:"
+    IDS_URL_ONLINEHELP      "https://bitbucket.org/assarbad/ntobjx/wiki/help/English"
 END
 
 STRINGTABLE
