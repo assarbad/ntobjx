@@ -15,11 +15,8 @@ You can find screenshots in the documentation_.
 
 Kurzer Hinweis: deutsche Version
 --------------------------------
-Dieses Programm gibt es jetzt auch auf Deutsch. Das funktioniert
-leider nur auf Windows Vista und neuer. Auf älteren Windowsversionen habe ich es
-inzwischen zum Laufen bekommen, es muß aber nochmal gründlich durchgetestet
-werden. Auf Vista und neuer wird ntobjx schon auf Deutsch gestartet, wenn euer
-System (bzw. euer Benutzerkonto) entsprechend konfiguriert ist.
+Dieses Programm gibt es jetzt auch auf Deutsch. Entsprechend der Einstellungen
+eures Benutzerkontos wird das Programm ggf. schon direkt auf Deutsch gestartet.
 Ansonsten könnt ihr F11 oder das "View"-Menü zum Umschalten benutzen. Viel Spaß!
 
 Das Fählertoifelchen
