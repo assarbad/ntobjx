@@ -19,12 +19,12 @@ Dieses Programm gibt es jetzt auch auf Deutsch. Entsprechend der Einstellungen
 eures Benutzerkontos wird das Programm ggf. schon direkt auf Deutsch gestartet.
 Ansonsten könnt ihr F11 oder das "View"-Menü zum Umschalten benutzen. Viel Spaß!
 
+Die deutsche `Dokumentation findet sich hier`_.
+
 Das Fählertoifelchen
 ~~~~~~~~~~~~~~~~~~~~
 
-Defekte könnt ihr mir gern auch `auf Deutsch melden`_. Dokumentation auf Deutsch
-wird irgendwann nachgereicht, es sei denn jemand kommt mir zuvor und steuert es
-großzügig bei (bitte als Pull-Request schicken).
+Defekte könnt ihr mir gern auch `auf Deutsch melden`_.
 
 Call to action
 --------------
@@ -120,6 +120,7 @@ The texts for both licenses can be found in ``LICENSE.txt`` and ``wtl/MS-PL.txt`
 respectively.
 
 .. _file a ticket: https://bitbucket.org/assarbad/ntobjx/issues?status=new&status=open
+.. _Dokumentation findet sich hier: https://bitbucket.org/assarbad/ntobjx/wiki/help/Deutsch
 .. _auf Deutsch melden: https://bitbucket.org/assarbad/ntobjx/issues?status=new&status=open
 .. _documentation: https://bitbucket.org/assarbad/ntobjx/wiki/help/English
 .. _download section: https://bitbucket.org/assarbad/ntobjx/downloads
