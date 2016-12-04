@@ -29,7 +29,7 @@
 ///
 ///////////////////////////////////////////////////////////////////////////////
 #ifndef __RESLANG_H_VER__
-#define __RESLANG_H_VER__ 2016120300
+#define __RESLANG_H_VER__ 2016120400
 #if (defined(_MSC_VER) && (_MSC_VER >= 1020)) || defined(__MCPP)
 #pragma once
 #endif // Check for "#pragma once" support
@@ -38,7 +38,7 @@
 #include <atlctrlw.h>
 #include "resource.h"
 
-EXTERN_C void HookLdrFindResource_U(HINSTANCE resmodule);
+EXTERN_C BOOL HookLdrFindResource_U(HINSTANCE resmodule);
 
 // This class ensures on Windows XP and earlier that the SetThreadLocale()
 // function will get the exact LANGID of available resources matching a

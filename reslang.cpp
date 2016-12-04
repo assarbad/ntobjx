@@ -198,12 +198,12 @@ namespace
     }
 }
 
-void HookLdrFindResource_U(HINSTANCE resmodule)
+BOOL HookLdrFindResource_U(HINSTANCE resmodule)
 {
     if (realLdrFindResource_U)
     {
         ATLTRACE2(_T("LdrFindResource_U already hooked\n"));
-        return;
+        return TRUE;
     }
     LPCTSTR lpszKernel32 = _T("kernel32.dll");
     LPCSTR lpszNtdll = "ntdll.dll";
@@ -241,21 +241,50 @@ void HookLdrFindResource_U(HINSTANCE resmodule)
                                 ATLTRACE2(_T("Found LdrFindResource_U function pointer\n"));
                                 // Got it ...
                                 DWORD dwOldProtect = 0;
-                                // Un-protect the memory (i.e. make it writable)
-                                if (::VirtualProtect(FirstThunk, sizeof(ULONG_PTR), PAGE_READWRITE, &dwOldProtect))
+                                __try
                                 {
                                     __try
                                     {
-                                        // Exchange the pointer with ours, retrieving the old one ...
-                                        realLdrFindResource_U = (TFNLdrFindResource_U)(InterlockedExchangePointer((PVOID*)FirstThunk, (PVOID)LocalLdrFindResource_U));
-                                        ATLTRACE2(_T("Hooked the LdrFindResource_U function\n"));
-                                        hResModule = resmodule;
+                                        MEMORY_BASIC_INFORMATION mbi;
+                                        if (::VirtualQuery(FirstThunk, &mbi, sizeof(mbi)))
+                                        {
+                                            ATLTRACE2(_T("\
+MEMORY_BASIC_INFORMATION mbi == {\n\
+    .BaseAddress == %p;\n\
+    .AllocationBase == %p;\n\
+    .AllocationProtect == %08X;\n\
+    .RegionSize == %u;\n\
+    .State == %08X;\n\
+    .Protect == %08X;\n\
+    .Type == %08X;\n\
+};\n"), mbi.BaseAddress, mbi.AllocationBase, mbi.AllocationProtect, mbi.RegionSize, mbi.State, mbi.Protect, mbi.Type);
+                                        }
                                     }
-                                    __finally
+                                    __except(EXCEPTION_EXECUTE_HANDLER)
                                     {
-                                        // Re-protect the memory (i.e. make it writable)
-                                        ::VirtualProtect(FirstThunk, sizeof(ULONG_PTR), dwOldProtect, &dwOldProtect);
+                                        ATLTRACE2(_T("Exception when trying to query memory information for %p\n"), FirstThunk);
                                     }
+                                    // Un-protect the memory (i.e. make it writable)
+                                    if (::VirtualProtect(FirstThunk, sizeof(ULONG_PTR), PAGE_READWRITE, &dwOldProtect))
+                                    {
+                                        __try
+                                        {
+                                            // Exchange the pointer with ours, retrieving the old one ...
+                                            realLdrFindResource_U = (TFNLdrFindResource_U)(InterlockedExchangePointer((PVOID*)FirstThunk, (PVOID)LocalLdrFindResource_U));
+                                            ATLTRACE2(_T("Hooked the LdrFindResource_U function\n"));
+                                            hResModule = resmodule;
+                                            return TRUE;
+                                        }
+                                        __finally
+                                        {
+                                            // Re-protect the memory (i.e. make it writable)
+                                            ::VirtualProtect(FirstThunk, sizeof(ULONG_PTR), dwOldProtect, &dwOldProtect);
+                                        }
+                                    }
+                                }
+                                __except(EXCEPTION_EXECUTE_HANDLER)
+                                {
+                                    ATLTRACE2(_T("Exception when unprotecting the IAT entry of LdrFindResource_U at %p\n"), FirstThunk);
                                 }
                                 break;
                             }
@@ -267,6 +296,7 @@ void HookLdrFindResource_U(HINSTANCE resmodule)
             }
         }
     }
+    return FALSE;
 }
 
 bool CLanguageSetter::operator!() const
