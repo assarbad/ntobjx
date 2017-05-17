@@ -38,6 +38,9 @@
 #else
 #   include "stdafx.h" /* Must alias DelayLoadError to a function that behaves like _tprintf */
 #endif
+#ifndef FACILITY_VISUALCPP
+#   define FACILITY_VISUALCPP  ((LONG)0x6d)
+#endif // !FACILITY_VISUALCPP
 #include <delayimp.h>
 
 #pragma comment(lib, "delayimp")

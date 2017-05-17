@@ -80,6 +80,11 @@
 #   include <atlbase.h>
 #endif
 
+#pragma warning(push) /* disable code analyzer warnings for ATL & WTL libraries */
+#pragma warning(disable:26110) /* warning C26110: Caller failing to hold lock ... */
+#pragma warning(disable:6031) /* warning C6031: Return value ignored: '...'. */
+#pragma warning(disable:6001) /* warning C6001: Using uninitialized memory '...'. */
+#pragma warning(disable:6387) /* warning C6387 : '...' could be '0' : this does not adhere to the specification for the function '...'. */
 #include <atlapp.h> /* chokes if _ATL_NO_COMMODULE is defined */
 #include <atlmisc.h>
 #include <atlsimpcoll.h>
@@ -90,6 +95,8 @@ extern CNtObjectsAppModule _Module;
 #include <atlwin.h>
 #include <atlddx.h>
 #include <Shellapi.h>
+
+#pragma warning(pop) /* restore code analyzer warnings*/
 
 #if (_MSC_VER >= 1400)
 #   if defined _M_IX86

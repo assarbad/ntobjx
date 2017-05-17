@@ -423,7 +423,7 @@ public:
                             // lstrcpyn is allergic to NULL pointers
                             if(res)
                             {
-                                ::lstrcpynW(res, pwchCur, cchString+1);
+                                (void)::lstrcpynW(res, pwchCur, cchString+1);
                                 res.Buffer()[cchString] = 0;
                             }
                             VTRACE(L"Resource string \"%s\"", res.Buffer());

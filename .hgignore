@@ -31,3 +31,4 @@ ntobjx.txt
 *.7z
 *.asc
 *.user
+.vs/**

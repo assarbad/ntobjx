@@ -6,7 +6,7 @@
 ///
 ///////////////////////////////////////////////////////////////////////////////
 ///
-/// Copyright (c) 2016 Oliver Schneider (assarbad.net)
+/// Copyright (c) 2016, 2017 Oliver Schneider (assarbad.net)
 ///
 /// Permission is hereby granted, free of charge, to any person obtaining a
 /// copy of this software and associated documentation files (the "Software"),
@@ -79,8 +79,9 @@
 #include "util/VersionInfo.h"
 #ifndef NTOBJX_NO_XML_EXPORT
 #define _ALLOW_RTCc_IN_STL
-#pragma warning(push)
+#pragma warning(push) /* disable code analyzer warnings pugixml library */
 #pragma warning(disable:4995)
+#pragma warning(disable:6384) /* warning C6384: Dividing sizeof a pointer by another value. */
 #include "pugixml.hpp"
 #pragma warning(pop)
 #endif
@@ -476,7 +477,8 @@ class CObjectPropertySheet :
         END_MSG_MAP()
 
         CObjectSecurityNAPage(GenericObject* obj, ObjectHandle& objHdl, bool bFeatureUnavailable = false)
-            : baseClass((LPCTSTR)NULL)
+#           pragma warning(suppress: 6387)
+            : baseClass()
             , m_obj(obj)
             , m_objHdl(objHdl)
             , m_bFeatureUnavailable(bFeatureUnavailable)
@@ -495,7 +497,7 @@ class CObjectPropertySheet :
             if (m_bFeatureUnavailable)
             {
                 CString str;
-                ATLVERIFY(str.LoadString(IDS_FEATURE_UNAVAILABLE));
+#               pragma warning(suppress: 6031)
                 m_edtExplanation.SetWindowText(str);
             }
             else
@@ -591,7 +593,8 @@ class CObjectPropertySheet :
         END_MSG_MAP()
 
         CObjectDetailsPage(GenericObject* obj, ObjectHandle& objHdl)
-            : baseClass((LPCTSTR)NULL)
+#           pragma warning(suppress: 6387)
+            : baseClass()
             , m_obj(obj)
             , m_objHdl(objHdl)
         {
@@ -625,6 +628,7 @@ class CObjectPropertySheet :
             }
 
             CString na;
+#           pragma warning(suppress: 6031)
             ATLVERIFY(na.LoadString(IDS_NOT_AVAILABLE_SHORT));
             if (m_objHdl)
             {
@@ -726,6 +730,7 @@ class CObjectPropertySheet :
             }
             else
             {
+#               pragma warning(suppress: 6031)
                 ATLVERIFY(str.LoadString(IDS_NOT_AVAILABLE_SHORT));
             }
             return str;
@@ -778,7 +783,7 @@ class CObjectPropertySheet :
         }
 
 #ifndef SEC_IMAGE_NO_EXECUTE
-#   define SEC_IMAGE_NO_EXECUTE (SEC_IMAGE | SEC_NOCACHE)     
+#   define SEC_IMAGE_NO_EXECUTE (SEC_IMAGE | SEC_NOCACHE)
 #endif
         CString ReadableAllocationAttributes_(ULONG aa)
         {
@@ -876,6 +881,7 @@ class CObjectPropertySheet :
                 if (SymbolicLink* symlink = dynamic_cast<SymbolicLink*>(m_obj))
                 {
                     SetAttributesVisible_(1);
+#                   pragma warning(suppress: 6031)
                     ATLVERIFY(str.LoadString(IDS_OBJSPEC_NAME1_SYMLINK));
                     m_stcObjSpecName1.SetWindowText(str);
                     m_stcObjSpecAttr1.SetWindowText(symlink->target());
@@ -888,8 +894,10 @@ class CObjectPropertySheet :
                 if (*info)
                 {
                     SetAttributesVisible_(2);
+#                   pragma warning(suppress: 6031)
                     ATLVERIFY(str.LoadString(IDS_OBJSPEC_NAME1_EVENT));
                     m_stcObjSpecName1.SetWindowText(str);
+#                   pragma warning(suppress: 6031)
                     ATLVERIFY(str.LoadString(IDS_OBJSPEC_NAME2_EVENT));
                     m_stcObjSpecName2.SetWindowText(str);
                     str.Format(_T("%d"), info->EventState);
@@ -897,9 +905,11 @@ class CObjectPropertySheet :
                     switch (info->EventType)
                     {
                     case SynchronizationEvent:
+#                       pragma warning(suppress: 6031)
                         ATLVERIFY(str.LoadString(IDS_OBJSPEC_ATTR2_EVENT_SYNC));
                         break;
                     case NotificationEvent:
+#                       pragma warning(suppress: 6031)
                         ATLVERIFY(str.LoadString(IDS_OBJSPEC_ATTR2_EVENT_NOTIFY));
                         break;
                     default:
@@ -917,6 +927,7 @@ class CObjectPropertySheet :
                 if (*info)
                 {
                     SetAttributesVisible_(1);
+#                   pragma warning(suppress: 6031)
                     ATLVERIFY(str.LoadString(IDS_OBJSPEC_NAME1_IOCOMPLETION));
                     m_stcObjSpecName1.SetWindowText(str);
                     str.Format(_T("%u"), info->Depth);
@@ -931,8 +942,10 @@ class CObjectPropertySheet :
                 if (*info)
                 {
                     SetAttributesVisible_(2);
+#                   pragma warning(suppress: 6031)
                     ATLVERIFY(str.LoadString(IDS_OBJSPEC_NAME1_KEY));
                     m_stcObjSpecName1.SetWindowText(str);
+#                   pragma warning(suppress: 6031)
                     ATLVERIFY(str.LoadString(IDS_OBJSPEC_NAME2_KEY));
                     m_stcObjSpecName2.SetWindowText(str);
                     str = FormatCreationTime_(info->LastWriteTime);
@@ -949,10 +962,13 @@ class CObjectPropertySheet :
                 if (*info)
                 {
                     SetAttributesVisible_(3);
+#                   pragma warning(suppress: 6031)
                     ATLVERIFY(str.LoadString(IDS_OBJSPEC_NAME1_MUTANT));
                     m_stcObjSpecName1.SetWindowText(str);
+#                   pragma warning(suppress: 6031)
                     ATLVERIFY(str.LoadString(IDS_OBJSPEC_NAME2_MUTANT));
                     m_stcObjSpecName2.SetWindowText(str);
+#                   pragma warning(suppress: 6031)
                     ATLVERIFY(str.LoadString(IDS_OBJSPEC_NAME3_MUTANT));
                     m_stcObjSpecName3.SetWindowText(str);
                     str = info->AbandonedState ? _T("yes") : _T("no");
@@ -971,10 +987,13 @@ class CObjectPropertySheet :
                 if (*info)
                 {
                     SetAttributesVisible_(3);
+#                   pragma warning(suppress: 6031)
                     ATLVERIFY(str.LoadString(IDS_OBJSPEC_NAME1_SECTION));
                     m_stcObjSpecName1.SetWindowText(str);
+#                   pragma warning(suppress: 6031)
                     ATLVERIFY(str.LoadString(IDS_OBJSPEC_NAME2_SECTION));
                     m_stcObjSpecName2.SetWindowText(str);
+#                   pragma warning(suppress: 6031)
                     ATLVERIFY(str.LoadString(IDS_OBJSPEC_NAME3_SECTION));
                     m_stcObjSpecName3.SetWindowText(str);
                     str.Format(_T("0x%p"), info->BaseAddress);
@@ -998,8 +1017,10 @@ class CObjectPropertySheet :
                 if (*info)
                 {
                     SetAttributesVisible_(2);
+#                   pragma warning(suppress: 6031)
                     ATLVERIFY(str.LoadString(IDS_OBJSPEC_NAME1_SEMAPHORE));
                     m_stcObjSpecName1.SetWindowText(str);
+#                   pragma warning(suppress: 6031)
                     ATLVERIFY(str.LoadString(IDS_OBJSPEC_NAME2_SEMAPHORE));
                     m_stcObjSpecName2.SetWindowText(str);
                     str.Format(_T("%u"), info->CurrentCount);
@@ -1016,8 +1037,10 @@ class CObjectPropertySheet :
                 if (*info)
                 {
                     SetAttributesVisible_(2);
+#                   pragma warning(suppress: 6031)
                     ATLVERIFY(str.LoadString(IDS_OBJSPEC_NAME1_TIMER));
                     m_stcObjSpecName1.SetWindowText(str);
+#                   pragma warning(suppress: 6031)
                     ATLVERIFY(str.LoadString(IDS_OBJSPEC_NAME2_TIMER));
                     m_stcObjSpecName2.SetWindowText(str);
                     str = info->TimerState ? _T("on") : _T("off");
@@ -1035,12 +1058,16 @@ class CObjectPropertySheet :
                 if (*info)
                 {
                     SetAttributesVisible_(3);
+#                   pragma warning(suppress: 6031)
                     ATLVERIFY(str.LoadString(IDS_OBJSPEC_NAME1_WINSTA));
                     m_stcObjSpecName1.SetWindowText(str);
+#                   pragma warning(suppress: 6031)
                     ATLVERIFY(str.LoadString(IDS_OBJSPEC_NAME2_WINSTA));
                     m_stcObjSpecName2.SetWindowText(str);
+#                   pragma warning(suppress: 6031)
                     ATLVERIFY(str.LoadString(IDS_OBJSPEC_NAME3_WINSTA));
                     m_stcObjSpecName3.SetWindowText(str);
+#                   pragma warning(suppress: 6031)
                     ATLVERIFY(str.LoadString(IDS_NOT_AVAILABLE_SHORT));
                     m_stcObjSpecAttr1.SetWindowText(info->username.GetLength() ? info->username : str);
                     m_stcObjSpecAttr2.SetWindowText(info->sid.GetLength() ? info->sid : str);
@@ -1167,6 +1194,7 @@ public:
     END_MSG_MAP()
 
     CObjectPropertySheet(GenericObject* obj, CObjectImageList& imagelist)
+#       pragma warning(suppress: 6387)
         : baseClass((LPCTSTR)NULL, 0, NULL)
         , m_obj(obj)
         , m_objHdl(obj)
@@ -1338,6 +1366,7 @@ public:
         ATLVERIFY(m_revisionurl.SubclassWindow(GetDlgItem(IDC_STATIC_REVISION)));
 
         CString str;
+#       pragma warning(suppress: 6031)
         ATLVERIFY(str.LoadString(IDS_PROGRAM_DESCRIPTION));
         ATLVERIFY(SetDlgItemText(IDC_STATIC_COPYRIGHT, m_verinfo[_T("LegalCopyright")]));
         ATLVERIFY(SetDlgItemText(IDC_STATIC_DESCRIPTION, str));
@@ -2060,6 +2089,7 @@ public:
 
             for (int idx = 0; idx < static_cast<int>(_countof(lvColumnDefaults)); idx++)
             {
+#               pragma warning(suppress: 6031)
                 ATLVERIFY(columnName.LoadString(lvColumnDefaults[idx].resId));
 
                 LVCOLUMN lvc = { 0 };
@@ -2133,6 +2163,7 @@ private:
             CString columnName;
             for(int idx = 0; idx < static_cast<int>(_countof(lvColumnDefaults)); idx++)
             {
+#               pragma warning(suppress: 6031)
                 ATLVERIFY(columnName.LoadString(lvColumnDefaults[idx].resId));
                 if(idx > (GetColumnCount() - 1))
                 {
@@ -2183,6 +2214,7 @@ public:
         if (idx < m_nPanes)
         {
             CString resStr;
+#           pragma warning(suppress: 6031)
             ATLVERIFY(resStr.LoadString(m_pPane[idx]));
             ATLVERIFY(SetPaneText(m_pPane[idx], resStr));
         }
@@ -2205,9 +2237,11 @@ public:
     {
     }
 
-    virtual ~CVisitedListT()
+    /*lint -save -e1509*/
+    ~CVisitedListT()
     {
     }
+    /*lint -restore*/
 
     inline T Navigate(bool forward)
     {
@@ -2380,7 +2414,11 @@ public:
         , m_currentLang(m_langSetter.set())
         , m_osvix(osvix)
     {
-        *(FARPROC*)&DllGetVersion = ::GetProcAddress(::GetModuleHandle(_T("shell32.dll")), "DllGetVersion");
+        HMODULE hShell32 = ::GetModuleHandle(_T("shell32.dll"));
+        if (hShell32)
+        {
+            *(FARPROC*)&DllGetVersion = ::GetProcAddress(hShell32, "DllGetVersion");
+        }
     }
 
     virtual BOOL PreTranslateMessage(MSG* pMsg)
@@ -2545,6 +2583,7 @@ public:
         sei.fMask = SEE_MASK_FLAG_NO_UI;
         sei.lpVerb = _T("open");
         CString url;
+#       pragma warning(suppress: 6031)
         ATLVERIFY(url.LoadString(IDS_URL_ONLINEHELP));
         sei.lpFile = url.GetString();
         ATLVERIFY(::ShellExecuteEx(&sei));
@@ -3008,6 +3047,7 @@ private:
     inline void SetWindowTitle_()
     {
         CString oldWndTitle, newDlgTitle;
+#       pragma warning(suppress: 6031)
         ATLVERIFY(oldWndTitle.LoadString(IDR_MAINFRAME));
         ATLTRACE2(_T("Old title: %s\n"), oldWndTitle.GetString());
         newDlgTitle.Format(IDS_TITLEBAR_FMTSTR, oldWndTitle.GetString(), m_verinfo[_T("FileVersion")], sizeof(void*) * 8);
@@ -3095,7 +3135,10 @@ private:
         }
         else
         {
-            m_status.SetWindowText(fullName);
+            if (NULL != fullName)
+            {
+                m_status.SetWindowText(fullName);
+            }
         }
         m_status.SetPaneIcon(ID_DEFAULT_PANE, m_imagelist.IconByObjType(obj));
     }
@@ -3222,7 +3265,7 @@ private:
             , m_currentPrefix(_T("\t"))
         {
             m_bOpened = (0 == _tfopen_s(&m_file, lpszFileName, _T("w+, ccs=UTF-8")));
-            if (m_bOpened)
+            if (m_bOpened && m_file)
             {
                 _ftprintf(m_file, _T("\\\n")); // Root of object manager namespace
             }

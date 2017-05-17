@@ -5,6 +5,8 @@ set SIGURL=https://bitbucket.org/assarbad/ntobjx
 set SIGDESC=ntobjx: NT Objects
 premake4.exe --release vs2005
 call "%~dp0setvcvars.cmd" 2005
+:: premake4.exe --release --xp vs2017
+:: call "%~dp0setvcvars.cmd" 2017
 echo %VCVER_FRIENDLY%
 vcbuild.exe /time /rebuild /showenv /M1 /nologo "/htmllog:$(SolutionDir)buildlog.html" "%~dp0%PRJNAME%.vs8.sln" "$ALL"
 del /f %PRJNAME%\*.idb

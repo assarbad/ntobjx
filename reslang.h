@@ -34,8 +34,13 @@
 #pragma once
 #endif // Check for "#pragma once" support
 
+#pragma warning(push) /* disable code analyzer warnings for ATL & WTL libraries */
+#pragma warning(disable:6387) /* warning C6387 : '...' could be '0' : this does not adhere to the specification for the function '...'. */
+#pragma warning(disable:6001) /* warning C6001: Using uninitialized memory '...'. */
+#pragma warning(disable:6011) /* warning C6011: Dereferencing NULL pointer '...'.  */
 #include <atlctrls.h>
 #include <atlctrlw.h>
+#pragma warning(pop) /* restore code analyzer warnings*/
 #include "resource.h"
 
 EXTERN_C BOOL HookLdrFindResource_U(HINSTANCE resmodule);

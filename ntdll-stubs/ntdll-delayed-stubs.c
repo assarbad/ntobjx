@@ -1,3 +1,4 @@
+#pragma warning(disable: 4005)
 #ifndef _WIN32_WINNT
 #   define _WIN32_WINNT 0x0500
 #endif
@@ -10,6 +11,7 @@
 #endif
 #include <Windows.h>
 #include "../ntnative.h"
+#pragma warning(default: 4005)
 
 NTSTATUS
 NTAPI

@@ -6,7 +6,7 @@
 ///
 ///////////////////////////////////////////////////////////////////////////////
 ///
-/// Copyright (c) 2016 Oliver Schneider (assarbad.net)
+/// Copyright (c) 2016, 2017 Oliver Schneider (assarbad.net)
 ///
 /// Permission is hereby granted, free of charge, to any person obtaining a
 /// copy of this software and associated documentation files (the "Software"),
@@ -30,6 +30,10 @@
 
 #include "stdafx.h"
 
+#pragma warning(push) /* disable code analyzer warnings */
+#pragma warning(disable:6387) /* warning C6387 : '...' could be '0' : this does not adhere to the specification for the function '...'. */
+#pragma warning(disable:6001) /* warning C6001: Using uninitialized memory '...'. */
+#pragma warning(disable:6011) /* warning C6011: Dereferencing NULL pointer '...'.  */
 #include <atlframe.h>
 #include <atlctrls.h>
 #include <atldlgs.h>
@@ -37,6 +41,7 @@
 #include <atlctrlw.h>
 #include <atlsplit.h>
 #include <atlsecurity.h>
+#pragma warning(pop) /* restore code analyzer warnings*/
 #include <stdarg.h>
 
 #include "resource.h"
@@ -133,11 +138,15 @@ int Run(LPTSTR /*lpstrCmdLine*/ = NULL, int nCmdShow = SW_SHOWDEFAULT)
 {
     OSVERSIONINFOEXW const& osvix = GetOSVersionInfo();
     // Set the default language
-    gLangSetter.set();
+    (void)gLangSetter.set();
 
     if (osvix.dwMajorVersion < 6) /* language handling for resources works starting with Vista (SetThreadUILanguage), but not before that */
     {
-        HookLdrFindResource_U(_Module.GetModuleInstance());
+        if(!HookLdrFindResource_U(_Module.GetModuleInstance()))
+        {
+            ::Beep(500, 500);
+            ATLTRACE2(_T("Failed to hook LdrFindResource_U, so switching languages is unlikely to work as expected.\n"));
+        }
     }
 
     CMessageLoop theLoop;
@@ -170,6 +179,7 @@ EXTERN_C int __cdecl DelayLoadError(LPCTSTR lpszFormat, ...)
     return msg.GetLength();
 };
 
+#if (_MSC_VER < 1910)
 void * __cdecl operator new(size_t bytes)
 {
     return malloc(bytes);
@@ -179,6 +189,7 @@ void __cdecl operator delete(void *ptr)
 {
     free(ptr);
 }
+#endif // (_MSC_VER < 1910)
 
 extern "C" int __cdecl __purecall(void)
 {
@@ -186,6 +197,7 @@ extern "C" int __cdecl __purecall(void)
 }
 #endif // DDKBUILD
 
+#pragma warning(suppress: 28251)
 int WINAPI _tWinMain(HINSTANCE hInstance, HINSTANCE /*hPrevInstance*/, LPTSTR lpstrCmdLine, int nCmdShow)
 {
 #if 0 && defined(_DEBUG)

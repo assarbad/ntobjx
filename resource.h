@@ -2,6 +2,7 @@
 // Microsoft Visual C++ generated include file.
 // Used by ntobjx.rc
 //
+#pragma once
 #define IDR_MAINFRAME                   1
 #define IDS_PROGRAM_DESCRIPTION         2
 #define IDS_ABOUT_MENUITEM              3

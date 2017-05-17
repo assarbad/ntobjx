@@ -4,7 +4,7 @@
 ///
 ///////////////////////////////////////////////////////////////////////////////
 ///
-/// Copyright (c) 2016 Oliver Schneider (assarbad.net)
+/// Copyright (c) 2016, 2017 Oliver Schneider (assarbad.net)
 ///
 /// Permission is hereby granted, free of charge, to any person obtaining a
 /// copy of this software and associated documentation files (the "Software"),
@@ -390,6 +390,7 @@ namespace NtObjMgr{
                         EntryList deletions;
                         deletions.Copy(m_entries); // take copy of old list
                         size_t const todelete = deletions.GetCount();
+#pragma                 warning(suppress: 6387)
                         qsort_s(tmplist.GetData(), tmplist.GetCount(), sizeof(EntryList::INARGTYPE), (comparefunc_t)compareItem_, NULL);
                         m_entries.Copy(tmplist); // overwrite with new list
                         m_cached = true;
@@ -829,7 +830,7 @@ namespace NtObjMgr{
                 ATLTRACE2(_T("Bailing out early m_ob == %p; m_hObject == %p\n"), m_obj, m_hObject);
                 return;
             }
-            
+
             if (0 == _tcsicmp(_T(OBJTYPESTR_EVENT), m_obj->type()))
             {
                 ATLTRACE2(_T("Attempting to query object-specific info for %s\n"), m_obj->type().GetString());
@@ -872,6 +873,7 @@ namespace NtObjMgr{
                 m_timerBasicInfo.Attach(new CTimerBasicInformation(m_hObject));
             }
 
+            /*lint -save -esym(429,winfo)*/
             if (0 == _tcsicmp(_T(OBJTYPESTR_WINDOWSTATION), m_obj->type()))
             {
                 ATLTRACE2(_T("Attempting to query object-specific info for %s\n"), m_obj->type().GetString());
@@ -882,6 +884,7 @@ namespace NtObjMgr{
                     m_bHasObjectInfo = true;
                 }
             }
+            /*lint -restore*/
         }
 
         virtual ~ObjectHandleT()
@@ -890,7 +893,13 @@ namespace NtObjMgr{
             {
                 if (m_winStaInfo)
                 {
-                    ATLVERIFY(::CloseWindowStation(static_cast<HWINSTA>(m_hObject)));
+                    try /* don't let the potential exception bleed through */
+                    {
+                        ATLVERIFY(::CloseWindowStation(static_cast<HWINSTA>(m_hObject)));
+                    }
+                    catch (...)
+                    {
+                    }
                     return;
                 }
                 ::NtClose(m_hObject);

@@ -7,13 +7,13 @@
 /// use an external resource-only DLL and use that to load any kind of
 /// resources for a specific language. This makes it pretty much impossible to
 /// create a monolithic multilingual executable for Windows versions prior to
-/// Vista.
+/// Vista. This implementation attempts to fix that. So far successfully.
 ///
 /// Dual-licensed under MS-PL and MIT license (see below).
 ///
 ///////////////////////////////////////////////////////////////////////////////
 ///
-/// Copyright (c) 2016 Oliver Schneider (assarbad.net)
+/// Copyright (c) 2016, 2017 Oliver Schneider (assarbad.net)
 ///
 /// Permission is hereby granted, free of charge, to any person obtaining a
 /// copy of this software and associated documentation files (the "Software"),
@@ -77,6 +77,7 @@ namespace
             if (ResourceIdPath && (ResourceIdPathLength >= 2))
             {
 #ifdef _DEBUG
+                /*lint -save -e30*/
                 if (IS_INTRESOURCE(ResourceIdPath->Type))
                 {
                     LPCTSTR rt = NULL;
@@ -171,6 +172,7 @@ namespace
                     ATLTRACE2(_T("language: %s (%u)\n"), (ResourceIdPath->Language) ? name : _T("Neutral"), ResourceIdPath->Language);
                 else
                     ATLTRACE2(_T("language: %04X (%u)\n"), ResourceIdPath->Language, ResourceIdPath->Language);
+                /*lint -restore*/
 #endif // _DEBUG
                 if (!ResourceIdPath->Language) // Neutral?
                 {
@@ -210,8 +212,19 @@ BOOL HookLdrFindResource_U(HINSTANCE resmodule)
     HMODULE hKrnlBase = ::GetModuleHandle(lpszKernel32);
     ATLASSERT(hKrnlBase != NULL);
     PVOID lpKrnlBase = (PVOID)hKrnlBase;
+    if (!lpKrnlBase)
+    {
+        ATLTRACE2(_T("We could not get a module handle for kernel32.dll? What kind of OS is this running on? Congratulations for tickling out this condition.\n"));
+        return FALSE;
+    }
     ATLTRACE2(_T("%s = %p\n"), lpszKernel32, lpKrnlBase);
-    ULONG_PTR origLdrFindResource_U = (ULONG_PTR)::GetProcAddress(::GetModuleHandleA(lpszNtdll), "LdrFindResource_U");
+    HMODULE hNtdll = ::GetModuleHandleA(lpszNtdll);
+    if (!hNtdll)
+    {
+        ATLTRACE2(_T("We could not get a module handle for ntdll.dll? What kind of OS is this running on? Congratulations for tickling out this condition.\n"));
+        return FALSE;
+    }
+    ULONG_PTR origLdrFindResource_U = (ULONG_PTR)::GetProcAddress(hNtdll, "LdrFindResource_U");
     ATLASSERT(origLdrFindResource_U != NULL);
     if (PIMAGE_NT_HEADERS nthdrs = RtlImageNtHeader(lpKrnlBase))
     {
@@ -223,6 +236,7 @@ BOOL HookLdrFindResource_U(HINSTANCE resmodule)
             while(piid->Name)
             {
                 LPCSTR dllname = (LPCSTR)(piid->Name + (LPSTR)lpKrnlBase);
+#               pragma warning(suppress: 6387)
                 if (0 == _strcmpi(dllname, lpszNtdll))
                 {
                     // Since we don't have the OriginalFirstThunk info, we need
@@ -262,14 +276,17 @@ MEMORY_BASIC_INFORMATION mbi == {\n\
                                             __try
                                             {
                                                 // Exchange the pointer with ours, retrieving the old one ...
+                                                /*lint -save -e611*/
                                                 realLdrFindResource_U = (TFNLdrFindResource_U)(InterlockedExchangePointer((PVOID*)FirstThunk, (PVOID)LocalLdrFindResource_U));
+                                                /*lint -restore*/
                                                 ATLTRACE2(_T("Hooked the LdrFindResource_U function\n"));
                                                 hResModule = resmodule;
+#                                               pragma warning(suppress: 6242)
                                                 return TRUE;
                                             }
                                             __finally
                                             {
-                                                // Re-protect the memory (i.e. make it writable)
+                                                // Re-protect the memory (i.e. make it read-only again, typically)
                                                 ::VirtualProtect(FirstThunk, sizeof(ULONG_PTR), dwOldProtect, &dwOldProtect);
                                             }
                                         }
@@ -314,7 +331,11 @@ CLanguageSetter::CLanguageSetter(LANGID fallback /*= MAKELANGID(LANG_ENGLISH, SU
 
     if (m_dwMajorVersion >= 6)
     {
-        m_pfnSetThreadUILanguage = (TFNSetThreadUILanguage)(::GetProcAddress(::GetModuleHandle(_T("kernel32.dll")), "SetThreadUILanguage"));
+        HMODULE hKrnlBase = ::GetModuleHandle(_T("kernel32.dll"));
+        if (hKrnlBase)
+        {
+            m_pfnSetThreadUILanguage = (TFNSetThreadUILanguage)(::GetProcAddress(hKrnlBase, "SetThreadUILanguage"));
+        }
         ATLASSERT(m_pfnSetThreadUILanguage != 0);
     }
 }

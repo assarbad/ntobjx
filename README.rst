@@ -21,8 +21,8 @@ Ansonsten könnt ihr F11 oder das "View"-Menü zum Umschalten benutzen. Viel Spa
 
 Die deutsche `Dokumentation findet sich hier`_.
 
-Das Fählertoifelchen
-~~~~~~~~~~~~~~~~~~~~
+Das Fälertoifelchen
+~~~~~~~~~~~~~~~~~~~
 
 Defekte könnt ihr mir gern auch `auf Deutsch melden`_.
 
