@@ -2,28 +2,28 @@
 <Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
   <ItemGroup>
     <Filter Include="Header Files">
-      <UniqueIdentifier>{9286D6A8-6BBB-8445-B459-D6E9C1F477B5}</UniqueIdentifier>
+      <UniqueIdentifier>{65BCED7C-5FA8-CAC5-6E75-4B28C447F95A}</UniqueIdentifier>
     </Filter>
     <Filter Include="Header Files\WTL">
-      <UniqueIdentifier>{373EE6BD-3C97-B142-801E-FA8DED5F0DDD}</UniqueIdentifier>
+      <UniqueIdentifier>{96616F0F-F735-3EF5-FC35-A96C891F724C}</UniqueIdentifier>
     </Filter>
     <Filter Include="Special Files">
-      <UniqueIdentifier>{E4A49263-7CFD-8C4B-B3AA-383AB446D02A}</UniqueIdentifier>
+      <UniqueIdentifier>{1340A817-3DBB-1832-9493-18CD996EA715}</UniqueIdentifier>
     </Filter>
     <Filter Include="Special Files\Module Definition Files">
-      <UniqueIdentifier>{0D54135A-3746-A841-92CB-09FD030ACD2F}</UniqueIdentifier>
+      <UniqueIdentifier>{6EC51922-1D06-709D-5F9B-6C62A5BC1B1C}</UniqueIdentifier>
     </Filter>
     <Filter Include="pugixml">
-      <UniqueIdentifier>{C19F30B6-D826-4043-9222-B6AE99331512}</UniqueIdentifier>
+      <UniqueIdentifier>{A370B2F0-BDCB-9393-8886-AC538A6016A6}</UniqueIdentifier>
     </Filter>
     <Filter Include="Header Files\Utility classes">
-      <UniqueIdentifier>{E1DF4025-D7EC-4541-AFD0-2C7BD3313CA8}</UniqueIdentifier>
+      <UniqueIdentifier>{23012514-E9F7-21A2-7325-3281D54D92B9}</UniqueIdentifier>
     </Filter>
     <Filter Include="Resource Files">
-      <UniqueIdentifier>{54FABA39-5236-B24D-AB20-B38C86F6619B}</UniqueIdentifier>
+      <UniqueIdentifier>{E3ECE7B2-AF2E-BFFD-52C2-823C962A6D48}</UniqueIdentifier>
     </Filter>
     <Filter Include="Source Files">
-      <UniqueIdentifier>{A0289365-18A6-8343-AA1F-D7E5ECBD0EBE}</UniqueIdentifier>
+      <UniqueIdentifier>{DE1861F2-117B-FCB0-B133-291CD2B5E915}</UniqueIdentifier>
     </Filter>
   </ItemGroup>
   <ItemGroup>

@@ -32,3 +32,4 @@ ntobjx.txt
 *.asc
 *.user
 .vs/**
+*.aps

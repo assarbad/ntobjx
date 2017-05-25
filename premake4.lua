@@ -49,6 +49,46 @@ do
             return path.getrelative(os.getcwd(), fname)
         end
     end
+    -- Make UUID generation for filters deterministic
+    if os.str2uuid ~= nil then
+        local vc2010 = premake.vstudio.vc2010
+        vc2010.filteridgroup = function(prj)
+            local filters = { }
+            local filterfound = false
+
+            for file in premake.project.eachfile(prj) do
+                -- split the path into its component parts
+                local folders = string.explode(file.vpath, "/", true)
+                local path = ""
+                for i = 1, #folders - 1 do
+                    -- element is only written if there *are* filters
+                    if not filterfound then
+                        filterfound = true
+                        _p(1,'<ItemGroup>')
+                    end
+                    
+                    path = path .. folders[i]
+
+                    -- have I seen this path before?
+                    if not filters[path] then
+                        local seed = path .. (prj.uuid or "")
+                        local deterministic_uuid = os.str2uuid(seed)
+                        filters[path] = true
+                        _p(2, '<Filter Include="%s">', path)
+                        _p(3, '<UniqueIdentifier>{%s}</UniqueIdentifier>', deterministic_uuid)
+                        _p(2, '</Filter>')
+                    end
+
+                    -- prepare for the next subfolder
+                    path = path .. "\\"
+                end
+            end
+            
+            if filterfound then
+                _p(1,'</ItemGroup>')
+            end
+        end
+    end
     -- Name the project files after their VS version
     local orig_getbasename = premake.project.getbasename
     premake.project.getbasename = function(prjname, pattern)

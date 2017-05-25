@@ -39,7 +39,7 @@ BEGIN
         MENUITEM "&Eigenschaften\tF10",         ID_VIEW_PROPERTIES
         MENUITEM "Aktualisie&ren\tF5",          ID_VIEW_REFRESH
         MENUITEM SEPARATOR
-        POPUP "Sprache wechse&ln"
+        POPUP "Sprache wechse&ln\tF11"
         BEGIN
             MENUITEM "Englisch",                    ID_SWITCHLANGUAGE_ENGLISH
             MENUITEM "Deutsch",                     ID_SWITCHLANGUAGE_GERMAN
@@ -439,7 +439,7 @@ BEGIN
         MENUITEM "&Properties\tF10",            ID_VIEW_PROPERTIES
         MENUITEM "&Refresh\tF5",                ID_VIEW_REFRESH
         MENUITEM SEPARATOR
-        POPUP "Switch &language"
+        POPUP "Switch &language\tF11"
         BEGIN
             MENUITEM "English",                     ID_SWITCHLANGUAGE_ENGLISH
             MENUITEM "German (Deutsch)",            ID_SWITCHLANGUAGE_GERMAN
