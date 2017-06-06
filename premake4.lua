@@ -136,6 +136,18 @@ do
         end
         orig_generate(obj, filename, callback)
     end
+    -- Fix up premake.getlinks() to not do stupid stuff with object files we pass
+    local orig_premake_getlinks = premake.getlinks
+    premake.getlinks = function(cfg, kind, part)
+        local origret = orig_premake_getlinks(cfg, kind, part)
+        local ret = {}
+        for k,v in ipairs(origret) do
+            local dep = v:gsub(".obj.lib", ".obj")
+            dep = dep:gsub(".lib.lib", ".lib")
+            table.insert(ret, dep)
+        end
+        return ret
+    end
 end
 local function transformMN(input) -- transform the macro names for older Visual Studio versions
     local new_map   = { vs2002 = 0, vs2003 = 0, vs2005 = 0, vs2008 = 0 }
@@ -150,8 +162,19 @@ local function transformMN(input) -- transform the macro names for older Visual 
     return input
 end
 newoption { trigger = "release", description = "Creates a solution suitable for a release build." }
+newoption { trigger = "msvcrt", description = "Uses the Vista/2008 WDK to link dynamically against msvcrt.dll." }
 newoption { trigger = "cmdline", description = "Also creates the project for the command line tool." }
 newoption { trigger = "xp", description = "Enable XP-compatible build for newer Visual Studio versions." }
+if _OPTIONS["msvcrt"] then
+    local basedir = os.getenv("WLHBASE")
+    print("BASEDIR = " .. basedir)
+    if os.isdir(basedir) then
+        print("Using value of WLHBASE=" .. basedir .. " as WDK location to find msvcrt import library.")
+    else
+        print("ERROR: WLHBASE not set or base directory " .. (basedir or "<null>") .. "does not exist.")
+        os.exit(1)
+    end
+end
 
 solution (iif(release, slnname, "ntobjx"))
     configurations  (iif(release, {"Release"}, {"Debug", "Release"}))
@@ -165,7 +188,7 @@ solution (iif(release, slnname, "ntobjx"))
         language        ("C++")
         kind            ("WindowedApp")
         targetname      ("ntobjx")
-        flags           {"StaticRuntime", "Unicode", "NativeWChar", "ExtraWarnings", "WinMain", "NoMinimalRebuild", "NoIncrementalLink", "NoEditAndContinue"}
+        flags           {"Unicode", "NativeWChar", "ExtraWarnings", "WinMain", "NoMinimalRebuild", "NoIncrementalLink", "NoEditAndContinue"}
         targetdir       (iif(release, slnname, "build"))
         includedirs     {"wtl/Include", "pugixml"}
         objdir          (int_dir)
@@ -174,6 +197,9 @@ solution (iif(release, slnname, "ntobjx"))
         resincludedirs  {".", "$(IntDir)"}
         linkoptions     {"\"/libpath:$(IntDir)\"", "/pdbaltpath:%_PDB%", "/delay:nobind","/delayload:ntdll-delayed.dll","/delayload:version.dll"}
         defines         {"WIN32", "_WINDOWS", "STRICT"}
+        if not _OPTIONS["msvcrt"] then
+            flags       {"StaticRuntime"}
+        end
 
         files
         {
@@ -214,9 +240,19 @@ solution (iif(release, slnname, "ntobjx"))
 
         configuration {"Release", "x32"}
             targetsuffix    ("32")
+            if _OPTIONS["msvcrt"] then
+                links       {"comdlg32", "$(WLHBASE)\\lib\\crt\\i386\\msvcrt.lib", "$(WLHBASE)\\lib\\w2k\\i386\\strsafe.lib", "$(WLHBASE)\\lib\\w2k\\i386\\msvcrt_win2000.obj"}
+                defines     {"USE_W2K_COMPAT"}
+                linkoptions {"/delayload:msvcrt.dll",}
+            end
 
         configuration {"Release", "x64"}
             targetsuffix    ("64")
+            if _OPTIONS["msvcrt"] then
+                links       {"comdlg32", "$(WLHBASE)\\lib\\crt\\amd64\\msvcrt.lib", "$(WLHBASE)\\lib\\wnet\\amd64\\strsafe.lib", "$(WLHBASE)\\lib\\wnet\\amd64\\msvcrt_win2003.obj"}
+                defines     {"USE_W2K_COMPAT"}
+                linkoptions {"/delayload:msvcrt.dll",}
+            end
 
         configuration {"Debug"}
             flags           {"Symbols"}

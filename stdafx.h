@@ -117,7 +117,7 @@ extern CNtObjectsAppModule _Module;
 
 #ifndef DDKBUILD
     EXTERN_C int __cdecl DelayLoadError(LPCTSTR lpszFormat, ...);
-    EXTERN_C void force_resolve_ntdll(void);
+    EXTERN_C void force_resolve_all(void);
 #endif // DDKBUILD
 
 typedef struct _objtype_comment_t

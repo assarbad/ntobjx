@@ -33,3 +33,4 @@ ntobjx.txt
 *.user
 .vs/**
 *.aps
+ddkbuild/buildfre_*.log

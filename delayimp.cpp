@@ -85,7 +85,7 @@ static LONG WINAPI DelayLoadFilter(PEXCEPTION_POINTERS pExcPointers)
     return lDisposition;
 }
 
-EXTERN_C void force_resolve_ntdll(void)
+EXTERN_C void force_resolve_all(void)
 {
     __try
     {
