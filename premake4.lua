@@ -301,7 +301,7 @@ solution (iif(release, slnname, "ntobjx"))
             language        ("C++")
             kind            ("ConsoleApp")
             targetname      ("ntobjx_c")
-            flags           {"StaticRuntime", "Unicode", "NativeWChar", "ExtraWarnings", "WinMain", "NoMinimalRebuild", "NoIncrementalLink", "NoEditAndContinue"}
+            flags           {"StaticRuntime", "Unicode", "NativeWChar", "ExtraWarnings", "WinMain", "NoMinimalRebuild", "NoIncrementalLink", "NoEditAndContinue", "NoPCH"}
             targetdir       (iif(release, slnname, "build"))
             objdir          (int_dir)
             links           {"ntdll-delayed"}
@@ -325,6 +325,7 @@ solution (iif(release, slnname, "ntobjx"))
                 "hgid.h",
                 "fake_commodule.hpp",
                 "stdafx.*", "ntobjx.txt",
+                "reslang.*", "resource.h",
             }
 
             vpaths

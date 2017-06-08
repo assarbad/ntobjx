@@ -89,6 +89,16 @@ Visual Studio and therefore won't clash.
 Personally I currently use VS 2005 to *build* release versions, but VS 2017 to
 develop the utility.
 
+Command line version
+~~~~~~~~~~~~~~~~~~~~
+If you are merely interested in listing the objects, you can pass the parameter
+``--cmdline`` to your invocation of ``premake4`` and it will generate an extra
+project named ``ntobjx_c`` inside the solution. This project also is a nice
+show case for just the stuff provided in ``objmgr.hpp``, so if you want to play
+with that or understand it, you needn't sift through lots of GUI related code.
+
+Don't look any further than said command line tool.
+
 Defects
 -------
 Some people call them "bugs", but "bug" misses the distinction between cause
