@@ -45,4 +45,5 @@ TARGETLIBS=\
             $(SDK_LIB_PATH)\ntdll.lib
 
 SOURCES=ntobjx.cpp \
+        reslang.cpp \
         ddkbuild.rc

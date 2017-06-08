@@ -451,7 +451,7 @@ private:
 #       include <Aclapi.h>
 #   endif
 #   pragma comment(lib, "aclui.lib")
-#endif // DDKBUILD
+#endif // !DDKBUILD
 
 class CObjectPropertySheet :
     public CPropertySheetImpl<CObjectPropertySheet>
@@ -1177,7 +1177,7 @@ class CObjectPropertySheet :
             ATLTRACENOTIMPL(_T(__FUNCTION__));
         }
     };
-#endif // DDKBUILD
+#endif // !DDKBUILD
 
     typedef CPropertySheetImpl<CObjectPropertySheet> baseClass;
     GenericObject* m_obj;
@@ -1185,7 +1185,7 @@ class CObjectPropertySheet :
     CObjectDetailsPage m_details;
 #ifndef DDKBUILD
     ATL::CAutoPtr<CSecurityInformation> m_security;
-#endif // DDKBUILD
+#endif // !DDKBUILD
     ATL::CAutoPtr<CObjectSecurityNAPage> m_securityNA;
 public:
     BEGIN_MSG_MAP(CObjectPropertySheet)
@@ -1224,11 +1224,11 @@ public:
             ATLTRACE2(_T("Adding 'Security' property page\n"));
             AddPage(::CreateSecurityPage(m_security));
         }
-#else
+#else // DDKBUILD
         m_securityNA.Attach(new CObjectSecurityNAPage(m_obj, m_objHdl, true));
         ATLTRACE2(_T("Adding 'Security (N/A)' property page - feature not built into program\n"));
         AddPage(*m_securityNA);
-#endif // DDKBUILD
+#endif // !DDKBUILD
 
         SetTitle(obj->name(), PSH_PROPTITLE);
     }
@@ -2911,7 +2911,7 @@ public:
                     }
                 }
             }
-#           endif // DDKBUILD
+#           endif // !DDKBUILD
             ATLTRACE2(_T("last selected = %p -> %s\n"), m_activeObject, m_activeObject->fullname().GetString());
             CObjectPropertySheet objprop(m_activeObject, m_imagelist);
             (void)objprop.DoModal(m_hWnd);

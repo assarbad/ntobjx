@@ -69,6 +69,8 @@ I noticed that newer versions of the Windows SDK contain a more complete
 ``ntnative.h`` may be duplicates and the compiler may choke. If you find any
 such cases, please file a ticket to point them out to me.
 
+More details on `how to build`_ can be found in the project Wiki.
+
 Creating the solutions
 ~~~~~~~~~~~~~~~~~~~~~~
 Using the correct `premake4 flavor`_ the creation of the solutions and projects
@@ -76,15 +78,15 @@ is as easy as::
 
     premake4 vs2005
 
-For example to create all solutions and projects for VS 2005 through VS 2015 in
+For example to create all solutions and projects for VS 2005 through VS 2017 in
 parallel::
 
-    for %i in (vs2005 vs2008 vs2010 vs2012 vs2013 vs2015) do @premake4 %i
+    for %i in (vs2005 vs2008 vs2010 vs2012 vs2013 vs2015 vs2017) do @premake4 %i
 
 And don't worry, the names of the solutions and projects contain the version of
 Visual Studio and therefore won't clash.
 
-Personally I currently use VS 2005 to _build_ release versions, but VS 2015 to
+Personally I currently use VS 2005 to *build* release versions, but VS 2017 to
 develop the utility.
 
 Defects
@@ -130,3 +132,4 @@ respectively.
 .. _Why Programs Fail: http://www.whyprogramsfail.com/
 .. _MS-PL: https://opensource.org/licenses/MS-PL
 .. _WTL: https://sourceforge.net/projects/wtl/
+.. _how to build: https://bitbucket.org/assarbad/ntobjx/wiki/build/Home

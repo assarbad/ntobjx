@@ -1,5 +1,5 @@
 @echo off
-@set VERSION=V7.4
+@set VERSION=V7.4a
 @set OSR_DEBUG=off
 @if "%OS%"=="Windows_NT" goto :Prerequisites
 @echo This script requires Windows NT 4.0 or later to run properly!
@@ -8,8 +8,6 @@ goto :EOF
 :: Check whether FINDSTR is available. It's used to show warnings etc.
 findstr /? > NUL 2>&1 || echo "FINDSTR is a prerequisite but wasn't found!" && goto :EOF
 :::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
-::
-::    $Id: ddkbuild.cmd 60 2009-11-28 04:28:01Z oliver $
 ::
 ::    This software is supplied for instructional purposes only.
 ::
@@ -135,19 +133,8 @@ setlocal ENABLEEXTENSIONS & pushd .
 :: Check whether the REG utility is available
 reg /? > NUL 2>&1 && set OSR_REGAVAILABLE=1
 
-:: This is set by client-side keyword substitution
-set SVN_REVISION=$Revision: 60 $
-:: Extract the revision number from the revision keyword
-set SVN_REVISION=%SVN_REVISION:~0,-2%
-set SVN_REVISION=%SVN_REVISION:~11%
-:: This is set by client-side keyword substitution
-set SVN_REVDATE=$Date: 2009-11-28 04:28:01 +0000 (Sat, 28 Nov 2009) $
-:: Extract the date from the Date keyword
-set SVN_REVDATE=%SVN_REVDATE:~7,10%
-set VERSION=%VERSION%/r%SVN_REVISION%
-
 :: Init some special variables
-set OSR_VERSTR=OSR DDKBUILD.CMD %VERSION% (%SVN_REVDATE%) - OSR, Open Systems Resources, Inc.
+set OSR_VERSTR=OSR DDKBUILD.CMD %VERSION% - OSR, Open Systems Resources, Inc.
 set OSR_PREBUILD_SCRIPT=ddkprebld.cmd
 set OSR_POSTBUILD_SCRIPT=ddkpostbld.cmd
 set OSR_SETENV_SCRIPT=ddkbldenv.cmd
@@ -223,7 +210,6 @@ if %OSR_ERRCODE% neq 0 call :ShowErrorMsg %OSR_ERRCODE% "%ERR_BaseDirNotSet%" & 
 :::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
 set BASEDIR=%%%BASEDIRVAR%%%
 call :ResolveVar BASEDIR
-call :MakeShort BASEDIR "%BASEDIR%"
 :: Check for existing %BASEDIR%
 if "%BASEDIR%" == "" call :ShowErrorMsg 4 "%ERR_NoBASEDIR%" & goto :USAGE
 set PATH=%BASEDIR%\bin;%PATH%

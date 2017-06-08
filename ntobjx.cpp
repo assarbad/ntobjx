@@ -195,7 +195,7 @@ extern "C" int __cdecl __purecall(void)
 {
     return 0;
 }
-#endif // DDKBUILD
+#endif // !DDKBUILD
 
 #pragma warning(suppress: 28251)
 int WINAPI _tWinMain(HINSTANCE hInstance, HINSTANCE /*hPrevInstance*/, LPTSTR lpstrCmdLine, int nCmdShow)
@@ -212,7 +212,7 @@ int WINAPI _tWinMain(HINSTANCE hInstance, HINSTANCE /*hPrevInstance*/, LPTSTR lp
 
 #ifndef DDKBUILD
     force_resolve_all();
-#endif // DDKBUILD
+#endif // !DDKBUILD
     hRes = _Module.Init(NULL, hInstance);
     ATLASSERT(SUCCEEDED(hRes));
 
