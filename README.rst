@@ -26,8 +26,8 @@ Das Fälertoifelchen
 
 Defekte könnt ihr mir gern auch `auf Deutsch melden`_.
 
-Call to action
---------------
+Call to action: translations
+----------------------------
 Hey there. Yes, you. Want to see this program in your native language? Feel
 confident enough to translate any existing translation into your native tongue?
 If so, please send a pull request with the translated ``.rc`` file or

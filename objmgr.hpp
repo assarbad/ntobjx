@@ -701,7 +701,7 @@ namespace NtObjMgr{
                         {
                             CSimpleBuf<TCHAR> bufName(dwNameLen + 1);
                             CSimpleBuf<TCHAR> bufDomain(dwDomainLen + 1);
-                            if (::LookupAccountSid(NULL, psid, NULL, &dwNameLen, NULL, &dwDomainLen, &sidnu))
+                            if (::LookupAccountSid(NULL, psid, bufName, &dwNameLen, bufDomain, &dwDomainLen, &sidnu))
                             {
                                 username.Format(_T("%s\\%s"), bufDomain.Buffer(), bufName.Buffer());
                             }
