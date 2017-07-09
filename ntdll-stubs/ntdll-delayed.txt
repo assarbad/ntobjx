@@ -41,6 +41,7 @@ EXPORTS
     NtQueryTimer
     NtOpenDirectoryObject
     NtQueryDirectoryObject
+    NtQueryDirectoryFile
     NtOpenSymbolicLinkObject
     NtQuerySymbolicLinkObject
     NtOpenEvent

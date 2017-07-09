@@ -6,7 +6,7 @@
 ///
 ///////////////////////////////////////////////////////////////////////////////
 ///
-/// Copyright (c) 2016 Oliver Schneider (assarbad.net)
+/// Copyright (c) 2016, 2017 Oliver Schneider (assarbad.net)
 ///
 /// Permission is hereby granted, free of charge, to any person obtaining a
 /// copy of this software and associated documentation files (the "Software"),
@@ -29,7 +29,7 @@
 ///////////////////////////////////////////////////////////////////////////////
 
 #ifndef __NTNATIVE_H_VER__
-#define __NTNATIVE_H_VER__ 2016112722
+#define __NTNATIVE_H_VER__ 2017062821
 #if (defined(_MSC_VER) && (_MSC_VER >= 1020)) || defined(__MCPP)
 #pragma once
 #endif // Check for "#pragma once" support
@@ -454,6 +454,8 @@ typedef struct _GENERATE_NAME_CONTEXT {
 } GENERATE_NAME_CONTEXT;
 typedef GENERATE_NAME_CONTEXT *PGENERATE_NAME_CONTEXT;
 
+typedef VOID (NTAPI *PIO_APC_ROUTINE) (__in PVOID ApcContext, __in PIO_STATUS_BLOCK IoStatusBlock, __in ULONG Reserved);
+
 NTSTATUS
 NTAPI
 RtlGetVersion(
@@ -562,6 +564,22 @@ NtQueryDirectoryObject(
     __in BOOLEAN RestartScan,
     __inout PULONG Context,
     __out_opt PULONG ReturnLength
+);
+
+NTSTATUS
+NTAPI
+NtQueryDirectoryFile(
+    __in HANDLE FileHandle,
+    __in_opt HANDLE Event,
+    __in_opt PIO_APC_ROUTINE ApcRoutine,
+    __in_opt PVOID ApcContext,
+    __out PIO_STATUS_BLOCK IoStatusBlock,
+    __out_bcount(Length) PVOID FileInformation,
+    __in ULONG Length,
+    __in FILE_INFORMATION_CLASS FileInformationClass,
+    __in BOOLEAN ReturnSingleEntry,
+    __in_opt PUNICODE_STRING FileName,
+    __in BOOLEAN RestartScan
 );
 
 NTSTATUS
@@ -805,6 +823,7 @@ NtOpenFile(
 #define ZwQueryTimer NtQueryTimer
 #define ZwOpenDirectoryObject NtOpenDirectoryObject
 #define ZwQueryDirectoryObject NtQueryDirectoryObject
+#define ZwQueryDirectoryFile NtQueryDirectoryFile
 #define ZwOpenSymbolicLinkObject NtOpenSymbolicLinkObject
 #define ZwQuerySymbolicLinkObject NtQuerySymbolicLinkObject
 #define ZwOpenEvent NtOpenEvent

@@ -126,7 +126,7 @@ namespace
     int const imgListElemHeight = 16;
 
     // Requires open clipboard and doesn't close it
-    BOOL SetClipboardString(LPCTSTR lpsz)
+    BOOL setClipboardString(LPCTSTR lpsz)
     {
         CString s(lpsz);
         SIZE_T allocLength = (s.GetLength() + 2) * sizeof(TCHAR);
@@ -153,7 +153,7 @@ namespace
         return FALSE;
     }
 
-    void CopyItemToClipboard(HWND hWndSource, int idCmd, GenericObject* obj)
+    void copyItemToClipboard(HWND hWndSource, int idCmd, GenericObject* obj)
     {
         if(::OpenClipboard(hWndSource))
         {
@@ -239,14 +239,14 @@ namespace
                 }
                 break;
             }
-            ATLVERIFY(SetClipboardString(s.GetString()));
+            ATLVERIFY(setClipboardString(s.GetString()));
             ATLVERIFY(::CloseClipboard());
         }
     }
 
-    CSimpleBuf<TCHAR> StatusToString(LONG status)
+    CSimpleBuf<TCHAR> getStatusString(LONG status)
     {
-        if (HRESULT_FACILITY(status) == FACILITY_WIN32)
+        if(HRESULT_FACILITY(status) == FACILITY_WIN32)
         {
             CLoadLibrary kernel32;
             return CSimpleBuf<TCHAR>(kernel32.formatSystemMessage<TCHAR>(static_cast<DWORD>(status)));
@@ -259,15 +259,15 @@ namespace
     }
 
     // Example from https://msdn.microsoft.com/en-us/library/windows/desktop/aa376389.aspx
-    BOOL IsUserAdmin()
+    BOOL isUserAdmin()
     {
         BOOL bResult;
         SID_IDENTIFIER_AUTHORITY NtAuthority = SECURITY_NT_AUTHORITY;
         PSID AdministratorsGroup;
         bResult = ::AllocateAndInitializeSid(&NtAuthority, 2, SECURITY_BUILTIN_DOMAIN_RID, DOMAIN_ALIAS_RID_ADMINS, 0, 0, 0, 0, 0, 0, &AdministratorsGroup);
-        if (bResult)
+        if(bResult)
         {
-            if (!::CheckTokenMembership(NULL, AdministratorsGroup, &bResult))
+            if(!::CheckTokenMembership(NULL, AdministratorsGroup, &bResult))
             {
                 bResult = FALSE;
             }
@@ -277,20 +277,20 @@ namespace
         return bResult;
     }
 
-    BOOL IsElevated()
+    BOOL isElevated()
     {
         BOOL bResult = FALSE;
         HANDLE hToken = NULL;
-        if (::OpenProcessToken(GetCurrentProcess(), TOKEN_QUERY, &hToken))
+        if(::OpenProcessToken(GetCurrentProcess(), TOKEN_QUERY, &hToken))
         {
             TOKEN_ELEVATION Elevation;
             DWORD cbSize = sizeof(TOKEN_ELEVATION);
-            if (::GetTokenInformation(hToken, TokenElevation, &Elevation, sizeof(Elevation), &cbSize))
+            if(::GetTokenInformation(hToken, TokenElevation, &Elevation, sizeof(Elevation), &cbSize))
             {
                 bResult = Elevation.TokenIsElevated;
             }
         }
-        if (hToken)
+        if(hToken)
         {
             ::CloseHandle(hToken);
         }
@@ -341,7 +341,7 @@ public:
     CObjectImageList()
         : m_imagelist()
     {
-        PrepareImageList_();
+        prepareImageList_();
     }
 
     virtual ~CObjectImageList()
@@ -398,21 +398,21 @@ private:
         int retval = 0;
         for (size_t i = 0; i < resIconTypeMappingSize; i++)
         {
-            if (0 == _tcsicmp(typeName, resIconTypeMapping[i].typeName))
+            if(0 == _tcsicmp(typeName, resIconTypeMapping[i].typeName))
             {
-                if (IDI_DIRECTORY == resIconTypeMapping[i].resId)
+                if(IDI_DIRECTORY == resIconTypeMapping[i].resId)
                 {
                     // This program is not multi-threaded, so this works, otherwise we'd need locking here
                     static int emptydir = -1;
-                    if (Directory* dir = dynamic_cast<Directory*>(obj))
+                    if(Directory* dir = dynamic_cast<Directory*>(obj))
                     {
-                        if (!dir->size())
+                        if(!dir->size())
                         {
-                            if (-1 == emptydir)
+                            if(-1 == emptydir)
                             {
                                 for (size_t j = 0; j < resIconTypeMappingSize; j++)
                                 {
-                                    if (0 == _tcsicmp(_T(OBJTYPESTR_EMPTY_DIRECTORY), resIconTypeMapping[j].typeName))
+                                    if(0 == _tcsicmp(_T(OBJTYPESTR_EMPTY_DIRECTORY), resIconTypeMapping[j].typeName))
                                     {
                                         emptydir = static_cast<int>(j);
                                         break;
@@ -431,7 +431,7 @@ private:
     }
 
     // We create our image list dynamically from the icons
-    void PrepareImageList_()
+    void prepareImageList_()
     {
         ATLTRACE2(_T("Preparing image list for %hs\n"), __func__);
         const int iResIconTypeMappingSize = static_cast<int>(resIconTypeMappingSize);
@@ -494,7 +494,7 @@ class CObjectPropertySheet :
         {
             m_edtExplanation.Attach(GetDlgItem(IDC_EXPLANATION_WHY));
 
-            if (m_bFeatureUnavailable)
+            if(m_bFeatureUnavailable)
             {
                 CString str;
 #               pragma warning(suppress: 6031)
@@ -502,9 +502,9 @@ class CObjectPropertySheet :
             }
             else
             {
-                if (!m_objHdl)
+                if(!m_objHdl)
                 {
-                    CSimpleBuf<TCHAR> status(StatusToString(m_objHdl.getOpenStatus()));
+                    CSimpleBuf<TCHAR> status(getStatusString(m_objHdl.getOpenStatus()));
                     CString sStatus;
                     sStatus.Format(IDS_STATUS_DESCRIPTION, m_objHdl.getOpenStatus(), status.Buffer());
                     m_edtExplanation.SetWindowText(sStatus);
@@ -517,13 +517,13 @@ class CObjectPropertySheet :
             NONCLIENTMETRICS ncm = { 0 };
             ncm.cbSize = sizeof(ncm);
 
-            if (::SystemParametersInfo(SPI_GETNONCLIENTMETRICS, sizeof(ncm), &ncm, 0))
+            if(::SystemParametersInfo(SPI_GETNONCLIENTMETRICS, sizeof(ncm), &ncm, 0))
             {
                 LOGFONT logFont;
                 memcpy(&logFont, &ncm.lfMessageFont, sizeof(LOGFONT));
                 logFont.lfWeight = FW_BOLD;
                 HFONT hFont = m_font.CreateFontIndirect(&logFont);
-                if (hFont)
+                if(hFont)
                 {
                     SendDlgItemMessage(IDC_EXPLANATION_WHY, WM_SETFONT, reinterpret_cast<WPARAM>(hFont));
                     SendDlgItemMessage(IDC_NO_SECURITY_CAPTION, WM_SETFONT, reinterpret_cast<WPARAM>(hFont));
@@ -620,7 +620,7 @@ class CObjectPropertySheet :
             m_stcObjSpecAttr3.Attach(GetDlgItem(IDC_STATIC_OBJSPEC_ATTR3));
 
             ATLASSERT(m_obj);
-            if (m_obj)
+            if(m_obj)
             {
                 m_edtName.SetWindowText(m_obj->name());
                 m_edtFullname.SetWindowText(m_obj->fullname());
@@ -630,10 +630,10 @@ class CObjectPropertySheet :
             CString na;
 #           pragma warning(suppress: 6031)
             ATLVERIFY(na.LoadString(IDS_NOT_AVAILABLE_SHORT));
-            if (m_objHdl)
+            if(m_objHdl)
             {
                 CString str;
-                if (m_objHdl.hasObjectInfo())
+                if(m_objHdl.hasObjectInfo())
                 {
                     str.Format(_T("%u"), m_objHdl.getObjectInfo().HandleCount);
                     m_stcRefByHdl.SetWindowText(str);
@@ -643,9 +643,9 @@ class CObjectPropertySheet :
                     m_stcQuotaPaged.SetWindowText(str);
                     str.Format(_T("%u"), m_objHdl.getObjectInfo().NonPagedPoolUsage);
                     m_stcQuotaNonPaged.SetWindowText(str);
-                    m_stcCreationTime.SetWindowText(FormatCreationTime_(m_objHdl.getObjectInfo().CreationTime));
+                    m_stcCreationTime.SetWindowText(getformatCreationTimeString_(m_objHdl.getObjectInfo().CreationTime));
 
-                    ShowObjectSpecificInfo_();
+                    showObjectSpecificInfo_();
                 }
                 else
                 {
@@ -673,13 +673,13 @@ class CObjectPropertySheet :
             NONCLIENTMETRICS ncm = { 0 };
             ncm.cbSize = sizeof(ncm);
 
-            if (::SystemParametersInfo(SPI_GETNONCLIENTMETRICS, sizeof(ncm), &ncm, 0))
+            if(::SystemParametersInfo(SPI_GETNONCLIENTMETRICS, sizeof(ncm), &ncm, 0))
             {
                 LOGFONT logFont;
                 memcpy(&logFont, &ncm.lfMessageFont, sizeof(LOGFONT));
                 logFont.lfWeight = FW_BOLD;
                 HFONT hFont = m_font.CreateFontIndirect(&logFont);
-                if (hFont)
+                if(hFont)
                 {
                     SendDlgItemMessage(IDC_EXPLANATION_WHY, WM_SETFONT, reinterpret_cast<WPARAM>(hFont));
                 }
@@ -716,10 +716,10 @@ class CObjectPropertySheet :
 
     private:
 
-        static CString FormatCreationTime_(LARGE_INTEGER const& li)
+        static CString getformatCreationTimeString_(LARGE_INTEGER const& li)
         {
             CString str;
-            if (li.QuadPart > 0)
+            if(li.QuadPart > 0)
             {
                 ATLASSERT(li.HighPart >= 0); // anything else will fail our conversion below
                 FILETIME ft = { li.LowPart, static_cast<DWORD>(li.HighPart) };
@@ -736,110 +736,110 @@ class CObjectPropertySheet :
             return str;
         }
 
-        void SetAttributesVisible_(int num)
+        void setAttributesVisible_(int num)
         {
             m_stcGroupObjSpecific.ShowWindow(SW_SHOWNOACTIVATE);
-            if (num < 0)
+            if(num < 0)
             {
                 m_edtExplanation.ShowWindow(SW_SHOWNOACTIVATE);
                 return;
             }
-            if (m_obj)
+            if(m_obj)
             {
                 CString str;
                 str.Format(IDS_OBJSPEC_INFO, m_obj->type().GetString());
                 m_stcGroupObjSpecific.SetWindowText(str);
             }
-            if (num >= 1)
+            if(num >= 1)
             {
                 m_stcObjSpecName1.ShowWindow(SW_SHOWNOACTIVATE);
                 m_stcObjSpecAttr1.ShowWindow(SW_SHOWNOACTIVATE);
             }
-            if (num >= 2)
+            if(num >= 2)
             {
                 m_stcObjSpecName2.ShowWindow(SW_SHOWNOACTIVATE);
                 m_stcObjSpecAttr2.ShowWindow(SW_SHOWNOACTIVATE);
             }
-            if (num >= 3)
+            if(num >= 3)
             {
                 m_stcObjSpecName3.ShowWindow(SW_SHOWNOACTIVATE);
                 m_stcObjSpecAttr3.ShowWindow(SW_SHOWNOACTIVATE);
             }
         }
 
-        void ShowObjectSpecificError_(NTSTATUS statusCode)
+        void showObjectSpecificError_(NTSTATUS statusCode)
         {
-            CSimpleBuf<TCHAR> status(StatusToString(m_objHdl.getOpenStatus()));
+            CSimpleBuf<TCHAR> status(getStatusString(m_objHdl.getOpenStatus()));
             CString sStatus;
             sStatus.Format(IDS_STATUS_DESCRIPTION, statusCode, status.Buffer());
             m_edtExplanation.SetWindowText(sStatus);
-            if (m_obj)
+            if(m_obj)
             {
                 CString str;
                 str.Format(IDS_OBJSPEC_ERROR, m_obj->type().GetString());
                 m_stcGroupObjSpecific.SetWindowText(str);
             }
-            SetAttributesVisible_(-1);
+            setAttributesVisible_(-1);
         }
 
 #ifndef SEC_IMAGE_NO_EXECUTE
 #   define SEC_IMAGE_NO_EXECUTE (SEC_IMAGE | SEC_NOCACHE)
 #endif
-        CString ReadableAllocationAttributes_(ULONG aa)
+        CString getReadableAllocationAttributesString_(ULONG aa)
         {
             // TBD: should we localize these strings or rather not?
             CString str;
-            if (PAGE_NOACCESS & aa)
+            if(PAGE_NOACCESS & aa)
             {
                 str.Append(_T("!access+"));
             }
-            if (PAGE_READONLY & aa)
+            if(PAGE_READONLY & aa)
             {
                 str.Append(_T("ro+"));
             }
-            if (PAGE_READWRITE & aa)
+            if(PAGE_READWRITE & aa)
             {
                 str.Append(_T("rw+"));
             }
-            if (PAGE_WRITECOPY & aa)
+            if(PAGE_WRITECOPY & aa)
             {
                 str.Append(_T("cow+"));
             }
-            if (PAGE_EXECUTE & aa)
+            if(PAGE_EXECUTE & aa)
             {
                 str.Append(_T("x+"));
             }
-            if (PAGE_EXECUTE_READ & aa)
+            if(PAGE_EXECUTE_READ & aa)
             {
                 str.Append(_T("xro+"));
             }
-            if (PAGE_EXECUTE_READWRITE & aa)
+            if(PAGE_EXECUTE_READWRITE & aa)
             {
                 str.Append(_T("xrw+"));
             }
-            if (PAGE_EXECUTE_WRITECOPY & aa)
+            if(PAGE_EXECUTE_WRITECOPY & aa)
             {
                 str.Append(_T("xcow+"));
             }
-            if (PAGE_GUARD & aa)
+            if(PAGE_GUARD & aa)
             {
                 str.Append(_T("guard+"));
             }
-            if ((PAGE_NOCACHE & aa) || (SEC_NOCACHE & aa))
+            if((PAGE_NOCACHE & aa) || (SEC_NOCACHE & aa))
             {
                 str.Append(_T("!cache+"));
             }
-            if ((PAGE_WRITECOMBINE & aa) || (SEC_WRITECOMBINE & aa))
+            if((PAGE_WRITECOMBINE & aa) || (SEC_WRITECOMBINE & aa))
             {
                 str.Append(_T("wcomb+"));
             }
-            if (SEC_FILE & aa)
+            if(SEC_FILE & aa)
             {
                 str.Append(_T("file+"));
             }
-            if (SEC_IMAGE & aa)
+            if(SEC_IMAGE & aa)
             {
-                if (SEC_IMAGE_NO_EXECUTE & aa)
+                if(SEC_IMAGE_NO_EXECUTE & aa)
                 {
                     str.Append(_T("img!x+"));
                 }
@@ -848,39 +848,39 @@ class CObjectPropertySheet :
                     str.Append(_T("img+"));
                 }
             }
-            if (SEC_PROTECTED_IMAGE & aa)
+            if(SEC_PROTECTED_IMAGE & aa)
             {
                 str.Append(_T("protimg+"));
             }
-            if (SEC_RESERVE & aa)
+            if(SEC_RESERVE & aa)
             {
                 str.Append(_T("resrv+"));
             }
-            if (SEC_COMMIT & aa)
+            if(SEC_COMMIT & aa)
             {
                 str.Append(_T("commit+"));
             }
-            if (SEC_LARGE_PAGES & aa)
+            if(SEC_LARGE_PAGES & aa)
             {
                 str.Append(_T("lrgpgs+"));
             }
 
-            if (str.GetLength())
+            if(str.GetLength())
             {
                 str.Truncate(str.GetLength() - 1);
             }
             return str;
         }
 
-        void ShowObjectSpecificInfo_()
+        void showObjectSpecificInfo_()
         {
             CString str;
 
-            if (m_obj && otSymlink == m_obj->objtype())
+            if(m_obj && otSymlink == m_obj->objtype())
             {
-                if (SymbolicLink* symlink = dynamic_cast<SymbolicLink*>(m_obj))
+                if(SymbolicLink* symlink = dynamic_cast<SymbolicLink*>(m_obj))
                 {
-                    SetAttributesVisible_(1);
+                    setAttributesVisible_(1);
 #                   pragma warning(suppress: 6031)
                     ATLVERIFY(str.LoadString(IDS_OBJSPEC_NAME1_SYMLINK));
                     m_stcObjSpecName1.SetWindowText(str);
@@ -889,11 +889,11 @@ class CObjectPropertySheet :
                 }
             }
 
-            if (ObjectHandle::CEventBasicInformation const* info = m_objHdl.getEventBasicInfo())
+            if(ObjectHandle::CEventBasicInformation const* info = m_objHdl.getEventBasicInfo())
             {
-                if (*info)
+                if(*info)
                 {
-                    SetAttributesVisible_(2);
+                    setAttributesVisible_(2);
 #                   pragma warning(suppress: 6031)
                     ATLVERIFY(str.LoadString(IDS_OBJSPEC_NAME1_EVENT));
                     m_stcObjSpecName1.SetWindowText(str);
@@ -919,14 +919,14 @@ class CObjectPropertySheet :
                     m_stcObjSpecAttr2.SetWindowText(str);
                 }
                 else
-                    ShowObjectSpecificError_(info->getQueryStatus());
+                    showObjectSpecificError_(info->getQueryStatus());
             }
 
-            if (ObjectHandle::CIoCompletionBasicInformation const* info = m_objHdl.getIoCompletionBasicInfo())
+            if(ObjectHandle::CIoCompletionBasicInformation const* info = m_objHdl.getIoCompletionBasicInfo())
             {
-                if (*info)
+                if(*info)
                 {
-                    SetAttributesVisible_(1);
+                    setAttributesVisible_(1);
 #                   pragma warning(suppress: 6031)
                     ATLVERIFY(str.LoadString(IDS_OBJSPEC_NAME1_IOCOMPLETION));
                     m_stcObjSpecName1.SetWindowText(str);
@@ -934,34 +934,34 @@ class CObjectPropertySheet :
                     m_stcObjSpecAttr1.SetWindowText(str);
                 }
                 else
-                    ShowObjectSpecificError_(info->getQueryStatus());
+                    showObjectSpecificError_(info->getQueryStatus());
             }
 
-            if (ObjectHandle::CKeyBasicInformation const* info = m_objHdl.getKeyBasicInfo())
+            if(ObjectHandle::CKeyBasicInformation const* info = m_objHdl.getKeyBasicInfo())
             {
-                if (*info)
+                if(*info)
                 {
-                    SetAttributesVisible_(2);
+                    setAttributesVisible_(2);
 #                   pragma warning(suppress: 6031)
                     ATLVERIFY(str.LoadString(IDS_OBJSPEC_NAME1_KEY));
                     m_stcObjSpecName1.SetWindowText(str);
 #                   pragma warning(suppress: 6031)
                     ATLVERIFY(str.LoadString(IDS_OBJSPEC_NAME2_KEY));
                     m_stcObjSpecName2.SetWindowText(str);
-                    str = FormatCreationTime_(info->LastWriteTime);
+                    str = getformatCreationTimeString_(info->LastWriteTime);
                     m_stcObjSpecAttr1.SetWindowText(str);
                     str.Format(_T("%u"), info->TitleIndex);
                     m_stcObjSpecAttr2.SetWindowText(str);
                 }
                 else
-                    ShowObjectSpecificError_(info->getQueryStatus());
+                    showObjectSpecificError_(info->getQueryStatus());
             }
 
-            if (ObjectHandle::CMutantBasicInformation const* info = m_objHdl.getMutantBasicInfo())
+            if(ObjectHandle::CMutantBasicInformation const* info = m_objHdl.getMutantBasicInfo())
             {
-                if (*info)
+                if(*info)
                 {
-                    SetAttributesVisible_(3);
+                    setAttributesVisible_(3);
 #                   pragma warning(suppress: 6031)
                     ATLVERIFY(str.LoadString(IDS_OBJSPEC_NAME1_MUTANT));
                     m_stcObjSpecName1.SetWindowText(str);
@@ -979,14 +979,14 @@ class CObjectPropertySheet :
                     m_stcObjSpecAttr3.SetWindowText(str);
                 }
                 else
-                    ShowObjectSpecificError_(info->getQueryStatus());
+                    showObjectSpecificError_(info->getQueryStatus());
             }
 
-            if (ObjectHandle::CSectionBasicInformation const* info = m_objHdl.getSectionBasicInfo())
+            if(ObjectHandle::CSectionBasicInformation const* info = m_objHdl.getSectionBasicInfo())
             {
-                if (*info)
+                if(*info)
                 {
-                    SetAttributesVisible_(3);
+                    setAttributesVisible_(3);
 #                   pragma warning(suppress: 6031)
                     ATLVERIFY(str.LoadString(IDS_OBJSPEC_NAME1_SECTION));
                     m_stcObjSpecName1.SetWindowText(str);
@@ -1001,22 +1001,22 @@ class CObjectPropertySheet :
                     str.Format(_T("%I64d"), info->MaximumSize.QuadPart);
                     m_stcObjSpecAttr2.SetWindowText(str);
                     str.Format(_T("%08X"), info->AllocationAttributes);
-                    CString readable = ReadableAllocationAttributes_(info->AllocationAttributes);
-                    if (readable.GetLength())
+                    CString readable = getReadableAllocationAttributesString_(info->AllocationAttributes);
+                    if(readable.GetLength())
                     {
                         str.AppendFormat(_T(" (%s)"), readable.GetString());
                     }
                     m_stcObjSpecAttr3.SetWindowText(str);
                 }
                 else
-                    ShowObjectSpecificError_(info->getQueryStatus());
+                    showObjectSpecificError_(info->getQueryStatus());
             }
 
-            if (ObjectHandle::CSemaphoreBasicInformation const* info = m_objHdl.getSemaphoreBasicInfo())
+            if(ObjectHandle::CSemaphoreBasicInformation const* info = m_objHdl.getSemaphoreBasicInfo())
             {
-                if (*info)
+                if(*info)
                 {
-                    SetAttributesVisible_(2);
+                    setAttributesVisible_(2);
 #                   pragma warning(suppress: 6031)
                     ATLVERIFY(str.LoadString(IDS_OBJSPEC_NAME1_SEMAPHORE));
                     m_stcObjSpecName1.SetWindowText(str);
@@ -1029,14 +1029,14 @@ class CObjectPropertySheet :
                     m_stcObjSpecAttr2.SetWindowText(str);
                 }
                 else
-                    ShowObjectSpecificError_(info->getQueryStatus());
+                    showObjectSpecificError_(info->getQueryStatus());
             }
 
-            if (ObjectHandle::CTimerBasicInformation const* info = m_objHdl.getTimerBasicInfo())
+            if(ObjectHandle::CTimerBasicInformation const* info = m_objHdl.getTimerBasicInfo())
             {
-                if (*info)
+                if(*info)
                 {
-                    SetAttributesVisible_(2);
+                    setAttributesVisible_(2);
 #                   pragma warning(suppress: 6031)
                     ATLVERIFY(str.LoadString(IDS_OBJSPEC_NAME1_TIMER));
                     m_stcObjSpecName1.SetWindowText(str);
@@ -1049,15 +1049,15 @@ class CObjectPropertySheet :
                     m_stcObjSpecAttr2.SetWindowText(str);
                 }
                 else
-                    ShowObjectSpecificError_(info->getQueryStatus());
+                    showObjectSpecificError_(info->getQueryStatus());
             }
 
-            if (ObjectHandle::CWinStaInformation const* info = m_objHdl.getWinStaInfo())
+            if(ObjectHandle::CWinStaInformation const* info = m_objHdl.getWinStaInfo())
             {
                 ATLTRACE2(_T("info = %p\n"), info);
-                if (*info)
+                if(*info)
                 {
-                    SetAttributesVisible_(3);
+                    setAttributesVisible_(3);
 #                   pragma warning(suppress: 6031)
                     ATLVERIFY(str.LoadString(IDS_OBJSPEC_NAME1_WINSTA));
                     m_stcObjSpecName1.SetWindowText(str);
@@ -1076,7 +1076,7 @@ class CObjectPropertySheet :
                 else
                 {
                     ATLTRACE2(_T("error = %p\n"), info);
-                    ShowObjectSpecificError_(info->getQueryStatus());
+                    showObjectSpecificError_(info->getQueryStatus());
                 }
             }
         }
@@ -1201,7 +1201,7 @@ public:
         , m_details(m_obj, m_objHdl)
     {
         baseClass::m_psh.dwFlags |= PSH_NOAPPLYNOW;
-        if (m_obj && imagelist.IndexByObjType(m_obj) >= 0)
+        if(m_obj && imagelist.IndexByObjType(m_obj) >= 0)
         {
             baseClass::m_psh.dwFlags |= PSH_USEHICON;
             baseClass::m_psh.hIcon = imagelist.IconByObjType(m_obj);
@@ -1212,7 +1212,7 @@ public:
         AddPage(m_details);
 
 #ifndef DDKBUILD
-        if (!m_objHdl)
+        if(!m_objHdl)
         {
             m_securityNA.Attach(new CObjectSecurityNAPage(m_obj, m_objHdl));
             ATLTRACE2(_T("Adding 'Security (N/A)' property page\n"));
@@ -1265,13 +1265,13 @@ public:
         ATLVERIFY(menu.LoadMenu(IDR_POPUP_HYPERLINK1));
         ATLASSERT(menu.IsMenu());
 
-        if (menu.IsMenu())
+        if(menu.IsMenu())
         {
             // Get the popup menu at index 0 from the menu resource
             CMenuHandle popup = menu.GetSubMenu(0);
             ATLASSERT(popup.IsMenu());
 
-            if (popup.IsMenu())
+            if(popup.IsMenu())
             {
                 // Let the user pick
                 int idCmd = popup.TrackPopupMenuEx(
@@ -1282,17 +1282,17 @@ public:
                     , NULL
                 );
 
-                if (idCmd)
+                if(idCmd)
                 {
                     switch (idCmd)
                     {
                     case ID_POPUPMENU_COPYURL:
-                        if (m_lpstrHyperLink)
+                        if(m_lpstrHyperLink)
                         {
                             ATLTRACE2(_T("Copy URL\n"), idCmd);
-                            if (::OpenClipboard(GetParent()))
+                            if(::OpenClipboard(GetParent()))
                             {
-                                ATLVERIFY(SetClipboardString(m_lpstrHyperLink));
+                                ATLVERIFY(setClipboardString(m_lpstrHyperLink));
                                 ATLVERIFY(::CloseClipboard());
                             }
                         }
@@ -1312,7 +1312,7 @@ public:
 class CHyperLinkCtxMenu : public CHyperLinkCtxMenuImpl<CHyperLinkCtxMenu>
 {
 public:
-    DECLARE_WND_CLASS(_T("WTL_CHyperLinkCtxMenu"))
+    DECLARE_WND_CLASS(_T("CNtObjectsHyperLinkCtxMenu"))
 };
 
 class CAboutDlg :
@@ -1384,13 +1384,13 @@ public:
         NONCLIENTMETRICS ncm = { 0 };
         ncm.cbSize = sizeof(ncm);
 
-        if (::SystemParametersInfo(SPI_GETNONCLIENTMETRICS, sizeof(ncm), &ncm, 0))
+        if(::SystemParametersInfo(SPI_GETNONCLIENTMETRICS, sizeof(ncm), &ncm, 0))
         {
             LOGFONT logFont;
             memcpy(&logFont, &ncm.lfMessageFont, sizeof(LOGFONT));
             logFont.lfWeight = FW_BOLD;
             HFONT hFont = m_progNameFont.CreateFontIndirect(&logFont);
-            if (hFont)
+            if(hFont)
             {
                 SendDlgItemMessage(IDC_STATIC_PROGNAME, WM_SETFONT, reinterpret_cast<WPARAM>(hFont));
             }
@@ -1429,6 +1429,7 @@ public:
 
 typedef CWinTraitsOR<WS_TABSTOP | TVS_HASLINES | TVS_HASBUTTONS | TVS_SHOWSELALWAYS | TVS_INFOTIP, WS_EX_CLIENTEDGE, CControlWinTraits> CNtObjectsTreeViewTraits;
 typedef CWinTraitsOR<WS_TABSTOP | LVS_SHAREIMAGELISTS | LVS_SINGLESEL, LVS_EX_FULLROWSELECT | LVS_EX_INFOTIP, CSortListViewCtrlTraits> CNtObjectsListViewTraits;
+typedef CWinTraitsOR<WS_TABSTOP | LVS_SHAREIMAGELISTS | LVS_SINGLESEL, LVS_EX_FULLROWSELECT | LVS_EX_INFOTIP, CSortListViewCtrlTraits> CNtObjectsFindResultsTraits;
 
 class CNtObjectsTreeView :
     public CWindowImpl<CNtObjectsTreeView, CTreeViewCtrlEx, CNtObjectsTreeViewTraits>
@@ -1459,7 +1460,7 @@ public:
         , m_hFrameWnd(NULL)
     {}
 
-    inline void SetFrameWindow(HWND hFrameWnd)
+    inline void setFrameWindow(HWND hFrameWnd)
     {
         m_hFrameWnd = hFrameWnd;
     }
@@ -1485,12 +1486,12 @@ public:
                 CMenu menu;
                 ATLVERIFY(menu.LoadMenu(IDR_POPUP_MENU1));
                 ATLASSERT(menu.IsMenu());
-                if (menu.IsMenu())
+                if(menu.IsMenu())
                 {
                     // Get the popup menu at index 0 from the menu resource
                     CMenuHandle popup = menu.GetSubMenu(0);
                     ATLASSERT(popup.IsMenu());
-                    if (popup.IsMenu())
+                    if(popup.IsMenu())
                     {
 
                         // Let the user pick
@@ -1502,7 +1503,7 @@ public:
                             , NULL
                         );
 
-                        if (idCmd)
+                        if(idCmd)
                         {
                             switch (idCmd)
                             {
@@ -1510,7 +1511,7 @@ public:
                             case ID_POPUPMENU_COPYFULLPATH:
                             case ID_POPUPMENU_COPYASCSTRING:
                             case ID_POPUPMENU_COPYSYMLINKTARGET:
-                                CopyItemToClipboard(m_hWnd, idCmd, dir);
+                                copyItemToClipboard(m_hWnd, idCmd, dir);
                                 break;
                             case ID_POPUPMENU_PROPERTIES:
                                 ::SendMessage(GetParent(), WM_COMMAND, MAKEWPARAM(ID_VIEW_PROPERTIES, 0), reinterpret_cast<LPARAM>(m_hWnd));
@@ -1548,7 +1549,7 @@ public:
             else
                 ATLTRACE2(_T("Sort children of %p\n"), pnmtv->itemNew.hItem);
 #endif
-            SortTreeItemChildren_(pnmtv->itemNew.hItem);
+            sortTreeItemChildren_(pnmtv->itemNew.hItem);
         }
         return 0;
     }
@@ -1596,27 +1597,27 @@ public:
     }
 
     /*lint -save -e1536 */
-    Directory& ObjectRoot()
+    Directory& getObjectRoot()
     {
         return m_objroot;
     }
     /*lint -restore */
 
-    bool EmptyAndRefill()
+    bool emptyAndRefill()
     {
         CSuppressRedraw suppressRedraw(m_hWnd);
         if(m_objroot.refresh())
         {
             if(::IsWindow(m_hWnd) && m_imagelist.IsNull())
             {
-                PrepareImageList_();
+                prepareImageList_();
             }
             if(DeleteAllItems())
             {
                 // Recursively fill the tree
-                Fill_(NULL, m_objroot);
+                fill_(NULL, m_objroot);
                 // Sort the tree
-                SortTreeItemChildren_(GetRootItem());
+                sortTreeItemChildren_(GetRootItem());
                 (void)Expand(GetRootItem());
                 // Signal that the tree has been initialized
                 m_bInitialized=true;
@@ -1628,13 +1629,13 @@ public:
         return m_bInitialized;
     }
 
-    inline void SelectRoot()
+    inline void selectRootItem()
     {
         ATLTRACE2(_T("%hs\n"), __func__);
         (void)SelectItem(GetRootItem());
     }
 
-    inline CTreeItem LookupTreeItem(Directory* dir)
+    inline CTreeItem lookupTreeItem(Directory* dir)
     {
         HTREEITEM ret = NULL;
         if(m_reverseLookup.Lookup(dir, ret))
@@ -1645,14 +1646,14 @@ public:
         return NULL;
     }
 
-    void SelectDirectory(Directory* dir, BOOL bIfNotAlreadySelected = FALSE)
+    void selectDirectory(Directory* dir, BOOL bIfNotAlreadySelected = FALSE)
     {
-        CTreeItem ti(LookupTreeItem(dir));
+        CTreeItem ti(lookupTreeItem(dir));
         if(!ti.IsNull())
         {
-            if (bIfNotAlreadySelected)
+            if(bIfNotAlreadySelected)
             {
-                if (0 == (TVIS_SELECTED & ti.GetState(TVIS_SELECTED))) // better select always? ...
+                if(0 == (TVIS_SELECTED & ti.GetState(TVIS_SELECTED))) // better select always? ...
                 {
                     ti.Select();
                 }
@@ -1665,16 +1666,16 @@ public:
         }
     }
 
-    Directory* ParentFromSelection()
+    Directory* getParentFromSelection()
     {
         CTreeItem ti(GetSelectedItem());
         ATLASSERT(!ti.IsNull());
         if(!ti.IsNull())
         {
             CTreeItem parent(ti.GetParent());
-            if (!parent.IsNull()) // we only want to navigate up if there is a parent ...
+            if(!parent.IsNull()) // we only want to navigate up if there is a parent ...
             {
-                if (Directory* dir = reinterpret_cast<Directory*>(parent.GetData()))
+                if(Directory* dir = reinterpret_cast<Directory*>(parent.GetData()))
                     return dir;
             }
         }
@@ -1692,7 +1693,7 @@ private:
     }
 
     // We create our image list dynamically from the icons
-    void PrepareImageList_()
+    void prepareImageList_()
     {
         ATLTRACE2(_T("Preparing image list for %hs\n"), __func__);
         WORD iconList[] = { IDI_OBJMGR_ROOT, IDI_DIRECTORY, IDI_EMPTY_DIRECTORY };
@@ -1706,13 +1707,13 @@ private:
         (void)SetImageList(m_imagelist);
     }
 
-    void SortTreeItemChildren_(HTREEITEM parent)
+    void sortTreeItemChildren_(HTREEITEM parent)
     {
         TVSORTCB tvscb = { parent, TreeViewCompareProc_, 0 };
         (void)SortChildrenCB(&tvscb, TRUE);
     }
 
-    void Fill_(HTREEITEM parent, Directory& current)
+    void fill_(HTREEITEM parent, Directory& current)
     {
         if(!parent)
         {
@@ -1728,7 +1729,7 @@ private:
                 const int imgidx = entry->size() ? 1 : 2;
                 HTREEITEM curritem = InsertItem(TVIF_TEXT | TVIF_SELECTEDIMAGE | TVIF_IMAGE | TVIF_PARAM, entry->name(), imgidx, imgidx, 0, 0, reinterpret_cast<LPARAM>(entry), parent, TVI_LAST);
                 m_reverseLookup[entry] = curritem;
-                Fill_(curritem, *entry);
+                fill_(curritem, *entry);
             }
         }
     }
@@ -1772,18 +1773,18 @@ public:
         return baseClass::Create(hWndParent, rect, szWindowName, dwStyle, dwExStyle, MenuOrID, lpCreateParam);
     }
 
-    inline void SetFrameWindow(HWND hFrameWnd)
+    inline void setFrameWindow(HWND hFrameWnd)
     {
         m_hFrameWnd = hFrameWnd;
     }
 
-    void FillFromDirectory(Directory& current)
+    void fillFromDirectory(Directory& current)
     {
         CSuppressRedraw suppressRedraw(m_hWnd);
         DeleteAllItems();
         ATLASSERT(m_pimagelist != NULL);
 #ifndef _DEBUG
-        if (!m_pimagelist)
+        if(!m_pimagelist)
         {
             return; // Avoid outright crash
         }
@@ -1792,7 +1793,7 @@ public:
         {
             (void)SetImageList(*m_pimagelist, LVSIL_SMALL);
         }
-        ResetAllColumns_();
+        resetAllColumns_();
         ATLASSERT(!m_pimagelist->IsNull());
         ATLTRACE2(_T("%hs: %s\n"), __func__, current.fullname().GetString());
         // To determine the required width for each column
@@ -1853,7 +1854,7 @@ public:
         LVHITTESTINFO lvhtti = {0};
         CPoint pt;
 
-        if(ItemFromHitTest_(lvhtti, pt))
+        if(getItemFromHitTest_(lvhtti, pt))
         {
             // If we found an item, select it
             ATLVERIFY(SelectItem(lvhtti.iItem));
@@ -1891,13 +1892,13 @@ public:
             CMenu menu;
             ATLVERIFY(menu.LoadMenu(IDR_POPUP_MENU1));
             ATLASSERT(menu.IsMenu());
-            if (menu.IsMenu())
+            if(menu.IsMenu())
             {
                 // Get the popup menu at index 0 from the menu resource
                 CMenuHandle popup = menu.GetSubMenu(submenuidx);
                 ATLASSERT(popup.IsMenu());
 
-                if (popup.IsMenu())
+                if(popup.IsMenu())
                 {
                     // Let the user pick
                     int idCmd = popup.TrackPopupMenuEx(
@@ -1908,7 +1909,7 @@ public:
                         , NULL
                     );
 
-                    if (idCmd)
+                    if(idCmd)
                     {
                         switch (idCmd)
                         {
@@ -1916,15 +1917,15 @@ public:
                         case ID_POPUPMENU_COPYFULLPATH:
                         case ID_POPUPMENU_COPYASCSTRING:
                         case ID_POPUPMENU_COPYSYMLINKTARGET:
-                            CopyItemToClipboard(m_hWnd, idCmd, itemobj);
+                            copyItemToClipboard(m_hWnd, idCmd, itemobj);
                             break;
                         case ID_POPUPMENU_PROPERTIES:
                             ::SendMessage(GetParent(), WM_COMMAND, MAKEWPARAM(ID_VIEW_PROPERTIES, 0), reinterpret_cast<LPARAM>(m_hWnd));
                             break;
                         case ID_POPUPMENU_OPENDIRECTORY:
-                            if (Directory* dir = dynamic_cast<Directory*>(itemobj))
+                            if(Directory* dir = dynamic_cast<Directory*>(itemobj))
                             {
-                                OpenDirectory_(dir);
+                                openDirectory_(dir);
                             }
                             break;
                         default:
@@ -1953,12 +1954,12 @@ public:
             {
                 int idx = GetNextItem(-1, LVNI_SELECTED);
                 ATLTRACE2(_T("%i == GetNextItem(-1, LVNI_SELECTED)\n"), idx);
-                if (idx >= 0)
+                if(idx >= 0)
                 {
                     ATLASSERT(1 == GetSelectedCount());
-                    if (-1 != idx)
+                    if(-1 != idx)
                     {
-                        OpenPropertiesOrDirectory_(idx);
+                        openPropertiesOrDirectory_(idx);
                     }
                 }
             }
@@ -1981,11 +1982,11 @@ public:
         LVHITTESTINFO lvhtti = {0};
         CPoint pt;
 
-        if(ItemFromHitTest_(lvhtti, pt))
+        if(getItemFromHitTest_(lvhtti, pt))
         {
             // If we found an item, select it
             ATLVERIFY(SelectItem(lvhtti.iItem));
-            OpenPropertiesOrDirectory_(lvhtti.iItem);
+            openPropertiesOrDirectory_(lvhtti.iItem);
         }
         return 0;
     }
@@ -2015,7 +2016,7 @@ public:
         {
             GenericObject* obj = reinterpret_cast<GenericObject*>(pnmlv->lParam);
             ATLASSERT(NULL != obj);
-            if (obj)
+            if(obj)
             {
                 // Tell the frame that this object is now to be considered active
                 (void)::SendMessage(m_hFrameWnd, WM_SET_ACTIVE_OBJECT, 0, reinterpret_cast<LPARAM>(obj));
@@ -2030,7 +2031,7 @@ public:
         LPNMLVGETINFOTIP pnmlv = reinterpret_cast<LPNMLVGETINFOTIP>(pnmh);
         ATLASSERT(NULL != pnmlv);
         bHandled = FALSE;
-        if (pnmlv)
+        if(pnmlv)
         {
             LVITEM item = { 0 };
             item.iItem = pnmlv->iItem;
@@ -2039,10 +2040,10 @@ public:
 
             GenericObject* obj = reinterpret_cast<GenericObject*>(item.lParam);
             ATLASSERT(NULL != obj);
-            if (obj)
+            if(obj)
             {
                 CString comment;
-                if (comment.LoadString(findComment(obj->fullname())))
+                if(comment.LoadString(findComment(obj->fullname())))
                 {
                     CString tip;
                     tip.Preallocate(pnmlv->cchTextMax);
@@ -2061,7 +2062,7 @@ public:
     }
 
     // If item1 > item2 return 1, if item1 < item2 return -1, else return 0.
-    int CompareItemsCustom(LVCompareParam* pItem1, LVCompareParam* pItem2, int iSortCol)
+    int compareItemsCustom(LVCompareParam* pItem1, LVCompareParam* pItem2, int iSortCol)
     {
         if(!iSortCol)
         {
@@ -2081,9 +2082,9 @@ public:
         return _tcsicmp(pItem1->pszValue, pItem2->pszValue);
     }
 
-    void ReloadColumnNames()
+    void reloadColumnNames()
     {
-        if (static_cast<int>(_countof(lvColumnDefaults)) == GetColumnCount())
+        if(static_cast<int>(_countof(lvColumnDefaults)) == GetColumnCount())
         {
             CString columnName;
 
@@ -2103,7 +2104,7 @@ public:
 
 private:
 
-    void OpenDirectory_(Directory* dir) const
+    void openDirectory_(Directory* dir) const
     {
         ATLASSERT(dir != NULL);
         ATLTRACE2(_T("%hs: %s\n"), __func__, dir->fullname().GetString());
@@ -2111,7 +2112,7 @@ private:
         (void)::SendMessage(m_hFrameWnd, WM_SELECT_TREEVIEW_DIRECTORY, 0, reinterpret_cast<LPARAM>(dir));
     }
 
-    void OpenPropertiesOrDirectory_(int idx) const
+    void openPropertiesOrDirectory_(int idx) const
     {
         ATLASSERT(idx != -1);
         LVITEM item = {0};
@@ -2125,7 +2126,7 @@ private:
             {
                 if(dir->size())
                 {
-                    OpenDirectory_(dir);
+                    openDirectory_(dir);
                     return;
                 }
                 // If it's empty, we'll show the properties instead, the user may still navigate
@@ -2135,7 +2136,7 @@ private:
         ::SendMessage(GetParent(), WM_COMMAND, MAKEWPARAM(ID_VIEW_PROPERTIES, 0), reinterpret_cast<LPARAM>(m_hWnd));
     }
 
-    bool ItemFromHitTest_(LVHITTESTINFO& lvhtti, CPoint& pt) const
+    bool getItemFromHitTest_(LVHITTESTINFO& lvhtti, CPoint& pt) const
     {
         ATLVERIFY(::GetCursorPos(&pt));
         ATLTRACE2(_T("Point of click: %d/%d\n"), pt.x, pt.y);
@@ -2145,7 +2146,7 @@ private:
         return (-1 != HitTest(&lvhtti));
     }
 
-    void DeleteAllColumns_()
+    void deleteAllColumns_()
     {
         ATLTRACE2(_T("Column count: %i\n"), GetColumnCount());
         // On older Windows/common control versions it's impossible to remove column 0
@@ -2155,11 +2156,11 @@ private:
         }
     }
 
-    void ResetAllColumns_()
+    void resetAllColumns_()
     {
         if(GetColumnCount() < static_cast<int>(_countof(lvColumnDefaults)))
         {
-            DeleteAllColumns_();
+            deleteAllColumns_();
             CString columnName;
             for(int idx = 0; idx < static_cast<int>(_countof(lvColumnDefaults)); idx++)
             {
@@ -2185,6 +2186,42 @@ private:
     }
 };
 
+class CNtObjectsFindResults :
+    public CSortListViewCtrlImpl<CNtObjectsFindResults, CListViewCtrl, CNtObjectsFindResultsTraits>
+{
+    HWND m_hFrameWnd;
+    CObjectImageList* m_pimagelist;
+    typedef CSortListViewCtrlImpl<CNtObjectsFindResults, CListViewCtrl, CNtObjectsListViewTraits> baseClass;
+public:
+    /*lint -save -e446 */
+    DECLARE_WND_SUPERCLASS(_T("NtObjectsFindResults"), CListViewCtrl::GetWndClassName())
+    /*lint -restore */
+
+    BEGIN_MSG_MAP(CNtObjectsFindResults)
+        DEFAULT_REFLECTION_HANDLER()
+        CHAIN_MSG_MAP(baseClass)
+    END_MSG_MAP()
+
+    CNtObjectsFindResults(HWND hFrameWnd = NULL)
+        : baseClass()
+        , m_hFrameWnd(hFrameWnd)
+        , m_pimagelist(NULL)
+    {}
+
+    HWND Create(HWND hWndParent, CObjectImageList& imagelist, ATL::_U_RECT rect = NULL, LPCTSTR szWindowName = NULL,
+        DWORD dwStyle = 0, DWORD dwExStyle = 0,
+        ATL::_U_MENUorID MenuOrID = 0U, LPVOID lpCreateParam = NULL)
+    {
+        m_pimagelist = &imagelist;
+        return baseClass::Create(hWndParent, rect, szWindowName, dwStyle, dwExStyle, MenuOrID, lpCreateParam);
+    }
+
+    inline void setFrameWindow(HWND hFrameWnd)
+    {
+        m_hFrameWnd = hFrameWnd;
+    }
+};
+
 #ifndef LVS_EX_DOUBLEBUFFER
 #   define LVS_EX_DOUBLEBUFFER     0x00010000
 #endif
@@ -2200,7 +2237,7 @@ public:
     DECLARE_WND_SUPERCLASS(_T("NtObjectsStatusBar"), GetWndClassName())
     /*lint -restore */
 
-    void InitializePanes(bool bIsAdmin, bool bIsElevated, bool bSetText = true)
+    void initializePanes(bool bIsAdmin, bool bIsElevated, bool bSetText = true)
     {
         ATLASSERT(!IsSimple());
         ATLASSERT(m_nPanes == 0);
@@ -2208,16 +2245,40 @@ public:
         ATLVERIFY(SetPanes(panes, _countof(panes), bSetText));
     }
 
-    void ReloadPaneText(int idx)
+    void reloadPaneText(int idx)
     {
         ATLVERIFY(idx < m_nPanes);
-        if (idx < m_nPanes)
+        if(idx < m_nPanes)
         {
             CString resStr;
 #           pragma warning(suppress: 6031)
             ATLVERIFY(resStr.LoadString(m_pPane[idx]));
             ATLVERIFY(SetPaneText(m_pPane[idx], resStr));
         }
+    }
+};
+
+class CNtObjectsSplitter : public CSplitterWindowImpl<CNtObjectsSplitter>
+{
+    typedef CSplitterWindowImpl<CNtObjectsSplitter> baseClass;
+public:
+    DECLARE_WND_CLASS_EX(_T("NtObjectsSplitter"), CS_DBLCLKS, COLOR_INFOBK)
+
+    CNtObjectsSplitter()
+        : baseClass(true)
+    {
+    }
+};
+
+class CNtObjectsFoundSplitter : public CSplitterWindowImpl<CNtObjectsFoundSplitter>
+{
+    typedef CSplitterWindowImpl<CNtObjectsFoundSplitter> baseClass;
+public:
+    DECLARE_WND_CLASS_EX(_T("NtObjectsFoundSplitter"), CS_DBLCLKS, COLOR_INFOBK)
+
+    CNtObjectsFoundSplitter()
+        : baseClass(false)
+    {
     }
 };
 
@@ -2243,33 +2304,33 @@ public:
     }
     /*lint -restore*/
 
-    inline T Navigate(bool forward)
+    inline T navigate(bool forward)
     {
         ATLASSERT(m_cursorIdx < 0);
-        if (forward)
+        if(forward)
         {
-            if (m_cursorIdx + 1 == 0)
+            if(m_cursorIdx + 1 == 0)
             {
-                ATLTRACE2(_T("Navigating forward doesn't work. Cursor already at the end of the list: %i (size == %i).\n"), m_cursorIdx, GetSize());
+                ATLTRACE2(_T("Navigating forward doesn't work. Cursor already at the end of the list: %i (size == %i).\n"), m_cursorIdx, getSize());
                 return NULL; // must be able to convert to NULL
             }
             m_cursorIdx = -1;
         }
         else
         {
-            if (GetSize() + m_cursorIdx - 1 < 0)
+            if(getSize() + m_cursorIdx - 1 < 0)
             {
-                ATLTRACE2(_T("Navigating backward doesn't work. Cursor already at the start of the list: %i (size == %i).\n"), m_cursorIdx, GetSize());
+                ATLTRACE2(_T("Navigating backward doesn't work. Cursor already at the start of the list: %i (size == %i).\n"), m_cursorIdx, getSize());
                 return NULL; // must be able to convert to NULL
             }
             m_cursorIdx--;
         }
 #ifdef _DEBUG
-        for (int i = 0; i < GetSize(); i++)
+        for (int i = 0; i < getSize(); i++)
         {
             T item = baseClass::operator [](i);
             ATLASSERT(item != NULL);
-            if (i == GetSize() + m_cursorIdx)
+            if(i == getSize() + m_cursorIdx)
             {
                 ATLTRACE2(_T("->  [%i] %s\n"), i, item->fullname().GetString());
             }
@@ -2279,35 +2340,35 @@ public:
             }
         }
 #endif // _DEBUG
-        ATLASSERT(GetSize() + m_cursorIdx >= 0);
-        ATLASSERT(GetSize() + m_cursorIdx < GetSize());
-        ATLTRACE2(_T("New cursor position: %i (size == %i).\n"), m_cursorIdx, GetSize());
-        return baseClass::operator [](GetSize() + m_cursorIdx);
+        ATLASSERT(getSize() + m_cursorIdx >= 0);
+        ATLASSERT(getSize() + m_cursorIdx < getSize());
+        ATLTRACE2(_T("New cursor position: %i (size == %i).\n"), m_cursorIdx, getSize());
+        return baseClass::operator [](getSize() + m_cursorIdx);
     }
 
-    inline BOOL Push(T t)
+    inline BOOL push(T t)
     {
-        int const nLast = GetSize() - 1;
-        if (nLast >= 0)
+        int const nLast = getSize() - 1;
+        if(nLast >= 0)
         {
-            if (baseClass::operator [](nLast) == t)
+            if(baseClass::operator [](nLast) == t)
             {
                 return TRUE; // do not add dupes if the previous entry contained the same item
             }
         }
         // Trim the list to maximum depth
-        while (GetSize() >= m_maxDepth)
+        while (getSize() >= m_maxDepth)
         {
-            (void)Shift();
+            (void)shift();
         }
         BOOL retval = baseClass::Add(t);
         m_cursorIdx = -1;
 #ifdef _DEBUG
-        for (int i = 0; i < GetSize(); i++)
+        for (int i = 0; i < getSize(); i++)
         {
             T item = baseClass::operator [](i);
             ATLASSERT(item != NULL);
-            if (i == GetSize() + m_cursorIdx)
+            if(i == getSize() + m_cursorIdx)
             {
                 ATLTRACE2(_T("->  [%i] %s\n"), i, item->fullname().GetString());
             }
@@ -2320,23 +2381,23 @@ public:
         return retval;
     }
 
-    inline T Pop()
+    inline T pop()
     {
-        int const nLast = GetSize() - 1;
-        if (nLast < 0)
+        int const nLast = getSize() - 1;
+        if(nLast < 0)
             return NULL; // must be able to convert to NULL
         T t = m_aT[nLast];
-        if (!RemoveAt(nLast))
+        if(!RemoveAt(nLast))
             return NULL;
         return t;
     }
 
-    inline T Shift()
+    inline T shift()
     {
-        if (GetSize() <= 0)
+        if(getSize() <= 0)
             return NULL; // must be able to convert to NULL
         T t = m_aT[0];
-        if (!RemoveAt(0))
+        if(!RemoveAt(0))
             return NULL;
         return t;
     }
@@ -2351,13 +2412,13 @@ public:
         return baseClass::operator [](nIndex);
     }
 
-    inline void ResetList()
+    inline void resetList()
     {
         baseClass::RemoveAll();
         m_cursorIdx = -1;
     }
 
-    inline int GetSize() const
+    inline int getSize() const
     {
         return baseClass::GetSize();
     }
@@ -2385,11 +2446,12 @@ public:
 
     CLanguageSetter& m_langSetter;
     CNtObjectsStatusBar m_status;
-    CSplitterWindow m_vsplit;
+    CNtObjectsSplitter m_vsplit;
+    CNtObjectsFoundSplitter m_hsplit;
     CNtObjectsTreeView m_treeview;
     CNtObjectsListView m_listview;
+    CNtObjectsFindResults m_findresults;
     bool m_bFirstOnIdle;
-    bool m_bIsFindDialogOpen;
     GenericObject* m_activeObject;
     CVersionInfo m_verinfo;
     CVisitedListT<Directory*> m_visitedList;
@@ -2404,18 +2466,17 @@ public:
     CNtObjectsMainFrame(OSVERSIONINFOEXW const& osvix)
         : m_langSetter(gLangSetter)
         , m_bFirstOnIdle(true) // to force initial refresh
-        , m_bIsFindDialogOpen(false)
         , m_activeObject(0)
         , m_verinfo(ModuleHelper::GetResourceInstance())
         , DllGetVersion(0)
         , m_imagelist()
-        , m_bIsAdmin(IsUserAdmin() != FALSE)
-        , m_bIsElevated(IsElevated() != FALSE)
+        , m_bIsAdmin(isUserAdmin() != FALSE)
+        , m_bIsElevated(isElevated() != FALSE)
         , m_currentLang(m_langSetter.set())
         , m_osvix(osvix)
     {
         HMODULE hShell32 = ::GetModuleHandle(_T("shell32.dll"));
-        if (hShell32)
+        if(hShell32)
         {
             *(FARPROC*)&DllGetVersion = ::GetProcAddress(hShell32, "DllGetVersion");
         }
@@ -2464,53 +2525,48 @@ public:
 
     LRESULT OnCreate(UINT /*uMsg*/, WPARAM /*wParam*/, LPARAM /*lParam*/, BOOL& /*bHandled*/)
     {
-        m_hWndStatusBar = m_status.Create(*this);
-        m_status.InitializePanes(m_bIsAdmin, m_bIsElevated);
+        ATLVERIFY(NULL != (m_hWndStatusBar = createStatusBar_()));
+        ATLVERIFY(NULL != (m_hWndClient = createSplitter_(m_hsplit, m_hWnd)));
+        ATLVERIFY(NULL != createSplitter_(m_vsplit, m_hsplit));
 
-        m_hWndClient = m_vsplit.Create(m_hWnd, rcDefault, NULL, WS_CHILD | WS_VISIBLE | WS_CLIPSIBLINGS | WS_CLIPCHILDREN);
-        // Add WS_EX_CONTROLPARENT such that tab stops work
-        LONG_PTR exStyle = ::GetWindowLongPtr(m_hWndClient, GWL_EXSTYLE);
-        ::SetWindowLongPtr(m_hWndClient, GWL_EXSTYLE, exStyle | WS_EX_CONTROLPARENT);
-        // The splitter should be smaller than the default width
-        m_vsplit.m_cxySplitBar = 3;
+        ATLVERIFY(NULL != m_treeview.Create(m_vsplit));
+        ATLVERIFY(NULL != m_listview.Create(m_vsplit, m_imagelist));
+        ATLVERIFY(NULL != m_findresults.Create(m_hsplit, m_imagelist));
 
-        ATLVERIFY(NULL != m_treeview.Create(m_hWndClient));
-        ATLVERIFY(NULL != m_listview.Create(m_hWndClient, m_imagelist));
-        if(DllGetVersion)
-        {
-            DLLVERSIONINFO dllvi = {sizeof(DLLVERSIONINFO), 0, 0, 0, 0};
-            if (SUCCEEDED(DllGetVersion(&dllvi)) && dllvi.dwMajorVersion >= 6)
-            {
-                m_treeview.SetExtendedStyle(TVS_EX_DOUBLEBUFFER, TVS_EX_DOUBLEBUFFER);
-                m_listview.SetExtendedListViewStyle(CNtObjectsListViewTraits::GetWndExStyle(LVS_EX_DOUBLEBUFFER));
-            }
-            else
-            {
-                m_listview.SetExtendedListViewStyle(CNtObjectsListViewTraits::GetWndExStyle(0));
-            }
-        }
-        else
-        {
-            m_listview.SetExtendedListViewStyle(CNtObjectsListViewTraits::GetWndExStyle(0));
-        }
+        ATLASSERT(::IsWindow(m_hWndStatusBar));
+        ATLASSERT(::IsWindow(m_hsplit) && (m_hWndClient == m_hsplit));
+        ATLASSERT(::IsWindow(m_vsplit));
+        ATLASSERT(::IsWindow(m_treeview));
+        ATLASSERT(::IsWindow(m_listview));
 
-        ATLTRACE2(_T("Control ID for splitter: %i\n"), ::GetDlgCtrlID(m_vsplit));
+        ATLTRACE2(_T("Control ID for vertical splitter: %i\n"), ::GetDlgCtrlID(m_vsplit));
+        ATLTRACE2(_T("Control ID for horizontal splitter: %i\n"), ::GetDlgCtrlID(m_hsplit));
         ATLTRACE2(_T("Control ID for treeview: %i\n"), ::GetDlgCtrlID(m_treeview));
         ATLTRACE2(_T("Control ID for listview: %i\n"), ::GetDlgCtrlID(m_listview));
-        ATLASSERT(m_vsplit.m_hWnd == ::GetDlgItem(m_hWnd, ::GetDlgCtrlID(m_vsplit)));
-        ATLASSERT(m_treeview.m_hWnd == ::GetDlgItem(m_hWndClient, ::GetDlgCtrlID(m_treeview)));
-        ATLASSERT(m_listview.m_hWnd == ::GetDlgItem(m_hWndClient, ::GetDlgCtrlID(m_listview)));
-        m_treeview.SetFrameWindow(m_hWnd);
-        m_listview.SetFrameWindow(m_hWnd);
+        ATLVERIFY(::IsWindow(m_findresults));
+        ATLASSERT(m_treeview == ::GetDlgItem(m_vsplit, ::GetDlgCtrlID(m_treeview)));
+        ATLASSERT(m_listview == ::GetDlgItem(m_vsplit, ::GetDlgCtrlID(m_listview)));
+        ATLASSERT(m_hsplit == ::GetDlgItem(m_hWnd, ::GetDlgCtrlID(m_hsplit)));
+        ATLASSERT(m_vsplit == ::GetDlgItem(m_hsplit, ::GetDlgCtrlID(m_vsplit)));
 
-        RenewAboutInSystemMenu_(TRUE);
+        setFrameWindow_();
+        enableShell60Features_();
+        renewAboutInSystemMenu_(TRUE);
 
-        m_vsplit.SetSplitterPanes(m_treeview, m_listview);
+        ATLVERIFY(m_vsplit.SetSplitterPane(SPLIT_PANE_LEFT, m_treeview));
+        ATLVERIFY(m_vsplit.SetSplitterPane(SPLIT_PANE_RIGHT, m_listview));
+        ATLVERIFY(m_hsplit.SetSplitterPane(SPLIT_PANE_TOP, m_vsplit));
+        ATLVERIFY(m_hsplit.SetSplitterPane(SPLIT_PANE_BOTTOM, m_findresults));
+
         UpdateLayout();
-        m_vsplit.SetSplitterPosPct(20);
-        m_vsplit.m_cxyMin = 180; //  minimum size of the treeview
 
-        (void)UpdateMainFormLanguage(m_currentLang);
+        m_hsplit.SetSplitterPosPct(100);
+        ATLVERIFY(m_hsplit.SetSinglePaneMode(SPLIT_PANE_TOP));
+
+        m_vsplit.SetSplitterPosPct(20);
+        m_vsplit.m_cxyMin = 180; //  minimum width of the treeview
+
+        (void)updateMainFormLanguage(m_currentLang);
 
         // register object for message filtering and idle updates
         CMessageLoop* pLoop = _Module.GetMessageLoop();
@@ -2559,12 +2615,12 @@ public:
     LRESULT OnViewRefresh(WORD /*wNotifyCode*/, WORD /*wID*/, HWND /*hWndCtl*/, BOOL& /*bHandled*/)
     {
         CWaitCursor wc;
-        if(m_treeview.EmptyAndRefill())
+        if(m_treeview.emptyAndRefill())
         {
             // Invalidate the cached items
-            m_visitedList.ResetList();
+            m_visitedList.resetList();
             // The following triggers TVN_SELCHANGED which in turn fills the listview
-            m_treeview.SelectRoot();
+            m_treeview.selectRootItem();
         }
         return 0;
     }
@@ -2604,25 +2660,19 @@ public:
         if(IDOK == dlg.DoModal(m_hWnd))
         {
             ATLTRACE2(_T("The picked file is: %s\n"), dlg.m_szFileName);
-            SaveAs_(dlg.m_szFileName, m_treeview.ObjectRoot());
+            saveAs_(dlg.m_szFileName, m_treeview.getObjectRoot());
         }
         return 0;
     }
 
     LRESULT OnFindObject(WORD /*wNotifyCode*/, WORD /*wID*/, HWND /*hWndCtl*/, BOOL& /*bHandled*/)
     {
-        if(m_bIsFindDialogOpen)
-        {
-            ATLTRACE2(_T("Find dialog is already open\n"));
-            return 0;
-        }
-        m_bIsFindDialogOpen = true;
-
-        // Prepare the find dialog
+        m_hsplit.SetSinglePaneMode();
+        m_hsplit.SetSplitterPosPct(75);
         return 0;
     }
 
-    LANGID UpdateMainFormLanguage(LANGID langID, BOOL bRefreshAll = FALSE)
+    LANGID updateMainFormLanguage(LANGID langID, BOOL bRefreshAll = FALSE)
     {
         if(m_currentLang != langID)
         {
@@ -2631,12 +2681,12 @@ public:
         ATLASSERT(ID_SWITCHLANGUAGE_GERMAN == MAKELANGID(LANG_GERMAN, SUBLANG_GERMAN));
         ATLASSERT(ID_SWITCHLANGUAGE_ENGLISH == MAKELANGID(LANG_ENGLISH, SUBLANG_ENGLISH_US));
 
-        SetWindowTitle_();
+        setWindowTitle_();
 
-        RenewMainMenuAndAccelerators_();
-        m_listview.ReloadColumnNames();
-        RenewStatusBar_();
-        RenewAboutInSystemMenu_();
+        renewMainMenuAndAccelerators_();
+        m_listview.reloadColumnNames();
+        renewStatusBar_();
+        renewAboutInSystemMenu_();
 
         switch (m_currentLang)
         {
@@ -2655,7 +2705,7 @@ public:
         return m_currentLang;
     }
 
-    void SwitchLanguagePopup()
+    void showSwitchLanguagePopup()
     {
         CPoint pt, spt;
         ATLVERIFY(::GetCursorPos(&pt));
@@ -2667,31 +2717,31 @@ public:
         ATLVERIFY(menu.LoadMenu(IDR_MAINFRAME));
         ATLASSERT(menu.IsMenu());
 
-        if (menu.IsMenu())
+        if(menu.IsMenu())
         {
             ATLTRACE2(_T("%hs: Main menu items %i\n"), __func__, menu.GetMenuItemCount());
 #ifdef _DEBUG
-            DumpMenuItems_(menu);
+            dumpMenuItems_(menu);
 #endif // _DEBUG
             // Get the popup menu at index 0 from the menu resource
             CMenuHandle viewmenu = menu.GetSubMenu(1);
             ATLASSERT(viewmenu.IsMenu());
 
-            if (viewmenu.IsMenu())
+            if(viewmenu.IsMenu())
             {
                 ATLTRACE2(_T("%hs: View menu items %i\n"), __func__, viewmenu.GetMenuItemCount());
 #ifdef _DEBUG
-                DumpMenuItems_(viewmenu);
+                dumpMenuItems_(viewmenu);
 #endif // _DEBUG
                 CMenuHandle popup = viewmenu.GetSubMenu(viewmenu.GetMenuItemCount() - 1);
                 ATLTRACE2(_T("%hs: %i == Switch language menu item\n"), __func__, viewmenu.GetMenuItemCount() - 1);
                 ATLASSERT(popup.IsMenu());
 
-                if (popup.IsMenu())
+                if(popup.IsMenu())
                 {
                     ATLTRACE2(_T("%hs: Switch Language menu items %i\n"), __func__, popup.GetMenuItemCount());
 #ifdef _DEBUG
-                    DumpMenuItems_(popup);
+                    dumpMenuItems_(popup);
 #endif // _DEBUG
 
                     // Let the user pick
@@ -2703,14 +2753,14 @@ public:
                         , NULL
                     );
 
-                    if (idCmd)
+                    if(idCmd)
                     {
                         switch (idCmd)
                         {
                         case ID_SWITCHLANGUAGE_ENGLISH:
                         case ID_SWITCHLANGUAGE_GERMAN:
                             ATLTRACE2(_T("Picked language %i\n"), idCmd);
-                            if (static_cast<LANGID>(idCmd) != m_currentLang)
+                            if(static_cast<LANGID>(idCmd) != m_currentLang)
                             {
                                 SendMessage(WM_COMMAND, static_cast<WPARAM>(idCmd));
                             }
@@ -2738,10 +2788,10 @@ public:
         {
         case ID_SWITCHLANGUAGE_GERMAN:
         case ID_SWITCHLANGUAGE_ENGLISH:
-            (void)UpdateMainFormLanguage(wID, TRUE);
+            (void)updateMainFormLanguage(wID, TRUE);
             break;
         case ID_SWITCHLANGUAGE_POPUP:
-            SwitchLanguagePopup();
+            showSwitchLanguagePopup();
             break;
         default:
             ATLTRACE2(_T("Oi! That language isn't implemented in the GUI!\n"));
@@ -2771,11 +2821,11 @@ public:
             {
             case APPCOMMAND_BROWSER_BACKWARD:
             case APPCOMMAND_MEDIA_PREVIOUSTRACK:
-                bHandled = Navigate_(false);
+                bHandled = navigate_(false);
                 break;
             case APPCOMMAND_BROWSER_FORWARD:
             case APPCOMMAND_MEDIA_NEXTTRACK:
-                bHandled = Navigate_(true);
+                bHandled = navigate_(true);
                 break;
             }
         }
@@ -2790,8 +2840,8 @@ public:
         if(Directory* dir = reinterpret_cast<Directory*>(lParam))
         {
             ATLTRACE2(_T("%hs: %s\n"), __func__, dir->fullname().GetString());
-            VisitDirectory_(dir);
-            SetActiveObject_(dir);
+            visitDirectory_(dir);
+            setActiveObject_(dir);
         }
         return 0;
     }
@@ -2800,10 +2850,10 @@ public:
     LRESULT OnSelectTreeviewDirectory(UINT /*uMsg*/, WPARAM /*wParam*/, LPARAM lParam, BOOL& /*bHandled*/)
     {
         ATLASSERT(lParam != 0);
-        if (Directory* dir = reinterpret_cast<Directory*>(lParam))
+        if(Directory* dir = reinterpret_cast<Directory*>(lParam))
         {
             ATLTRACE2(_T("%hs: %s\n"), __func__, dir->fullname().GetString());
-            m_treeview.SelectDirectory(dir);
+            m_treeview.selectDirectory(dir);
         }
         return 0;
     }
@@ -2812,17 +2862,17 @@ public:
     {
         if(GenericObject* obj = reinterpret_cast<GenericObject*>(lParam))
         {
-            SetActiveObject_(obj);
+            setActiveObject_(obj);
         }
         return 0;
     }
 
     inline LRESULT OnDirectoryUp(UINT /*uMsg*/, WPARAM /*wParam*/, LPARAM /*lParam*/, BOOL& /*bHandled*/)
     {
-        if (Directory* dir = m_treeview.ParentFromSelection())
+        if(Directory* dir = m_treeview.getParentFromSelection())
         {
             ATLTRACE2(_T("%hs: %s\n"), __func__, dir->fullname().GetString());
-            m_treeview.SelectDirectory(dir);
+            m_treeview.selectDirectory(dir);
         }
         return 0;
     }
@@ -2844,10 +2894,10 @@ public:
                     break;
                 }
             }
-            if (::IsWindow(m_status.m_hWnd))
+            if(::IsWindow(m_status))
             {
-                ::SendMessage(m_status.m_hWnd, SB_SIMPLE, TRUE, 0L);
-                ::SendMessage(m_status.m_hWnd, SB_SETTEXT, (255 | SBT_NOBORDERS), (LPARAM)szBuff);
+                ::SendMessage(m_status, SB_SIMPLE, TRUE, 0L);
+                ::SendMessage(m_status, SB_SETTEXT, (255 | SBT_NOBORDERS), (LPARAM)szBuff);
             }
         }
         else
@@ -2874,11 +2924,11 @@ public:
         {
             ATLTRACE2(_T("Last selected item: %s\n"), m_activeObject->fullname().GetString());
         }
-        if(hWndCtl == m_listview.m_hWnd)
+        if(hWndCtl == m_listview)
         {
             ATLTRACE2(_T("From ListView\n"));
         }
-        else if(hWndCtl == m_treeview.m_hWnd)
+        else if(hWndCtl == m_treeview)
         {
             ATLTRACE2(_T("From TreeView\n"));
         }
@@ -2922,7 +2972,7 @@ public:
 
 private:
 #ifdef _DEBUG
-    template<typename T> void DumpMenuItems_(T& menu) const
+    template<typename T> void dumpMenuItems_(T& menu) const
     {
         ATLTRACE2(_T("%hs: ======================================\n"), __func__);
         for (int i = 0; i < menu.GetMenuItemCount(); i++)
@@ -2931,17 +2981,17 @@ private:
             mii.cbSize = sizeof(mii);
             mii.fMask = MIIM_FTYPE;
             ATLVERIFY(menu.GetMenuItemInfo(static_cast<UINT>(i), TRUE, &mii));
-            if (mii.fType == MFT_SEPARATOR)
+            if(mii.fType == MFT_SEPARATOR)
             {
                 ATLTRACE2(_T("%hs: %i -> --------------[Separator]-------------\n"), __func__, i);
             }
-            if (mii.fType == MFT_STRING)
+            if(mii.fType == MFT_STRING)
             {
                 CString s;
                 mii.fMask = MIIM_STRING;
                 mii.dwTypeData = s.GetBufferSetLength(MAX_PATH);
                 mii.cch = MAX_PATH;
-                if (menu.GetMenuItemInfo(static_cast<UINT>(i), TRUE, &mii))
+                if(menu.GetMenuItemInfo(static_cast<UINT>(i), TRUE, &mii))
                 {
                     ATLTRACE2(_T("%hs: %i -> %s\n"), __func__, i, mii.dwTypeData);
                 }
@@ -2954,19 +3004,19 @@ private:
     }
 #endif // _DEBUG
 
-    inline void DisableSwitchLanguageMenuItem_()
+    inline void disableSwitchLanguageMenuItem_()
     {
         CMenuHandle mainmenu = GetMenu();
-        if (mainmenu.IsMenu())
+        if(mainmenu.IsMenu())
         {
             CMenuHandle viewmenu = mainmenu.GetSubMenu(1);
-            if (viewmenu.IsMenu())
+            if(viewmenu.IsMenu())
             {
                 int const idx = viewmenu.GetMenuItemCount() - 1;
                 MENUITEMINFO mii = { 0 };
                 mii.cbSize = sizeof(mii);
                 mii.fMask = MIIM_STATE;
-                if (viewmenu.GetMenuItemInfo(static_cast<UINT>(idx), TRUE, &mii))
+                if(viewmenu.GetMenuItemInfo(static_cast<UINT>(idx), TRUE, &mii))
                 {
                     mii.fState |= MFS_DISABLED;
                     ATLVERIFY(viewmenu.SetMenuItemInfo(static_cast<UINT>(idx), TRUE, &mii));
@@ -2975,15 +3025,15 @@ private:
         }
     }
 
-    inline void RenewAboutInSystemMenu_(BOOL bInitial = FALSE)
+    inline void renewAboutInSystemMenu_(BOOL bInitial = FALSE)
     {
         CMenuHandle sysmenu(GetSystemMenu(FALSE));
-        if (sysmenu.IsMenu())
+        if(sysmenu.IsMenu())
         {
             CString menuString;
-            if (menuString.LoadString(IDS_ABOUT_MENUITEM))
+            if(menuString.LoadString(IDS_ABOUT_MENUITEM))
             {
-                if (bInitial) //append, not just set the text
+                if(bInitial) //append, not just set the text
                 {
                     ATLVERIFY(sysmenu.AppendMenu(MF_SEPARATOR));
                     ATLVERIFY(sysmenu.AppendMenu(MF_STRING, IDS_ABOUT_DESCRIPTION, menuString));
@@ -3002,28 +3052,28 @@ private:
         }
     }
 
-    inline void RenewStatusBar_()
+    inline void renewStatusBar_()
     {
-        if (::IsWindow(m_status.m_hWnd))
+        if(::IsWindow(m_status))
         {
             ATLASSERT(m_status.m_nPanes == 3); // in case I ever change this, that's the tripping wire to notice
-            m_status.ReloadPaneText(1);
-            m_status.ReloadPaneText(2);
+            m_status.reloadPaneText(1);
+            m_status.reloadPaneText(2);
 
-            if (m_activeObject)
+            if(m_activeObject)
             {
-                SetStatusBarItem_(m_activeObject);
+                setStatusBarItem_(m_activeObject);
             }
         }
     }
 
-    inline void RenewMainMenuAndAccelerators_()
+    inline void renewMainMenuAndAccelerators_()
     {
         HMENU hOldMenu = GetMenu();
         ATLASSERT(hOldMenu != NULL);
         HMENU hNewMenu = ::LoadMenu(ModuleHelper::GetResourceInstance(), MAKEINTRESOURCE(GetWndClassInfo().m_uCommonResourceID));
         ATLASSERT(hNewMenu != NULL);
-        if (hNewMenu != NULL)
+        if(hNewMenu != NULL)
         {
             ATLVERIFY(SetMenu(hNewMenu));
             ATLVERIFY(::DestroyMenu(hOldMenu));
@@ -3033,10 +3083,10 @@ private:
             HACCEL hOldAccel = m_hAccel;
             HACCEL hNewAccel = ::LoadAccelerators(ModuleHelper::GetResourceInstance(), MAKEINTRESOURCE(GetWndClassInfo().m_uCommonResourceID));
             ATLASSERT(hNewAccel != NULL);
-            if (hNewAccel)
+            if(hNewAccel)
             {
                 m_hAccel = hNewAccel;
-                if (hOldAccel)
+                if(hOldAccel)
                 {
                     ATLVERIFY(::DestroyAcceleratorTable(hOldAccel));
                 }
@@ -3044,7 +3094,7 @@ private:
         }
     }
 
-    inline void SetWindowTitle_()
+    inline void setWindowTitle_()
     {
         CString oldWndTitle, newDlgTitle;
 #       pragma warning(suppress: 6031)
@@ -3055,16 +3105,16 @@ private:
         ATLVERIFY(SetWindowText(newDlgTitle.GetString()));
     }
 
-    inline void SetActiveObject_(GenericObject* obj)
+    inline void setActiveObject_(GenericObject* obj)
     {
         m_activeObject = obj;
-        SetStatusBarItem_(obj);
+        setStatusBarItem_(obj);
     }
 
-    void VisitDirectory_(Directory* dir)
+    void visitDirectory_(Directory* dir)
     {
         ATLASSERT(dir != NULL);
-        if (!dir)
+        if(!dir)
         {
             return;
         }
@@ -3072,40 +3122,40 @@ private:
         LPCWSTR fullName = (dir) ? dir->fullname().GetString() : _T("");
         ATLTRACE2(_T("Visiting Directory: '%s'\n"), fullName);
 #endif // _DEBUG
-        m_listview.FillFromDirectory(*dir);
+        m_listview.fillFromDirectory(*dir);
         // Keep a list of visited directories
-        ATLVERIFY(m_visitedList.Push(dir));
+        ATLVERIFY(m_visitedList.push(dir));
     }
 
-    inline BOOL Navigate_(bool forward)
+    inline BOOL navigate_(bool forward)
     {
         ATLTRACE2(_T("%hs: Navigating %s\n"), __func__, (forward) ? _T("forward") : _T("backward"));
-        Directory* dir = static_cast<Directory*>(m_visitedList.Navigate(forward));
-        if (!dir)
+        Directory* dir = static_cast<Directory*>(m_visitedList.navigate(forward));
+        if(!dir)
         {
             ATLTRACE2(_T("No valid Directory* returned.\n"));
             ::MessageBeep(MB_ICONEXCLAMATION);
             return FALSE;
         }
-        m_treeview.SelectDirectory(dir);
-        if (forward)
+        m_treeview.selectDirectory(dir);
+        if(forward)
         {
             // Keep a list of visited directories
-            ATLVERIFY(m_visitedList.Push(dir));
+            ATLVERIFY(m_visitedList.push(dir));
         }
         return TRUE;
     }
 
-    inline void SetStatusBarItem_(GenericObject* obj)
+    inline void setStatusBarItem_(GenericObject* obj)
     {
         ATLASSERT(obj != NULL);
-        if (!::IsWindow(m_status.m_hWnd))
+        if(!::IsWindow(m_status))
         {
             return;
         }
 
         LPCWSTR fullName = (obj) ? obj->fullname().GetString() : NULL;
-        if (Directory* pdir = dynamic_cast<Directory*>(obj))
+        if(Directory* pdir = dynamic_cast<Directory*>(obj))
         {
             Directory& dir = *pdir;
             ULONG nSymLinks = 0, nDirectories = 0, nChildren = static_cast<ULONG>(dir.size());
@@ -3114,7 +3164,7 @@ private:
                 GenericObject* childobj = dir[i];
 
                 ATLASSERT(childobj != NULL);
-                if (!childobj)
+                if(!childobj)
                     continue;
 
                 switch (dir[i]->objtype())
@@ -3135,7 +3185,7 @@ private:
         }
         else
         {
-            if (NULL != fullName)
+            if(NULL != fullName)
             {
                 m_status.SetWindowText(fullName);
             }
@@ -3147,10 +3197,10 @@ private:
     {
     public:
         virtual ~IObjectDirectoryDumper() {}
-        virtual void SymlinkObject(const SymbolicLink* obj) = 0;
-        virtual void ContainedObject(const GenericObject* obj) = 0;
-        virtual void EnterDirectory(const Directory* obj) = 0;
-        virtual void LeaveDirectory() = 0;
+        virtual void addSymlinkObject(const SymbolicLink* obj) = 0;
+        virtual void addContainedObject(const GenericObject* obj) = 0;
+        virtual void enterDirectory(const Directory* obj) = 0;
+        virtual void leaveDirectory() = 0;
         virtual LPCTSTR getFileName() const = 0;
 
         virtual void operator()(Directory& current)
@@ -3159,19 +3209,19 @@ private:
             {
                 GenericObject* entry = current[i];
 
-                if (Directory* directory = dynamic_cast<Directory*>(entry))
+                if(Directory* directory = dynamic_cast<Directory*>(entry))
                 {
-                    this->EnterDirectory(directory);
+                    this->enterDirectory(directory);
                     this->operator()(*directory);
-                    this->LeaveDirectory();
+                    this->leaveDirectory();
                     continue;
                 }
-                if (SymbolicLink const* symlink = dynamic_cast<SymbolicLink const*>(entry))
+                if(SymbolicLink const* symlink = dynamic_cast<SymbolicLink const*>(entry))
                 {
-                    this->SymlinkObject(symlink);
+                    this->addSymlinkObject(symlink);
                     continue;
                 }
-                this->ContainedObject(entry);
+                this->addContainedObject(entry);
             }
         }
     };
@@ -3207,18 +3257,18 @@ private:
             }
         }
 
-        void SymlinkObject(const SymbolicLink* obj)
+        void addSymlinkObject(const SymbolicLink* obj)
         {
-            pugi::xml_node node = AddStandardObject_(obj);
+            pugi::xml_node node = addStandardObject_(obj);
             ATLVERIFY(node.append_attribute(_T("target")).set_value(obj->target().GetString()));
         }
 
-        void ContainedObject(const GenericObject* obj)
+        void addContainedObject(const GenericObject* obj)
         {
-            (void)AddStandardObject_(obj);
+            (void)addStandardObject_(obj);
         }
 
-        void EnterDirectory(const Directory* obj)
+        void enterDirectory(const Directory* obj)
         {
             ATLASSERT(obj != NULL);
             m_previousNode = m_currentNode;
@@ -3226,7 +3276,7 @@ private:
             ATLVERIFY(m_currentNode.append_attribute(_T("name")).set_value(obj->name().GetString()));
         }
 
-        void LeaveDirectory()
+        void leaveDirectory()
         {
             m_currentNode = m_previousNode;
         }
@@ -3237,7 +3287,7 @@ private:
         }
 
     private:
-        pugi::xml_node AddStandardObject_(const GenericObject* obj)
+        pugi::xml_node addStandardObject_(const GenericObject* obj)
         {
             ATLASSERT(obj != NULL);
             pugi::xml_node node = m_currentNode.append_child(_T("Object"));
@@ -3265,7 +3315,7 @@ private:
             , m_currentPrefix(_T("\t"))
         {
             m_bOpened = (0 == _tfopen_s(&m_file, lpszFileName, _T("w+, ccs=UTF-8")));
-            if (m_bOpened && m_file)
+            if(m_bOpened && m_file)
             {
                 _ftprintf(m_file, _T("\\\n")); // Root of object manager namespace
             }
@@ -3277,21 +3327,21 @@ private:
             m_bOpened = (0 != fclose(m_file));
         }
 
-        void SymlinkObject(const SymbolicLink* obj)
+        void addSymlinkObject(const SymbolicLink* obj)
         {
             ATLASSERT(obj != NULL);
             LPCTSTR linePrefix = m_currentPrefix.GetString();
             _ftprintf(m_file, _T("%s%s [%s] -> %s\n"), linePrefix, obj->name().GetString(), obj->type().GetString(), obj->target().GetString());
         }
 
-        void ContainedObject(const GenericObject* obj)
+        void addContainedObject(const GenericObject* obj)
         {
             ATLASSERT(obj != NULL);
             LPCTSTR linePrefix = m_currentPrefix.GetString();
             _ftprintf(m_file, _T("%s%s [%s]\n"), linePrefix, obj->name().GetString(), obj->type().GetString());
         }
 
-        void EnterDirectory(const Directory* obj)
+        void enterDirectory(const Directory* obj)
         {
             ATLASSERT(obj != NULL);
             LPCTSTR linePrefix = m_currentPrefix.GetString();
@@ -3300,7 +3350,7 @@ private:
             m_currentPrefix.AppendChar(_T('\t'));
         }
 
-        void LeaveDirectory()
+        void leaveDirectory()
         {
             m_currentPrefix = m_previousPrefix;
         }
@@ -3311,12 +3361,12 @@ private:
         }
     };
 
-    void SaveAs_(LPCTSTR lpszFileName, Directory& objroot)
+    void saveAs_(LPCTSTR lpszFileName, Directory& objroot)
     {
-        if (size_t len = (lpszFileName) ? _tcslen(lpszFileName) : 0)
+        if(size_t len = (lpszFileName) ? _tcslen(lpszFileName) : 0)
         {
 #ifndef NTOBJX_NO_XML_EXPORT
-            if (lpszFileName && (len > 4) && (0 == _tcsicmp(_T(".xml"), &lpszFileName[len -4])))
+            if(lpszFileName && (len > 4) && (0 == _tcsicmp(_T(".xml"), &lpszFileName[len -4])))
             {
                 ATLTRACE2(_T("Assuming the user wants to save an XML, based on extension: %s\n"), lpszFileName);
                 CXmlObjectDirectoryDumper dump(lpszFileName);
@@ -3333,4 +3383,54 @@ private:
 #endif // !NTOBJX_NO_XML_EXPORT
         }
     }
+
+    inline HWND createStatusBar_()
+    {
+        HWND hWndStatusBar = m_status.Create(*this);
+        m_status.initializePanes(m_bIsAdmin, m_bIsElevated);
+        return hWndStatusBar;
+    }
+
+    template<typename T> HWND createSplitter_(T& splitter, HWND hWndParent, bool bFullDrag = true)
+    {
+        HWND hWndSplitter = splitter.Create(hWndParent, rcDefault, NULL, WS_CHILD | WS_VISIBLE | WS_CLIPSIBLINGS | WS_CLIPCHILDREN);
+        // Add WS_EX_CONTROLPARENT such that tab stops work
+        LONG_PTR exStyle = ::GetWindowLongPtr(hWndSplitter, GWL_EXSTYLE);
+        ::SetWindowLongPtr(hWndSplitter, GWL_EXSTYLE, exStyle | WS_EX_CONTROLPARENT);
+        // The splitter should be smaller than the default width
+        splitter.m_cxySplitBar = 3;
+        splitter.m_bFullDrag = bFullDrag; // enable/disable ghost bar instead of full "live" drag
+        return hWndSplitter;
+    }
+
+    inline void enableShell60Features_()
+    {
+        if(DllGetVersion)
+        {
+            DLLVERSIONINFO dllvi = {sizeof(DLLVERSIONINFO), 0, 0, 0, 0};
+            if(SUCCEEDED(DllGetVersion(&dllvi)) && dllvi.dwMajorVersion >= 6)
+            {
+                m_treeview.SetExtendedStyle(TVS_EX_DOUBLEBUFFER, TVS_EX_DOUBLEBUFFER);
+                m_listview.SetExtendedListViewStyle(CNtObjectsListViewTraits::GetWndExStyle(LVS_EX_DOUBLEBUFFER));
+                m_findresults.SetExtendedListViewStyle(CNtObjectsFindResultsTraits::GetWndExStyle(LVS_EX_DOUBLEBUFFER));
+            }
+            else
+            {
+                m_listview.SetExtendedListViewStyle(CNtObjectsListViewTraits::GetWndExStyle(0));
+                m_findresults.SetExtendedListViewStyle(CNtObjectsFindResultsTraits::GetWndExStyle(0));
+            }
+        }
+        else
+        {
+            m_listview.SetExtendedListViewStyle(CNtObjectsListViewTraits::GetWndExStyle(0));
+        }
+    }
+
+    inline void setFrameWindow_()
+    {
+        m_treeview.setFrameWindow(m_hWnd); // make the frame window known to the treeview control
+        m_listview.setFrameWindow(m_hWnd); // make the frame window known to the listview control
+        m_findresults.setFrameWindow(m_hWnd); // make the frame window known to the listview control for found objects
+    }
+
 };

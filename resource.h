@@ -2,7 +2,6 @@
 // Microsoft Visual C++ generated include file.
 // Used by ntobjx.rc
 //
-#pragma once
 #define IDR_MAINFRAME                   1
 #define IDS_PROGRAM_DESCRIPTION         2
 #define IDS_ABOUT_MENUITEM              3
@@ -85,7 +84,6 @@
 #define IDC_EDIT_NAME                   1010
 #define IDC_EDIT_FULLNAME               1011
 #define IDC_EDIT_TYPE                   1012
-#define IDC_EDIT_FINDTEXT               1014
 #define IDC_EXPLANATION_WHY             1015
 #define IDC_NO_SECURITY_CAPTION         1016
 #define IDC_REF_BYPTR                   1018

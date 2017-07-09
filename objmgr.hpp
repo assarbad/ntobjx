@@ -27,7 +27,7 @@
 ///////////////////////////////////////////////////////////////////////////////
 
 #ifndef __OBJMGR_HPP_VER__
-#define __OBJMGR_HPP_VER__ 2017060817
+#define __OBJMGR_HPP_VER__ 2017062820
 #if (defined(_MSC_VER) && (_MSC_VER >= 1020)) || defined(__MCPP)
 #pragma once
 #endif // Check for "#pragma once" support
@@ -957,7 +957,7 @@ namespace NtObjMgr{
         static NTSTATUS NTAPI OpenObjectAsFile_(__out PHANDLE Handle, __in ACCESS_MASK DesiredAccess, __in POBJECT_ATTRIBUTES ObjectAttributes)
         {
             IO_STATUS_BLOCK iostat;
-            return NtOpenFile(Handle, DesiredAccess, ObjectAttributes, &iostat, FILE_SHARE_READ | FILE_SHARE_WRITE | FILE_SHARE_DELETE, 0);
+            return ::NtOpenFile(Handle, DesiredAccess, ObjectAttributes, &iostat, FILE_SHARE_READ | FILE_SHARE_WRITE | FILE_SHARE_DELETE, 0);
         }
 
         static openobj_fct_t PickOpenObjectFunction_(LPCTSTR lpszTypeName)
@@ -969,16 +969,16 @@ namespace NtObjMgr{
 
             static struct { LPCTSTR tpname; openobj_fct_t openFct; } openFunctions[] =
             {
-                { _T(OBJTYPESTR_DIRECTORY), NtOpenDirectoryObject },
-                { _T(OBJTYPESTR_EVENT), NtOpenEvent },
-                { _T(OBJTYPESTR_EVENTPAIR), NtOpenEventPair },
-                { _T(OBJTYPESTR_IOCOMPLETION), NtOpenIoCompletion },
-                { _T(OBJTYPESTR_KEY), NtOpenKey },
-                { _T(OBJTYPESTR_MUTANT), NtOpenMutant },
-                { _T(OBJTYPESTR_SECTION), NtOpenSection },
-                { _T(OBJTYPESTR_SEMAPHORE), NtOpenSemaphore },
-                { _T(OBJTYPESTR_SYMBOLICLINK), NtOpenSymbolicLinkObject },
-                { _T(OBJTYPESTR_TIMER), NtOpenTimer },
+                { _T(OBJTYPESTR_DIRECTORY), ::NtOpenDirectoryObject },
+                { _T(OBJTYPESTR_EVENT), ::NtOpenEvent },
+                { _T(OBJTYPESTR_EVENTPAIR), ::NtOpenEventPair },
+                { _T(OBJTYPESTR_IOCOMPLETION), ::NtOpenIoCompletion },
+                { _T(OBJTYPESTR_KEY), ::NtOpenKey },
+                { _T(OBJTYPESTR_MUTANT), ::NtOpenMutant },
+                { _T(OBJTYPESTR_SECTION), ::NtOpenSection },
+                { _T(OBJTYPESTR_SEMAPHORE), ::NtOpenSemaphore },
+                { _T(OBJTYPESTR_SYMBOLICLINK), ::NtOpenSymbolicLinkObject },
+                { _T(OBJTYPESTR_TIMER), ::NtOpenTimer },
             };
             openobj_fct_t OpenObjectFct = OpenObjectAsFile_; // default
 
@@ -1065,7 +1065,7 @@ namespace NtObjMgr{
             {
                 ATLTRACE2(_T("Success. Returning handle %p.\n"), hObject);
                 ULONG retLen = 0;
-                queryStatus = NtQueryObject(hObject, ObjectBasicInformation, &obi, static_cast<ULONG>(sizeof(obi)), &retLen);
+                queryStatus = ::NtQueryObject(hObject, ObjectBasicInformation, &obi, static_cast<ULONG>(sizeof(obi)), &retLen);
                 if (NT_SUCCESS(queryStatus))
                 {
                     hasObjInfo = true;
