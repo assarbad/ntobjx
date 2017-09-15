@@ -8,18 +8,12 @@
 local action = _ACTION or ""
 local release = false
 local cmdline = false
-local slnname = ""
-local pfx = ""
 if _OPTIONS["cmdline"] then
     cmdline = true
 end
 if _OPTIONS["release"] then
     print "INFO: Creating release build solution."
     release = true
-    slnname = "ntobjx_release"
-    pfx = slnname .. "_"
-    _OPTIONS["release"] = pfx
-    cmdline = false
 end
 do
     -- This is mainly to support older premake4 builds
@@ -106,9 +100,11 @@ do
     -- Make sure we can generate XP-compatible projects for newer Visual Studio versions
     local orig_vc2010_configurationPropertyGroup = premake.vstudio.vc2010.configurationPropertyGroup
     premake.vstudio.vc2010.configurationPropertyGroup = function(cfg, cfginfo)
-        io.capture()
+        local old_captured = io.captured -- save io.captured state
+        io.capture() -- this sets io.captured = ''
         orig_vc2010_configurationPropertyGroup(cfg, cfginfo)
         local captured = io.endcapture()
+        assert(captured ~= nil)
         local toolsets = { vs2012 = "v110", vs2013 = "v120", vs2015 = "v140", vs2017 = "v141" }
         local toolset = toolsets[_ACTION]
         if toolset then
@@ -117,8 +113,49 @@ do
                 captured = captured:gsub("(</PlatformToolset>)", "_xp%1")
             end
         end
-        io.write(captured)
+        if old_captured ~= nil then
+            io.captured = old_captured .. captured -- restore outer captured state, if any
+        else
+            io.write(captured)
+        end
     end
+    -- Premake4 sets the PDB file name for the compiler's PDB to the default
+    -- value used by the linker's PDB. This causes error C1052 on VS2017. Fix it.
+    local orig_premake_vs2010_vcxproj = premake.vs2010_vcxproj
+    premake.vs2010_vcxproj = function(prj)
+        local old_captured = io.captured -- save io.captured state
+        io.capture() -- this sets io.captured = ''
+        orig_premake_vs2010_vcxproj(prj)
+        local captured = io.endcapture()
+        assert(captured ~= nil)
+        captured = captured:gsub("%s+<ProgramDataBaseFileName>[^<]+</ProgramDataBaseFileName>", "")
+        if old_captured ~= nil then
+            io.captured = old_captured .. captured -- restore outer captured state, if any
+        else
+            io.write(captured)
+        end
+    end
+    -- ... same as above but for VS200x this time
+    local function wrap_remove_pdb_attribute(origfunc)
+        local fct = function(cfg)
+            local old_captured = io.captured -- save io.captured state
+            io.capture() -- this sets io.captured = ''
+            origfunc(cfg)
+            local captured = io.endcapture()
+            assert(captured ~= nil)
+            captured = captured:gsub('%s+ProgramDataBaseFileName=\"[^"]+\"', "")
+            if old_captured ~= nil then
+                io.captured = old_captured .. captured -- restore outer captured state, if any
+            else
+                io.write(captured)
+            end
+        end
+        return fct
+    end
+    premake.vstudio.vc200x.VCLinkerTool = wrap_remove_pdb_attribute(premake.vstudio.vc200x.VCLinkerTool)
+    premake.vstudio.vc200x.toolmap.VCLinkerTool = premake.vstudio.vc200x.VCLinkerTool -- this is important as well
+    premake.vstudio.vc200x.VCCLCompilerTool = wrap_remove_pdb_attribute(premake.vstudio.vc200x.VCCLCompilerTool)
+    premake.vstudio.vc200x.toolmap.VCCLCompilerTool = premake.vstudio.vc200x.VCCLCompilerTool -- this is important as well
     -- Override the object directory paths ... don't make them "unique" inside premake4
     local orig_gettarget = premake.gettarget
     premake.gettarget = function(cfg, direction, pathstyle, namestyle, system)
@@ -176,26 +213,26 @@ if _OPTIONS["msvcrt"] then
     end
 end
 
-solution (iif(release, slnname, "ntobjx"))
+solution ("ntobjx" .. iif(release, "_release", ""))
     configurations  (iif(release, {"Release"}, {"Debug", "Release"}))
     platforms       (iif(_ACTION < "vs2005", {"x32"}, {"x32", "x64"}))
     location        ('.')
 
     -- Main ntobjx project
-    project (iif(release, slnname, "ntobjx"))
-        local int_dir   = pfx.."intermediate/" .. action .. "_$(" .. transformMN("Platform") .. ")_$(" .. transformMN("Configuration") .. ")\\$(ProjectName)"
+    project ("ntobjx" .. iif(release, "_release", ""))
+        local int_dir   = iif(release, "release_", "").."intermediate/" .. action .. "_$(" .. transformMN("Platform") .. ")_$(" .. transformMN("Configuration") .. ")\\$(ProjectName)"
         uuid            ("DE5A7539-C36C-4F2E-9CE3-18087DC72346")
         language        ("C++")
         kind            ("WindowedApp")
         targetname      ("ntobjx")
-        flags           {"Unicode", "NativeWChar", "ExtraWarnings", "WinMain", "NoMinimalRebuild", "NoIncrementalLink", "NoEditAndContinue"}
+        flags           {"Unicode", "NativeWChar", "ExtraWarnings", "WinMain",}
         targetdir       (iif(release, slnname, "build"))
         includedirs     {"wtl/Include", "pugixml"}
         objdir          (int_dir)
         links           {"ntdll-delayed", "version"}
         resoptions      {"/nologo", "/l409"}
         resincludedirs  {".", "$(IntDir)"}
-        linkoptions     {"\"/libpath:$(IntDir)\"", "/pdbaltpath:%_PDB%", "/delay:nobind","/delayload:ntdll-delayed.dll","/delayload:version.dll"}
+        linkoptions     {"\"/libpath:$(IntDir)\"", "/delay:nobind","/delayload:ntdll-delayed.dll","/delayload:version.dll"}
         defines         {"WIN32", "_WINDOWS", "STRICT"}
         if not _OPTIONS["msvcrt"] then
             flags       {"StaticRuntime"}
@@ -206,9 +243,10 @@ solution (iif(release, slnname, "ntobjx"))
             "wtl/Include/*.h",
             "ntdll-stubs/*.txt",
             "pugixml/*.hpp",
-            "*.h", "util/*.h", "util/*.hpp",
+            "util/*.h", "util/*.hpp",
             "*.rc",
             "*.cpp",
+            "*.h",
             "*.hpp",
             "*.manifest",
             "*.cmd", "*.txt", "*.md", "*.rst", "premake4.lua",
@@ -255,17 +293,20 @@ solution (iif(release, slnname, "ntobjx"))
             end
 
         configuration {"Debug"}
-            flags           {"Symbols"}
+            flags           {"Symbols",}
+
+        configuration {"*"}
+            prebuildcommands{"\"$(ProjectDir)\\hgid.cmd\"",}
 
         configuration {"x64"}
-            prebuildcommands{"lib.exe /nologo /nodefaultlib \"/def:ntdll-stubs\\ntdll-delayed.txt\" \"/out:$(IntDir)\\ntdll-delayed.lib\" /machine:x64", "\"$(ProjectDir)\\hgid.cmd\""}
+            prebuildcommands{"lib.exe /nologo /nodefaultlib \"/def:ntdll-stubs\\ntdll-delayed.txt\" \"/out:$(IntDir)\\ntdll-delayed.lib\" /machine:x64",}
 
         configuration {"x32"}
-            prebuildcommands{"cl.exe /nologo /c /TC /Ob0 /Gz ntdll-stubs\\ntdll-delayed-stubs.c \"/Fo$(IntDir)\\ntdll-delayed-stubs.obj\"", "lib.exe /nologo \"/def:ntdll-stubs\\ntdll-delayed.txt\" \"/out:$(IntDir)\\ntdll-delayed.lib\" /machine:x86 \"$(IntDir)\\ntdll-delayed-stubs.obj\"", "\"$(ProjectDir)\\hgid.cmd\""}
+            prebuildcommands{"cl.exe /nologo /c /TC /Ob0 /Gz ntdll-stubs\\ntdll-delayed-stubs.c \"/Fo$(IntDir)\\ntdll-delayed-stubs.obj\"", "lib.exe /nologo \"/def:ntdll-stubs\\ntdll-delayed.txt\" \"/out:$(IntDir)\\ntdll-delayed.lib\" /machine:x86 \"$(IntDir)\\ntdll-delayed-stubs.obj\"",}
 
         configuration {"Release"}
             defines         ("NDEBUG")
-            flags           {"Optimize", "Symbols"}
+            flags           {"Optimize", "Symbols", "NoMinimalRebuild", "NoIncrementalLink", "NoEditAndContinue"}
             linkoptions     {"/release"}
             buildoptions    {"/Oi", "/Os", "/Gy"}
 
@@ -296,7 +337,7 @@ solution (iif(release, slnname, "ntobjx"))
     if cmdline then
         -- ntobjx_c project
         project (iif(release, slnname, "ntobjx_c"))
-            local int_dir   = pfx.."intermediate/" .. action .. "_$(" .. transformMN("Platform") .. ")_$(" .. transformMN("Configuration") .. ")\\$(ProjectName)"
+            local int_dir   = iif(release, "release_", "").."intermediate/" .. action .. "_$(" .. transformMN("Platform") .. ")_$(" .. transformMN("Configuration") .. ")\\$(ProjectName)"
             uuid            ("CA1F91D0-7D7E-4A9C-9DD1-6C65C2F37A59")
             language        ("C++")
             kind            ("ConsoleApp")
@@ -307,8 +348,8 @@ solution (iif(release, slnname, "ntobjx"))
             links           {"ntdll-delayed"}
             resoptions      {"/nologo", "/l409"}
             resincludedirs  {".", "$(IntDir)"}
-            linkoptions     {"\"/libpath:$(IntDir)\"", "/pdbaltpath:%_PDB%", "/delay:nobind","/delayload:ntdll-delayed.dll"}
-            defines         {"WIN32", "_WINDOWS", "STRICT", "_CONSOLE"}
+            linkoptions     {"\"/libpath:$(IntDir)\"", "/delay:nobind","/delayload:ntdll-delayed.dll"}
+            defines         {"WIN32", "_WINDOWS", "STRICT", "_CONSOLE", "_ALLOW_RTCc_IN_STL"}
 
             files
             {

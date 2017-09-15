@@ -373,6 +373,8 @@ BEGIN
     IDS_OBJSPEC_NAME2_WINSTA "Sicherheits-ID:"
     IDS_OBJSPEC_NAME3_WINSTA "Kennzeichen:"
     IDS_URL_ONLINEHELP      "https://bitbucket.org/assarbad/ntobjx/wiki/help/Deutsch"
+    ID_OBJSEARCH_CAPTION    "Objektsuche"
+    ID_OBJSEARCH_TEXT       "Suchbegriff"
 END
 
 STRINGTABLE 
@@ -789,6 +791,8 @@ BEGIN
     IDS_OBJSPEC_NAME2_WINSTA "SID:"
     IDS_OBJSPEC_NAME3_WINSTA "Flags:"
     IDS_URL_ONLINEHELP      "https://bitbucket.org/assarbad/ntobjx/wiki/help/English"
+    ID_OBJSEARCH_CAPTION    "Object search"
+    ID_OBJSEARCH_TEXT       "Search term"
 END
 
 STRINGTABLE 

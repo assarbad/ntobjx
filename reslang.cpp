@@ -168,7 +168,7 @@ namespace
                     ATLTRACE2(_T("name: %s; "), (LPCWSTR)ResourceIdPath->Name);
                 }
                 WCHAR name[MAX_PATH] = {0};
-                if (::GetLocaleInfo((LCID)ResourceIdPath->Language, LOCALE_SENGLANGUAGE, name, sizeof(name)))
+                if (::GetLocaleInfo((LCID)ResourceIdPath->Language, LOCALE_SENGLANGUAGE, name, _countof(name)))
                     ATLTRACE2(_T("language: %s (%u)\n"), (ResourceIdPath->Language) ? name : _T("Neutral"), ResourceIdPath->Language);
                 else
                     ATLTRACE2(_T("language: %04X (%u)\n"), ResourceIdPath->Language, ResourceIdPath->Language);

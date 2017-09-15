@@ -29,19 +29,15 @@
 ///////////////////////////////////////////////////////////////////////////////
 
 #ifndef __VERSIONINFO_H_VER__
-#define __VERSIONINFO_H_VER__ 2016102018
+#define __VERSIONINFO_H_VER__ 2017091422
 #if (defined(_MSC_VER) && (_MSC_VER >= 1020)) || defined(__MCPP)
 #pragma once
 #endif // Check for "#pragma once" support
 
 #include <Windows.h>
-#ifndef _ATL_USE_CSTRING
-#   define _ATL_USE_CSTRING
-#endif // _ATL_USE_CSTRING
-#ifndef _WTL_NO_CSTRING
-#   define _WTL_NO_CSTRING
-#endif // _WTL_NO_CSTRING
-#include <atlstr.h>
+#include <tchar.h>
+#include <cstdio>
+#pragma comment(lib, "delayimp")
 
 class CVersionInfo
 {
@@ -69,15 +65,21 @@ public:
                             UINT uLen;
                             if (::VerQueryValue(m_lpVerInfo, _T("\\"), (LPVOID*)&m_pFixedFileInfo, &uLen))
                             {
+#ifdef ATLTRACE2
                                 ATLTRACE2(_T("%u.%u\n"), HIWORD(m_pFixedFileInfo->dwFileVersionMS), LOWORD(m_pFixedFileInfo->dwFileVersionMS));
+#endif // ATLTRACE2
                                 DWORD* translations;
                                 if (::VerQueryValue(m_lpVerInfo, _T("\\VarFileInfo\\Translation"), (LPVOID*)&translations, &uLen))
                                 {
                                     size_t const numTranslations = uLen / sizeof(DWORD);
+#ifdef ATLTRACE2
                                     ATLTRACE2(_T("Number of translations: %u\n"), (UINT)numTranslations);
+#endif // ATLTRACE2
                                     for (size_t i = 0; i < numTranslations; i++)
                                     {
+#ifdef ATLTRACE2
                                         ATLTRACE2(_T("Translation %u: %08X\n"), (UINT)i, translations[i]);
+#endif // ATLTRACE2
                                         switch (LOWORD(translations[i]))
                                         {
                                         case MAKELANGID(LANG_NEUTRAL, SUBLANG_NEUTRAL): // fall through
@@ -110,17 +112,37 @@ public:
 
     LPCTSTR operator[](LPCTSTR lpszKey) const
     {
-        ATL::CString fullName;
-        fullName.Format(_T("\\StringFileInfo\\%04X%04X\\%s"), LOWORD(m_useTranslation), HIWORD(m_useTranslation), lpszKey);
-        ATLTRACE2(_T("Full name: %s\n"), fullName.GetString());
+        if (!lpszKey)
+        {
+            return NULL;
+        }
+        size_t const addend = MAX_PATH;
+        if(_tcslen(lpszKey) >= addend)
+        {
+            return NULL;
+        }
+        TCHAR const fmtstr[] = _T("\\StringFileInfo\\%04X%04X\\%s");
+        //_tprintf(_T("Size of fmtstr = %d\n"), sizeof(fmtstr));
+        size_t const fmtbuflen = sizeof(fmtstr)/sizeof(fmtstr[0]) + addend;
+        TCHAR fullName[fmtbuflen] = {0};
+        _stprintf_s(fullName, fmtbuflen, fmtstr, LOWORD(m_useTranslation), HIWORD(m_useTranslation), lpszKey);
+        fullName[fmtbuflen-1] = 0;
+
+#ifdef ATLTRACE2
+        ATLTRACE2(_T("Full name: %s\n"), fullName);
+#endif // ATLTRACE2
         UINT uLen = 0;
         LPTSTR lpszBuf = NULL;
         if (::VerQueryValue(m_lpVerInfo, fullName, (LPVOID*)&lpszBuf, &uLen))
         {
+#ifdef ATLTRACE2
             ATLTRACE2(_T("Value: %s\n"), lpszBuf);
+#endif // ATLTRACE2
             return lpszBuf;
         }
+#ifdef ATLTRACE2
         ATLTRACE2(_T("Value: NULL\n"));
+#endif // ATLTRACE2
         return NULL;
     }
 };

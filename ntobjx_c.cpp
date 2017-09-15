@@ -28,16 +28,16 @@ void PrintDirectory(Directory& current, ATL::CString Prefix = _T(""))
         if(directory)
         {
             CString newPrefix(Prefix + _T("  "));
-            _tprintf(_T("%s%ws [%ws]\n"), Prefix.GetString(), directory->name(), directory->type());
+            _tprintf(_T("%s%ws [%ws]\n"), Prefix.GetString(), directory->name().GetString(), directory->type().GetString());
             PrintDirectory(*directory, newPrefix);
         }
         else if(symlink)
         {
-            _tprintf(_T("%s%ws [%ws] -> %ws\n"), Prefix.GetString(), symlink->name(), symlink->type(), symlink->target());
+            _tprintf(_T("%s%ws [%ws] -> %ws\n"), Prefix.GetString(), symlink->name().GetString(), symlink->type().GetString(), symlink->target().GetString());
         }
         else
         {
-            _tprintf(_T("%s%ws [%ws]\n"), Prefix.GetString(), entry->name(), entry->type());
+            _tprintf(_T("%s%ws [%ws]\n"), Prefix.GetString(), entry->name().GetString(), entry->type().GetString());
         }
     }
 }

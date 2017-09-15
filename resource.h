@@ -29,6 +29,8 @@
 #define IDS_OBJSPEC_NAME2_WINSTA        25
 #define IDS_OBJSPEC_NAME3_WINSTA        26
 #define IDS_URL_ONLINEHELP              27
+#define ID_OBJSEARCH_CAPTION            28
+#define ID_OBJSEARCH_TEXT               29
 #define IDD_PROPERTIES                  107
 #define IDR_POPUP_MENU1                 202
 #define IDD_ABOUT                       205

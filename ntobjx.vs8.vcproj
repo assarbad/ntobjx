@@ -27,7 +27,7 @@
 			>
 			<Tool
 				Name="VCPreBuildEventTool"
-				CommandLine="cl.exe /nologo /c /TC /Ob0 /Gz ntdll-stubs\ntdll-delayed-stubs.c &quot;/Fo$(IntDir)\ntdll-delayed-stubs.obj&quot;&#x0D;&#x0A;lib.exe /nologo &quot;/def:ntdll-stubs\ntdll-delayed.txt&quot; &quot;/out:$(IntDir)\ntdll-delayed.lib&quot; /machine:x86 &quot;$(IntDir)\ntdll-delayed-stubs.obj&quot;&#x0D;&#x0A;&quot;$(ProjectDir)\hgid.cmd&quot;&#x0D;&#x0A;"
+				CommandLine="cl.exe /nologo /c /TC /Ob0 /Gz ntdll-stubs\ntdll-delayed-stubs.c &quot;/Fo$(IntDir)\ntdll-delayed-stubs.obj&quot;&#x0D;&#x0A;lib.exe /nologo &quot;/def:ntdll-stubs\ntdll-delayed.txt&quot; &quot;/out:$(IntDir)\ntdll-delayed.lib&quot; /machine:x86 &quot;$(IntDir)\ntdll-delayed-stubs.obj&quot;&#x0D;&#x0A;&quot;$(ProjectDir)\hgid.cmd&quot;"
 			/>
 			<Tool
 				Name="VCCustomBuildTool"
@@ -46,15 +46,15 @@
 				Optimization="0"
 				AdditionalIncludeDirectories="wtl\Include;pugixml"
 				PreprocessorDefinitions="WIN32;_WINDOWS;STRICT;WINVER=0x0500"
+				MinimalRebuild="true"
 				BasicRuntimeChecks="3"
 				RuntimeLibrary="1"
 				EnableFunctionLevelLinking="true"
 				TreatWChar_tAsBuiltInType="true"
 				UsePrecompiledHeader="0"
-				ProgramDataBaseFileName="$(OutDir)\ntobjx32D.pdb"
 				WarningLevel="4"
 				Detect64BitPortabilityProblems="true"
-				DebugInformationFormat="3"
+				DebugInformationFormat="4"
 			/>
 			<Tool
 				Name="VCManagedResourceCompilerTool"
@@ -70,10 +70,10 @@
 			/>
 			<Tool
 				Name="VCLinkerTool"
-				AdditionalOptions="&quot;/libpath:$(IntDir)&quot; /pdbaltpath:%_PDB% /delay:nobind /delayload:ntdll-delayed.dll /delayload:version.dll"
+				AdditionalOptions="&quot;/libpath:$(IntDir)&quot; /delay:nobind /delayload:ntdll-delayed.dll /delayload:version.dll"
 				AdditionalDependencies="ntdll-delayed.lib version.lib"
 				OutputFile="$(OutDir)\ntobjx32D.exe"
-				LinkIncremental="1"
+				LinkIncremental="2"
 				AdditionalLibraryDirectories=""
 				GenerateDebugInformation="true"
 				SubSystem="2"
@@ -114,7 +114,7 @@
 			>
 			<Tool
 				Name="VCPreBuildEventTool"
-				CommandLine="lib.exe /nologo /nodefaultlib &quot;/def:ntdll-stubs\ntdll-delayed.txt&quot; &quot;/out:$(IntDir)\ntdll-delayed.lib&quot; /machine:x64&#x0D;&#x0A;&quot;$(ProjectDir)\hgid.cmd&quot;&#x0D;&#x0A;"
+				CommandLine="lib.exe /nologo /nodefaultlib &quot;/def:ntdll-stubs\ntdll-delayed.txt&quot; &quot;/out:$(IntDir)\ntdll-delayed.lib&quot; /machine:x64&#x0D;&#x0A;&quot;$(ProjectDir)\hgid.cmd&quot;"
 			/>
 			<Tool
 				Name="VCCustomBuildTool"
@@ -134,12 +134,12 @@
 				Optimization="0"
 				AdditionalIncludeDirectories="wtl\Include;pugixml"
 				PreprocessorDefinitions="WIN32;_WINDOWS;STRICT;WINVER=0x0501"
+				MinimalRebuild="true"
 				BasicRuntimeChecks="3"
 				RuntimeLibrary="1"
 				EnableFunctionLevelLinking="true"
 				TreatWChar_tAsBuiltInType="true"
 				UsePrecompiledHeader="0"
-				ProgramDataBaseFileName="$(OutDir)\ntobjx64D.pdb"
 				WarningLevel="4"
 				Detect64BitPortabilityProblems="true"
 				DebugInformationFormat="3"
@@ -158,10 +158,10 @@
 			/>
 			<Tool
 				Name="VCLinkerTool"
-				AdditionalOptions="&quot;/libpath:$(IntDir)&quot; /pdbaltpath:%_PDB% /delay:nobind /delayload:ntdll-delayed.dll /delayload:version.dll"
+				AdditionalOptions="&quot;/libpath:$(IntDir)&quot; /delay:nobind /delayload:ntdll-delayed.dll /delayload:version.dll"
 				AdditionalDependencies="ntdll-delayed.lib version.lib"
 				OutputFile="$(OutDir)\ntobjx64D.exe"
-				LinkIncremental="1"
+				LinkIncremental="2"
 				AdditionalLibraryDirectories=""
 				GenerateDebugInformation="true"
 				SubSystem="2"
@@ -202,7 +202,7 @@
 			>
 			<Tool
 				Name="VCPreBuildEventTool"
-				CommandLine="cl.exe /nologo /c /TC /Ob0 /Gz ntdll-stubs\ntdll-delayed-stubs.c &quot;/Fo$(IntDir)\ntdll-delayed-stubs.obj&quot;&#x0D;&#x0A;lib.exe /nologo &quot;/def:ntdll-stubs\ntdll-delayed.txt&quot; &quot;/out:$(IntDir)\ntdll-delayed.lib&quot; /machine:x86 &quot;$(IntDir)\ntdll-delayed-stubs.obj&quot;&#x0D;&#x0A;&quot;$(ProjectDir)\hgid.cmd&quot;&#x0D;&#x0A;"
+				CommandLine="cl.exe /nologo /c /TC /Ob0 /Gz ntdll-stubs\ntdll-delayed-stubs.c &quot;/Fo$(IntDir)\ntdll-delayed-stubs.obj&quot;&#x0D;&#x0A;lib.exe /nologo &quot;/def:ntdll-stubs\ntdll-delayed.txt&quot; &quot;/out:$(IntDir)\ntdll-delayed.lib&quot; /machine:x86 &quot;$(IntDir)\ntdll-delayed-stubs.obj&quot;&#x0D;&#x0A;&quot;$(ProjectDir)\hgid.cmd&quot;"
 			/>
 			<Tool
 				Name="VCCustomBuildTool"
@@ -227,7 +227,6 @@
 				EnableFunctionLevelLinking="true"
 				TreatWChar_tAsBuiltInType="true"
 				UsePrecompiledHeader="0"
-				ProgramDataBaseFileName="$(OutDir)\ntobjx32.pdb"
 				WarningLevel="4"
 				Detect64BitPortabilityProblems="true"
 				DebugInformationFormat="3"
@@ -246,7 +245,7 @@
 			/>
 			<Tool
 				Name="VCLinkerTool"
-				AdditionalOptions="&quot;/libpath:$(IntDir)&quot; /pdbaltpath:%_PDB% /delay:nobind /delayload:ntdll-delayed.dll /delayload:version.dll /release /subsystem:windows,5.00 /opt:nowin98"
+				AdditionalOptions="&quot;/libpath:$(IntDir)&quot; /delay:nobind /delayload:ntdll-delayed.dll /delayload:version.dll /release /subsystem:windows,5.00 /opt:nowin98"
 				AdditionalDependencies="ntdll-delayed.lib version.lib"
 				OutputFile="$(OutDir)\ntobjx32.exe"
 				LinkIncremental="1"
@@ -292,7 +291,7 @@
 			>
 			<Tool
 				Name="VCPreBuildEventTool"
-				CommandLine="lib.exe /nologo /nodefaultlib &quot;/def:ntdll-stubs\ntdll-delayed.txt&quot; &quot;/out:$(IntDir)\ntdll-delayed.lib&quot; /machine:x64&#x0D;&#x0A;&quot;$(ProjectDir)\hgid.cmd&quot;&#x0D;&#x0A;"
+				CommandLine="lib.exe /nologo /nodefaultlib &quot;/def:ntdll-stubs\ntdll-delayed.txt&quot; &quot;/out:$(IntDir)\ntdll-delayed.lib&quot; /machine:x64&#x0D;&#x0A;&quot;$(ProjectDir)\hgid.cmd&quot;"
 			/>
 			<Tool
 				Name="VCCustomBuildTool"
@@ -318,7 +317,6 @@
 				EnableFunctionLevelLinking="true"
 				TreatWChar_tAsBuiltInType="true"
 				UsePrecompiledHeader="0"
-				ProgramDataBaseFileName="$(OutDir)\ntobjx64.pdb"
 				WarningLevel="4"
 				Detect64BitPortabilityProblems="true"
 				DebugInformationFormat="3"
@@ -337,7 +335,7 @@
 			/>
 			<Tool
 				Name="VCLinkerTool"
-				AdditionalOptions="&quot;/libpath:$(IntDir)&quot; /pdbaltpath:%_PDB% /delay:nobind /delayload:ntdll-delayed.dll /delayload:version.dll /release /subsystem:windows,5.02 /opt:nowin98"
+				AdditionalOptions="&quot;/libpath:$(IntDir)&quot; /delay:nobind /delayload:ntdll-delayed.dll /delayload:version.dll /release /subsystem:windows,5.02 /opt:nowin98"
 				AdditionalDependencies="ntdll-delayed.lib version.lib"
 				OutputFile="$(OutDir)\ntobjx64.exe"
 				LinkIncremental="1"
@@ -380,45 +378,11 @@
 	<Files>
 		<Filter
 			Name="Header Files"
+			Filter=""
 			>
-			<File
-				RelativePath="exeversion.h"
-				>
-			</File>
-			<File
-				RelativePath="fake_commodule.hpp"
-				>
-			</File>
-			<File
-				RelativePath="ntnative.h"
-				>
-			</File>
-			<File
-				RelativePath="ntobjx.h"
-				>
-			</File>
-			<File
-				RelativePath="objmgr.hpp"
-				>
-			</File>
-			<File
-				RelativePath="objtypes.h"
-				>
-			</File>
-			<File
-				RelativePath="reslang.h"
-				>
-			</File>
-			<File
-				RelativePath="resource.h"
-				>
-			</File>
-			<File
-				RelativePath="stdafx.h"
-				>
-			</File>
 			<Filter
 				Name="Utility classes"
+				Filter=""
 				>
 				<File
 					RelativePath="util\LoadLibrary.h"
@@ -435,6 +399,7 @@
 			</Filter>
 			<Filter
 				Name="WTL"
+				Filter=""
 				>
 				<File
 					RelativePath="wtl\Include\atlapp.h"
@@ -525,9 +490,54 @@
 					>
 				</File>
 			</Filter>
+			<File
+				RelativePath="exeversion.h"
+				>
+			</File>
+			<File
+				RelativePath="fake_commodule.hpp"
+				>
+			</File>
+			<File
+				RelativePath="ntnative.h"
+				>
+			</File>
+			<File
+				RelativePath="ntobjx.h"
+				>
+			</File>
+			<File
+				RelativePath="objmgr.hpp"
+				>
+			</File>
+			<File
+				RelativePath="objtypes.h"
+				>
+			</File>
+			<File
+				RelativePath="reslang.h"
+				>
+			</File>
+			<File
+				RelativePath="resource.h"
+				>
+			</File>
+			<File
+				RelativePath="stdafx.h"
+				>
+			</File>
 		</Filter>
+		<File
+			RelativePath="LICENSE.txt"
+			>
+		</File>
+		<File
+			RelativePath="README.rst"
+			>
+		</File>
 		<Filter
 			Name="Resource Files"
+			Filter=""
 			>
 			<File
 				RelativePath="exeversion.rc"
@@ -544,6 +554,7 @@
 		</Filter>
 		<Filter
 			Name="Source Files"
+			Filter=""
 			>
 			<File
 				RelativePath="delayimp.cpp"
@@ -564,7 +575,17 @@
 		</Filter>
 		<Filter
 			Name="Special Files"
+			Filter=""
 			>
+			<Filter
+				Name="Module Definition Files"
+				Filter=""
+				>
+				<File
+					RelativePath="ntdll-stubs\ntdll-delayed.txt"
+					>
+				</File>
+			</Filter>
 			<File
 				RelativePath="hgid.cmd"
 				>
@@ -585,17 +606,10 @@
 				RelativePath="setvcvars.cmd"
 				>
 			</File>
-			<Filter
-				Name="Module Definition Files"
-				>
-				<File
-					RelativePath="ntdll-stubs\ntdll-delayed.txt"
-					>
-				</File>
-			</Filter>
 		</Filter>
 		<Filter
 			Name="pugixml"
+			Filter=""
 			>
 			<File
 				RelativePath="pugixml\pugiconfig.hpp"
@@ -606,18 +620,6 @@
 				>
 			</File>
 		</Filter>
-		<File
-			RelativePath="LICENSE.txt"
-			>
-		</File>
-		<File
-			RelativePath=".\res\ntobjx.ico"
-			>
-		</File>
-		<File
-			RelativePath="README.rst"
-			>
-		</File>
 	</Files>
 	<Globals>
 	</Globals>

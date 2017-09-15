@@ -6,7 +6,7 @@
 #pragma once
 
 #if !defined(_UNICODE) && !defined(UNICODE)
-#	error This applications must be built with _UNICODE defined.
+#   error This applications must be built with _UNICODE defined.
 #endif
 
 #ifdef NDEBUG

@@ -29,7 +29,7 @@
 ///////////////////////////////////////////////////////////////////////////////
 
 #ifndef __NTNATIVE_H_VER__
-#define __NTNATIVE_H_VER__ 2017062821
+#define __NTNATIVE_H_VER__ 2017071819
 #if (defined(_MSC_VER) && (_MSC_VER >= 1020)) || defined(__MCPP)
 #pragma once
 #endif // Check for "#pragma once" support
@@ -454,7 +454,13 @@ typedef struct _GENERATE_NAME_CONTEXT {
 } GENERATE_NAME_CONTEXT;
 typedef GENERATE_NAME_CONTEXT *PGENERATE_NAME_CONTEXT;
 
+#ifndef PIO_APC_ROUTINE_DEFINED
+#pragma warning(push) /* disable code analyzer warnings for ATL & WTL libraries */
+#pragma warning(disable:28301) /* warning C28301 : No annotations for first declaration of ... */
 typedef VOID (NTAPI *PIO_APC_ROUTINE) (__in PVOID ApcContext, __in PIO_STATUS_BLOCK IoStatusBlock, __in ULONG Reserved);
+#define PIO_APC_ROUTINE_DEFINED
+#pragma warning(pop) /* restore code analyzer warnings*/
+#endif // PIO_APC_ROUTINE_DEFINED
 
 NTSTATUS
 NTAPI

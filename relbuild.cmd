@@ -1,8 +1,9 @@
 @echo off
 setlocal ENABLEEXTENSIONS & pushd .
-set PRJNAME=ntobjx_release
-set SIGURL=https://bitbucket.org/assarbad/ntobjx
-set SIGDESC=ntobjx: NT Objects
+set TGTNAME=ntobjx
+set PRJNAME=%TGTNAME%_release
+set SIGURL=https://bitbucket.org/assarbad/%TGTNAME%
+set SIGDESC=%TGTNAME%: NT Objects
 premake4.exe --release vs2005
 call "%~dp0setvcvars.cmd" 2005
 :: premake4.exe --release --xp vs2017
@@ -17,9 +18,9 @@ set SEVENZIP=%ProgramFiles%\7-Zip\7z.exe
 if not exist "%SEVENZIP%" set SEVENZIP=%ProgramFiles(x86)%\7-Zip\7z.exe
 for /f %%i in ('hg id -i') do @set RELEASE=%%i
 for /f %%i in ('hg id -n') do @set RELEASE=%%i-%RELEASE%
-set RELARCHIVE=%~dp0ntobjx-%RELEASE%.7z
+set RELARCHIVE=%~dp0%TGTNAME%-%RELEASE%.7z
 if exist "%SEVENZIP%" @(
-    pushd "%~dp0ntobjx_release"
+    pushd "%~dp0%PRJNAME%"
     "%SEVENZIP%" a -y -t7z "%RELARCHIVE%" "*.exe" "*.pdb"
     gpg -ba %RELARCHIVE%
     popd

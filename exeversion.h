@@ -21,8 +21,8 @@
 /// DEALINGS IN THE SOFTWARE.
 ///
 ///////////////////////////////////////////////////////////////////////////////
-#ifndef __EXEVERSION_H_VERSION__
-#define __EXEVERSION_H_VERSION__ 2017070913
+#ifndef __EXEVERSION_H_VER__
+#define __EXEVERSION_H_VER__ 2017070913
 
 #if defined(_MSC_VER) && (_MSC_VER >= 1020)
 #pragma once
@@ -73,4 +73,4 @@
 #define CREATE_FVER(maj,min,patch,build) maj ## . ## min ## . ## patch ## . ## build
 #define CREATE_PVER(maj,min,patch,build) maj ## . ## min ## . ## patch
 
-#endif // __EXEVERSION_H_VERSION__
+#endif // __EXEVERSION_H_VER__

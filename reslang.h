@@ -47,9 +47,9 @@ EXTERN_C BOOL HookLdrFindResource_U(HINSTANCE resmodule);
 
 // This class ensures on Windows XP and earlier that the SetThreadLocale()
 // function will get the exact LANGID of available resources matching a
-// given primary LANGID
-// Example:
-// If the app contains resources for
+// given primary LANGID. This way we work around the quirky decision making
+// process regarding resource selection in older versions of Windows
+// (pre-Vista).
 class CLanguageSetter
 {
     typedef LANGID(WINAPI * TFNSetThreadUILanguage)(LANGID LangId);

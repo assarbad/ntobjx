@@ -104,6 +104,13 @@ using WTL::CFileDialog;
 #define WM_SELECT_TREEVIEW_DIRECTORY (WM_USER+102)
 #define WM_DIRECTORY_UP              (WM_USER+103)
 
+#ifndef LVS_EX_DOUBLEBUFFER
+#   define LVS_EX_DOUBLEBUFFER     0x00010000
+#endif
+#ifndef TVS_EX_DOUBLEBUFFER
+#   define TVS_EX_DOUBLEBUFFER     0x0004
+#endif
+
 // Handler prototypes (uncomment arguments if needed):
 //  LRESULT MessageHandler(UINT /*uMsg*/, WPARAM /*wParam*/, LPARAM /*lParam*/, BOOL& /*bHandled*/)
 //  LRESULT CommandHandler(WORD /*wNotifyCode*/, WORD /*wID*/, HWND /*hWndCtl*/, BOOL& /*bHandled*/)
@@ -453,8 +460,8 @@ private:
 #   pragma comment(lib, "aclui.lib")
 #endif // !DDKBUILD
 
-class CObjectPropertySheet :
-    public CPropertySheetImpl<CObjectPropertySheet>
+template <typename T> class CObjectPropertySheetT :
+    public CPropertySheetImpl<CObjectPropertySheetT<T> >
 {
     class CObjectSecurityNAPage :
         public CPropertyPageImpl<CObjectSecurityNAPage>
@@ -510,8 +517,7 @@ class CObjectPropertySheet :
                     m_edtExplanation.SetWindowText(sStatus);
                 }
             }
-            LONG oldStyle = m_edtExplanation.GetWindowLong(GWL_STYLE);
-            m_edtExplanation.SetWindowLong(GWL_STYLE, oldStyle & ~ES_NOHIDESEL);
+            m_edtExplanation.ModifyStyle(ES_NOHIDESEL, 0);
             m_edtExplanation.SetSelNone(TRUE);
 
             NONCLIENTMETRICS ncm = { 0 };
@@ -685,8 +691,7 @@ class CObjectPropertySheet :
                 }
             }
 
-            LONG oldStyle = m_edtExplanation.GetWindowLong(GWL_STYLE);
-            m_edtExplanation.SetWindowLong(GWL_STYLE, oldStyle & ~ES_NOHIDESEL);
+            m_edtExplanation.ModifyStyle(ES_NOHIDESEL, 0);
             m_edtExplanation.SetSelNone(TRUE);
 
             return TRUE;
@@ -1179,7 +1184,7 @@ class CObjectPropertySheet :
     };
 #endif // !DDKBUILD
 
-    typedef CPropertySheetImpl<CObjectPropertySheet> baseClass;
+    typedef CPropertySheetImpl<CObjectPropertySheetT<T> > baseClass;
     GenericObject* m_obj;
     ObjectHandle   m_objHdl;
     CObjectDetailsPage m_details;
@@ -1188,12 +1193,12 @@ class CObjectPropertySheet :
 #endif // !DDKBUILD
     ATL::CAutoPtr<CObjectSecurityNAPage> m_securityNA;
 public:
-    BEGIN_MSG_MAP(CObjectPropertySheet)
+    BEGIN_MSG_MAP(CObjectPropertySheetT<T>)
         MESSAGE_HANDLER(WM_INITDIALOG, OnInitDialog)
         CHAIN_MSG_MAP(baseClass)
     END_MSG_MAP()
 
-    CObjectPropertySheet(GenericObject* obj, CObjectImageList& imagelist)
+    CObjectPropertySheetT(GenericObject* obj, T& imagelist)
 #       pragma warning(suppress: 6387)
         : baseClass((LPCTSTR)NULL, 0, NULL)
         , m_obj(obj)
@@ -1233,7 +1238,7 @@ public:
         SetTitle(obj->name(), PSH_PROPTITLE);
     }
 
-    ~CObjectPropertySheet()
+    ~CObjectPropertySheetT()
     {
         m_obj = 0;
     }
@@ -1244,6 +1249,7 @@ public:
         return TRUE;
     }
 };
+typedef CObjectPropertySheetT<CObjectImageList> CObjectPropertySheet;
 
 template <typename T>
 class CHyperLinkCtxMenuImpl : public CHyperLinkImpl<T>
@@ -1431,11 +1437,11 @@ typedef CWinTraitsOR<WS_TABSTOP | TVS_HASLINES | TVS_HASBUTTONS | TVS_SHOWSELALW
 typedef CWinTraitsOR<WS_TABSTOP | LVS_SHAREIMAGELISTS | LVS_SINGLESEL, LVS_EX_FULLROWSELECT | LVS_EX_INFOTIP, CSortListViewCtrlTraits> CNtObjectsListViewTraits;
 typedef CWinTraitsOR<WS_TABSTOP | LVS_SHAREIMAGELISTS | LVS_SINGLESEL, LVS_EX_FULLROWSELECT | LVS_EX_INFOTIP, CSortListViewCtrlTraits> CNtObjectsFindResultsTraits;
 
-class CNtObjectsTreeView :
-    public CWindowImpl<CNtObjectsTreeView, CTreeViewCtrlEx, CNtObjectsTreeViewTraits>
+template <typename T> class CNtObjectsTreeViewT :
+    public CWindowImpl<CNtObjectsTreeViewT<T>, CTreeViewCtrlEx, CNtObjectsTreeViewTraits>
 {
     typedef CAtlMap<Directory*, HTREEITEM> CReverseDirTreeMap;
-    typedef CWindowImpl<CNtObjectsTreeView, CTreeViewCtrlEx, CNtObjectsTreeViewTraits> baseClass;
+    typedef CWindowImpl<CNtObjectsTreeViewT<T>, CTreeViewCtrlEx, CNtObjectsTreeViewTraits> baseClass;
 
     bool m_bInitialized;
     Directory m_objroot;
@@ -1447,7 +1453,7 @@ public:
     DECLARE_WND_SUPERCLASS(_T("NtObjectsTreeView"), CTreeViewCtrlEx::GetWndClassName())
     /*lint -restore */
 
-    BEGIN_MSG_MAP(CNtObjectsTreeView)
+    BEGIN_MSG_MAP(CNtObjectsTreeViewT<T>)
         MESSAGE_HANDLER(WM_CONTEXTMENU, OnContextMenu)
         NOTIFY_CODE_HANDLER(TVN_ITEMEXPANDING, OnTVItemExpanding)
         NOTIFY_CODE_HANDLER(TVN_GETINFOTIP, OnGetInfoTip)
@@ -1455,7 +1461,7 @@ public:
         DEFAULT_REFLECTION_HANDLER()
     END_MSG_MAP()
 
-    CNtObjectsTreeView()
+    CNtObjectsTreeViewT()
         : m_bInitialized(false)
         , m_hFrameWnd(NULL)
     {}
@@ -1734,19 +1740,20 @@ private:
         }
     }
 };
+typedef CNtObjectsTreeViewT<CObjectImageList> CNtObjectsTreeView;
 
-class CNtObjectsListView :
-    public CSortListViewCtrlImpl<CNtObjectsListView, CListViewCtrl, CNtObjectsListViewTraits>
+template <typename T> class CNtObjectsListViewT :
+    public CSortListViewCtrlImpl<CNtObjectsListViewT<T>, CListViewCtrl, CNtObjectsListViewTraits>
 {
     HWND m_hFrameWnd;
-    CObjectImageList* m_pimagelist;
-    typedef CSortListViewCtrlImpl<CNtObjectsListView, CListViewCtrl, CNtObjectsListViewTraits> baseClass;
+    T& m_imagelist;
+    typedef CSortListViewCtrlImpl<CNtObjectsListViewT<T>, CListViewCtrl, CNtObjectsListViewTraits> baseClass;
 public:
     /*lint -save -e446 */
     DECLARE_WND_SUPERCLASS(_T("NtObjectsListView"), CListViewCtrl::GetWndClassName())
     /*lint -restore */
 
-    BEGIN_MSG_MAP(CNtObjectsListView)
+    BEGIN_MSG_MAP(CNtObjectsListView<T>)
         MESSAGE_HANDLER(WM_CONTEXTMENU, OnContextMenu)
         MESSAGE_HANDLER(WM_GETDLGCODE, OnGetDlgCode)
         MESSAGE_HANDLER(WM_LBUTTONDBLCLK, OnDoubleClick)
@@ -1759,19 +1766,11 @@ public:
         CHAIN_MSG_MAP(baseClass)
     END_MSG_MAP()
 
-    CNtObjectsListView(HWND hFrameWnd = NULL)
+    CNtObjectsListViewT(T& imagelist)
         : baseClass()
-        , m_hFrameWnd(hFrameWnd)
-        , m_pimagelist(NULL)
+        , m_hFrameWnd(NULL)
+        , m_imagelist(imagelist)
     {}
-
-    HWND Create(HWND hWndParent, CObjectImageList& imagelist, ATL::_U_RECT rect = NULL, LPCTSTR szWindowName = NULL,
-        DWORD dwStyle = 0, DWORD dwExStyle = 0,
-        ATL::_U_MENUorID MenuOrID = 0U, LPVOID lpCreateParam = NULL)
-    {
-        m_pimagelist = &imagelist;
-        return baseClass::Create(hWndParent, rect, szWindowName, dwStyle, dwExStyle, MenuOrID, lpCreateParam);
-    }
 
     inline void setFrameWindow(HWND hFrameWnd)
     {
@@ -1782,19 +1781,12 @@ public:
     {
         CSuppressRedraw suppressRedraw(m_hWnd);
         DeleteAllItems();
-        ATLASSERT(m_pimagelist != NULL);
-#ifndef _DEBUG
-        if(!m_pimagelist)
+        if(::IsWindow(m_hWnd) && !m_imagelist.IsNull())
         {
-            return; // Avoid outright crash
-        }
-#endif // !_DEBUG
-        if(::IsWindow(m_hWnd) && !m_pimagelist->IsNull())
-        {
-            (void)SetImageList(*m_pimagelist, LVSIL_SMALL);
+            (void)SetImageList(m_imagelist, LVSIL_SMALL);
         }
         resetAllColumns_();
-        ATLASSERT(!m_pimagelist->IsNull());
+        ATLASSERT(!m_imagelist.IsNull());
         ATLTRACE2(_T("%hs: %s\n"), __func__, current.fullname().GetString());
         // To determine the required width for each column
         int widths[] = {-1, -1, -1};
@@ -1806,7 +1798,7 @@ public:
                 , current[i]->name()
                 , 0
                 , 0
-                , m_pimagelist->IndexByObjType(current[i])
+                , m_imagelist.IndexByObjType(current[i])
                 , reinterpret_cast<LPARAM>(current[i])
                 );
             int const nameWidth = GetStringWidth(current[i]->name());
@@ -2062,7 +2054,7 @@ public:
     }
 
     // If item1 > item2 return 1, if item1 < item2 return -1, else return 0.
-    int compareItemsCustom(LVCompareParam* pItem1, LVCompareParam* pItem2, int iSortCol)
+    int CompareItemsCustom(LVCompareParam* pItem1, LVCompareParam* pItem2, int iSortCol)
     {
         if(!iSortCol)
         {
@@ -2185,13 +2177,15 @@ private:
         }
     }
 };
+typedef CNtObjectsListViewT<CObjectImageList> CNtObjectsListView;
 
-class CNtObjectsFindResults :
-    public CSortListViewCtrlImpl<CNtObjectsFindResults, CListViewCtrl, CNtObjectsFindResultsTraits>
+#if 0
+template <typename T> class CNtObjectsFindResultsT :
+    public CSortListViewCtrlImpl<CNtObjectsFindResultsT<T>, CListViewCtrl, CNtObjectsFindResultsTraits>
 {
     HWND m_hFrameWnd;
-    CObjectImageList* m_pimagelist;
-    typedef CSortListViewCtrlImpl<CNtObjectsFindResults, CListViewCtrl, CNtObjectsListViewTraits> baseClass;
+    CObjectImageList& m_imagelist;
+    typedef CSortListViewCtrlImpl<CNtObjectsFindResultsT<T>, CListViewCtrl, CNtObjectsFindResultsTraits> baseClass;
 public:
     /*lint -save -e446 */
     DECLARE_WND_SUPERCLASS(_T("NtObjectsFindResults"), CListViewCtrl::GetWndClassName())
@@ -2202,33 +2196,56 @@ public:
         CHAIN_MSG_MAP(baseClass)
     END_MSG_MAP()
 
-    CNtObjectsFindResults(HWND hFrameWnd = NULL)
+    CNtObjectsFindResultsT(T& imagelist)
         : baseClass()
-        , m_hFrameWnd(hFrameWnd)
-        , m_pimagelist(NULL)
+        , m_hFrameWnd(NULL)
+        , m_imagelist(imagelist)
     {}
-
-    HWND Create(HWND hWndParent, CObjectImageList& imagelist, ATL::_U_RECT rect = NULL, LPCTSTR szWindowName = NULL,
-        DWORD dwStyle = 0, DWORD dwExStyle = 0,
-        ATL::_U_MENUorID MenuOrID = 0U, LPVOID lpCreateParam = NULL)
-    {
-        m_pimagelist = &imagelist;
-        return baseClass::Create(hWndParent, rect, szWindowName, dwStyle, dwExStyle, MenuOrID, lpCreateParam);
-    }
 
     inline void setFrameWindow(HWND hFrameWnd)
     {
         m_hFrameWnd = hFrameWnd;
     }
 };
+#endif // 0
 
-#ifndef LVS_EX_DOUBLEBUFFER
-#   define LVS_EX_DOUBLEBUFFER     0x00010000
-#endif
-#ifndef TVS_EX_DOUBLEBUFFER
-#   define TVS_EX_DOUBLEBUFFER     0x0004
-#endif
+class CSearchPane : public CPaneContainerImpl<CSearchPane>
+{
+    typedef CPaneContainerImpl<CSearchPane> baseClass;
 
+    UINT m_strID;
+public:
+    DECLARE_WND_CLASS(_T("SearchPane"))
+
+    BEGIN_MSG_MAP(CSearchPane)
+        DEFAULT_REFLECTION_HANDLER()
+        CHAIN_MSG_MAP(baseClass)
+        FORWARD_NOTIFICATIONS()
+    END_MSG_MAP()
+
+    CSearchPane(UINT strID)
+        : baseClass()
+        , m_strID(strID)
+    {
+        SetPaneContainerExtendedStyle(PANECNT_VERTICAL, PANECNT_VERTICAL);
+    }
+
+    HWND Create(HWND hWndParent, LPCTSTR lpstrTitle = NULL)
+    {
+        CString caption;
+        if(!lpstrTitle)
+        {
+            ATLVERIFY(caption.LoadString(m_strID));
+            lpstrTitle = caption.GetString();
+        }
+        return baseClass::Create(hWndParent, lpstrTitle);
+    }
+
+
+/*
+*/
+
+};
 
 class CNtObjectsStatusBar : public CMultiPaneStatusBarCtrlImpl<CNtObjectsStatusBar>
 {
@@ -2445,18 +2462,18 @@ public:
     DECLARE_FRAME_WND_CLASS(_T("NtObjectsMainFrame"), IDR_MAINFRAME)
 
     CLanguageSetter& m_langSetter;
+    CObjectImageList m_imagelist;
     CNtObjectsStatusBar m_status;
     CNtObjectsSplitter m_vsplit;
     CNtObjectsFoundSplitter m_hsplit;
     CNtObjectsTreeView m_treeview;
     CNtObjectsListView m_listview;
-    CNtObjectsFindResults m_findresults;
+    CSearchPane m_searchPane;
     bool m_bFirstOnIdle;
     GenericObject* m_activeObject;
     CVersionInfo m_verinfo;
     CVisitedListT<Directory*> m_visitedList;
     HRESULT (CALLBACK* DllGetVersion)(DLLVERSIONINFO *);
-    CObjectImageList m_imagelist;
     CAccessToken m_Token;
     const bool m_bIsAdmin;
     const bool m_bIsElevated;
@@ -2465,11 +2482,14 @@ public:
 
     CNtObjectsMainFrame(OSVERSIONINFOEXW const& osvix)
         : m_langSetter(gLangSetter)
+        , m_imagelist()
+        , m_treeview()
+        , m_listview(m_imagelist)
+        , m_searchPane(ID_OBJSEARCH_CAPTION)
         , m_bFirstOnIdle(true) // to force initial refresh
         , m_activeObject(0)
         , m_verinfo(ModuleHelper::GetResourceInstance())
         , DllGetVersion(0)
-        , m_imagelist()
         , m_bIsAdmin(isUserAdmin() != FALSE)
         , m_bIsElevated(isElevated() != FALSE)
         , m_currentLang(m_langSetter.set())
@@ -2530,8 +2550,8 @@ public:
         ATLVERIFY(NULL != createSplitter_(m_vsplit, m_hsplit));
 
         ATLVERIFY(NULL != m_treeview.Create(m_vsplit));
-        ATLVERIFY(NULL != m_listview.Create(m_vsplit, m_imagelist));
-        ATLVERIFY(NULL != m_findresults.Create(m_hsplit, m_imagelist));
+        ATLVERIFY(NULL != m_listview.Create(m_vsplit));
+        ATLVERIFY(NULL != m_searchPane.Create(m_hsplit));
 
         ATLASSERT(::IsWindow(m_hWndStatusBar));
         ATLASSERT(::IsWindow(m_hsplit) && (m_hWndClient == m_hsplit));
@@ -2543,7 +2563,7 @@ public:
         ATLTRACE2(_T("Control ID for horizontal splitter: %i\n"), ::GetDlgCtrlID(m_hsplit));
         ATLTRACE2(_T("Control ID for treeview: %i\n"), ::GetDlgCtrlID(m_treeview));
         ATLTRACE2(_T("Control ID for listview: %i\n"), ::GetDlgCtrlID(m_listview));
-        ATLVERIFY(::IsWindow(m_findresults));
+        ATLVERIFY(::IsWindow(m_searchPane));
         ATLASSERT(m_treeview == ::GetDlgItem(m_vsplit, ::GetDlgCtrlID(m_treeview)));
         ATLASSERT(m_listview == ::GetDlgItem(m_vsplit, ::GetDlgCtrlID(m_listview)));
         ATLASSERT(m_hsplit == ::GetDlgItem(m_hWnd, ::GetDlgCtrlID(m_hsplit)));
@@ -2556,7 +2576,7 @@ public:
         ATLVERIFY(m_vsplit.SetSplitterPane(SPLIT_PANE_LEFT, m_treeview));
         ATLVERIFY(m_vsplit.SetSplitterPane(SPLIT_PANE_RIGHT, m_listview));
         ATLVERIFY(m_hsplit.SetSplitterPane(SPLIT_PANE_TOP, m_vsplit));
-        ATLVERIFY(m_hsplit.SetSplitterPane(SPLIT_PANE_BOTTOM, m_findresults));
+        ATLVERIFY(m_hsplit.SetSplitterPane(SPLIT_PANE_BOTTOM, m_searchPane));
 
         UpdateLayout();
 
@@ -3394,9 +3414,8 @@ private:
     template<typename T> HWND createSplitter_(T& splitter, HWND hWndParent, bool bFullDrag = true)
     {
         HWND hWndSplitter = splitter.Create(hWndParent, rcDefault, NULL, WS_CHILD | WS_VISIBLE | WS_CLIPSIBLINGS | WS_CLIPCHILDREN);
-        // Add WS_EX_CONTROLPARENT such that tab stops work
-        LONG_PTR exStyle = ::GetWindowLongPtr(hWndSplitter, GWL_EXSTYLE);
-        ::SetWindowLongPtr(hWndSplitter, GWL_EXSTYLE, exStyle | WS_EX_CONTROLPARENT);
+        // Add WS_EX_CONTROLPARENT such that tab stops will work
+        splitter.ModifyStyleEx(0, WS_EX_CONTROLPARENT);
         // The splitter should be smaller than the default width
         splitter.m_cxySplitBar = 3;
         splitter.m_bFullDrag = bFullDrag; // enable/disable ghost bar instead of full "live" drag
@@ -3410,14 +3429,18 @@ private:
             DLLVERSIONINFO dllvi = {sizeof(DLLVERSIONINFO), 0, 0, 0, 0};
             if(SUCCEEDED(DllGetVersion(&dllvi)) && dllvi.dwMajorVersion >= 6)
             {
-                m_treeview.SetExtendedStyle(TVS_EX_DOUBLEBUFFER, TVS_EX_DOUBLEBUFFER);
+                m_treeview.ModifyStyleEx(0, TVS_EX_DOUBLEBUFFER);
                 m_listview.SetExtendedListViewStyle(CNtObjectsListViewTraits::GetWndExStyle(LVS_EX_DOUBLEBUFFER));
+/*
                 m_findresults.SetExtendedListViewStyle(CNtObjectsFindResultsTraits::GetWndExStyle(LVS_EX_DOUBLEBUFFER));
+*/
             }
             else
             {
                 m_listview.SetExtendedListViewStyle(CNtObjectsListViewTraits::GetWndExStyle(0));
+/*
                 m_findresults.SetExtendedListViewStyle(CNtObjectsFindResultsTraits::GetWndExStyle(0));
+*/
             }
         }
         else
@@ -3430,7 +3453,9 @@ private:
     {
         m_treeview.setFrameWindow(m_hWnd); // make the frame window known to the treeview control
         m_listview.setFrameWindow(m_hWnd); // make the frame window known to the listview control
+/*
         m_findresults.setFrameWindow(m_hWnd); // make the frame window known to the listview control for found objects
+*/
     }
 
 };

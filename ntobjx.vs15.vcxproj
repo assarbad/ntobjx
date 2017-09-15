@@ -69,14 +69,14 @@
     <IntDir>intermediate\vs2017_$(Platform)_$(Configuration)\$(ProjectName)\</IntDir>
     <TargetName>ntobjx32D</TargetName>
     <TargetExt>.exe</TargetExt>
-    <LinkIncremental>false</LinkIncremental>
+    <LinkIncremental>true</LinkIncremental>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
     <OutDir>build\</OutDir>
     <IntDir>intermediate\vs2017_$(Platform)_$(Configuration)\$(ProjectName)\</IntDir>
     <TargetName>ntobjx64D</TargetName>
     <TargetExt>.exe</TargetExt>
-    <LinkIncremental>false</LinkIncremental>
+    <LinkIncremental>true</LinkIncremental>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
     <OutDir>build\</OutDir>
@@ -97,7 +97,7 @@
       <Optimization>Disabled</Optimization>
       <AdditionalIncludeDirectories>wtl\Include;pugixml;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <PreprocessorDefinitions>WIN32;_WINDOWS;STRICT;WINVER=0x0501;%(PreprocessorDefinitions)</PreprocessorDefinitions>
-      <MinimalRebuild>false</MinimalRebuild>
+      <MinimalRebuild>true</MinimalRebuild>
       <BasicRuntimeChecks>EnableFastChecks</BasicRuntimeChecks>
       <SmallerTypeCheck>true</SmallerTypeCheck>
       <RuntimeLibrary>MultiThreadedDebug</RuntimeLibrary>
@@ -105,8 +105,7 @@
       <PrecompiledHeader></PrecompiledHeader>
       <WarningLevel>Level4</WarningLevel>
       <TreatWChar_tAsBuiltInType>true</TreatWChar_tAsBuiltInType>
-      <DebugInformationFormat>ProgramDatabase</DebugInformationFormat>
-      <ProgramDataBaseFileName>$(OutDir)ntobjx32D.pdb</ProgramDataBaseFileName>
+      <DebugInformationFormat>EditAndContinue</DebugInformationFormat>
     </ClCompile>
     <ResourceCompile>
       <PreprocessorDefinitions>WIN32;_WINDOWS;STRICT;WINVER=0x0501;%(PreprocessorDefinitions)</PreprocessorDefinitions>
@@ -118,7 +117,7 @@
       <AdditionalDependencies>ntdll-delayed.lib;version.lib;%(AdditionalDependencies)</AdditionalDependencies>
       <OutputFile>$(OutDir)ntobjx32D.exe</OutputFile>
       <TargetMachine>MachineX86</TargetMachine>
-      <AdditionalOptions>&quot;/libpath:$(IntDir)&quot; /pdbaltpath:%_PDB% /delay:nobind /delayload:ntdll-delayed.dll /delayload:version.dll %(AdditionalOptions)</AdditionalOptions>
+      <AdditionalOptions>&quot;/libpath:$(IntDir)&quot; /delay:nobind /delayload:ntdll-delayed.dll /delayload:version.dll %(AdditionalOptions)</AdditionalOptions>
     </Link>
     <PreBuildEvent>
       <Command>cl.exe /nologo /c /TC /Ob0 /Gz ntdll-stubs\ntdll-delayed-stubs.c &quot;/Fo$(IntDir)\ntdll-delayed-stubs.obj&quot;&#x0D;&#x0A;lib.exe /nologo &quot;/def:ntdll-stubs\ntdll-delayed.txt&quot; &quot;/out:$(IntDir)\ntdll-delayed.lib&quot; /machine:x86 &quot;$(IntDir)\ntdll-delayed-stubs.obj&quot;&#x0D;&#x0A;&quot;$(ProjectDir)\hgid.cmd&quot;</Command>
@@ -129,7 +128,7 @@
       <Optimization>Disabled</Optimization>
       <AdditionalIncludeDirectories>wtl\Include;pugixml;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <PreprocessorDefinitions>WIN32;_WINDOWS;STRICT;WINVER=0x0501;%(PreprocessorDefinitions)</PreprocessorDefinitions>
-      <MinimalRebuild>false</MinimalRebuild>
+      <MinimalRebuild>true</MinimalRebuild>
       <BasicRuntimeChecks>EnableFastChecks</BasicRuntimeChecks>
       <SmallerTypeCheck>true</SmallerTypeCheck>
       <RuntimeLibrary>MultiThreadedDebug</RuntimeLibrary>
@@ -138,7 +137,6 @@
       <WarningLevel>Level4</WarningLevel>
       <TreatWChar_tAsBuiltInType>true</TreatWChar_tAsBuiltInType>
       <DebugInformationFormat>ProgramDatabase</DebugInformationFormat>
-      <ProgramDataBaseFileName>$(OutDir)ntobjx64D.pdb</ProgramDataBaseFileName>
     </ClCompile>
     <ResourceCompile>
       <PreprocessorDefinitions>WIN32;_WINDOWS;STRICT;WINVER=0x0501;%(PreprocessorDefinitions)</PreprocessorDefinitions>
@@ -150,7 +148,7 @@
       <AdditionalDependencies>ntdll-delayed.lib;version.lib;%(AdditionalDependencies)</AdditionalDependencies>
       <OutputFile>$(OutDir)ntobjx64D.exe</OutputFile>
       <TargetMachine>MachineX64</TargetMachine>
-      <AdditionalOptions>&quot;/libpath:$(IntDir)&quot; /pdbaltpath:%_PDB% /delay:nobind /delayload:ntdll-delayed.dll /delayload:version.dll %(AdditionalOptions)</AdditionalOptions>
+      <AdditionalOptions>&quot;/libpath:$(IntDir)&quot; /delay:nobind /delayload:ntdll-delayed.dll /delayload:version.dll %(AdditionalOptions)</AdditionalOptions>
     </Link>
     <PreBuildEvent>
       <Command>lib.exe /nologo /nodefaultlib &quot;/def:ntdll-stubs\ntdll-delayed.txt&quot; &quot;/out:$(IntDir)\ntdll-delayed.lib&quot; /machine:x64&#x0D;&#x0A;&quot;$(ProjectDir)\hgid.cmd&quot;</Command>
@@ -170,7 +168,6 @@
       <WarningLevel>Level4</WarningLevel>
       <TreatWChar_tAsBuiltInType>true</TreatWChar_tAsBuiltInType>
       <DebugInformationFormat>ProgramDatabase</DebugInformationFormat>
-      <ProgramDataBaseFileName>$(OutDir)ntobjx32.pdb</ProgramDataBaseFileName>
     </ClCompile>
     <ResourceCompile>
       <PreprocessorDefinitions>WIN32;_WINDOWS;STRICT;NDEBUG;WINVER=0x0501;%(PreprocessorDefinitions)</PreprocessorDefinitions>
@@ -184,7 +181,7 @@
       <AdditionalDependencies>ntdll-delayed.lib;version.lib;%(AdditionalDependencies)</AdditionalDependencies>
       <OutputFile>$(OutDir)ntobjx32.exe</OutputFile>
       <TargetMachine>MachineX86</TargetMachine>
-      <AdditionalOptions>&quot;/libpath:$(IntDir)&quot; /pdbaltpath:%_PDB% /delay:nobind /delayload:ntdll-delayed.dll /delayload:version.dll /release /subsystem:windows,5.01 %(AdditionalOptions)</AdditionalOptions>
+      <AdditionalOptions>&quot;/libpath:$(IntDir)&quot; /delay:nobind /delayload:ntdll-delayed.dll /delayload:version.dll /release /subsystem:windows,5.01 %(AdditionalOptions)</AdditionalOptions>
     </Link>
     <PreBuildEvent>
       <Command>cl.exe /nologo /c /TC /Ob0 /Gz ntdll-stubs\ntdll-delayed-stubs.c &quot;/Fo$(IntDir)\ntdll-delayed-stubs.obj&quot;&#x0D;&#x0A;lib.exe /nologo &quot;/def:ntdll-stubs\ntdll-delayed.txt&quot; &quot;/out:$(IntDir)\ntdll-delayed.lib&quot; /machine:x86 &quot;$(IntDir)\ntdll-delayed-stubs.obj&quot;&#x0D;&#x0A;&quot;$(ProjectDir)\hgid.cmd&quot;</Command>
@@ -204,7 +201,6 @@
       <WarningLevel>Level4</WarningLevel>
       <TreatWChar_tAsBuiltInType>true</TreatWChar_tAsBuiltInType>
       <DebugInformationFormat>ProgramDatabase</DebugInformationFormat>
-      <ProgramDataBaseFileName>$(OutDir)ntobjx64.pdb</ProgramDataBaseFileName>
     </ClCompile>
     <ResourceCompile>
       <PreprocessorDefinitions>WIN32;_WINDOWS;STRICT;NDEBUG;WINVER=0x0501;%(PreprocessorDefinitions)</PreprocessorDefinitions>
@@ -218,7 +214,7 @@
       <AdditionalDependencies>ntdll-delayed.lib;version.lib;%(AdditionalDependencies)</AdditionalDependencies>
       <OutputFile>$(OutDir)ntobjx64.exe</OutputFile>
       <TargetMachine>MachineX64</TargetMachine>
-      <AdditionalOptions>&quot;/libpath:$(IntDir)&quot; /pdbaltpath:%_PDB% /delay:nobind /delayload:ntdll-delayed.dll /delayload:version.dll /release /subsystem:windows,5.02 %(AdditionalOptions)</AdditionalOptions>
+      <AdditionalOptions>&quot;/libpath:$(IntDir)&quot; /delay:nobind /delayload:ntdll-delayed.dll /delayload:version.dll /release /subsystem:windows,5.02 %(AdditionalOptions)</AdditionalOptions>
     </Link>
     <PreBuildEvent>
       <Command>lib.exe /nologo /nodefaultlib &quot;/def:ntdll-stubs\ntdll-delayed.txt&quot; &quot;/out:$(IntDir)\ntdll-delayed.lib&quot; /machine:x64&#x0D;&#x0A;&quot;$(ProjectDir)\hgid.cmd&quot;</Command>
