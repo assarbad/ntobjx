@@ -29,7 +29,7 @@
 ///////////////////////////////////////////////////////////////////////////////
 
 #ifndef __NTNATIVE_H_VER__
-#define __NTNATIVE_H_VER__ 2017071819
+#define __NTNATIVE_H_VER__ 2017091820
 #if (defined(_MSC_VER) && (_MSC_VER >= 1020)) || defined(__MCPP)
 #pragma once
 #endif // Check for "#pragma once" support
@@ -107,15 +107,15 @@
 #   define RtlFillMemory(Destination,Length,Fill) memset((Destination),(Fill),(Length))
 #   define RtlZeroMemory(Destination,Length) memset((Destination),0,(Length))
 
-    __kernel_entry NTSTATUS
-        NTAPI
-        NtClose (
+    NTSTATUS
+    NTAPI
+    NtClose(
         __in HANDLE Handle
     );
 
     VOID
-        NTAPI
-        RtlInitUnicodeString (
+    NTAPI
+    RtlInitUnicodeString(
         PUNICODE_STRING DestinationString,
         PCWSTR SourceString
     );
@@ -462,6 +462,75 @@ typedef VOID (NTAPI *PIO_APC_ROUTINE) (__in PVOID ApcContext, __in PIO_STATUS_BL
 #pragma warning(pop) /* restore code analyzer warnings*/
 #endif // PIO_APC_ROUTINE_DEFINED
 
+typedef enum _NT_FILE_INFORMATION_CLASS
+{
+    FileInformationDirectory = 1,
+    FileInformationFullDirectory, //  2
+    FileInformationBothDirectory, //  3
+    FileInformationBasic, //  4
+    FileInformationStandard, //  5
+    FileInformationInternal, //  6
+    FileInformationEa, //  7
+    FileInformationAccess, //  8
+    FileInformationName, //  9
+    FileInformationRename, //  10
+    FileInformationLink, //  11
+    FileInformationNames, //  12
+    FileInformationDisposition, //  13
+    FileInformationPosition, //  14
+    FileInformationFullEa, //  15
+    FileInformationMode, //  16
+    FileInformationAlignment, //  17
+    FileInformationAll, //  18
+    FileInformationAllocation, //  19
+    FileInformationEndOfFile, //  20
+    FileInformationAlternateName, //  21
+    FileInformationStream, //  22
+    FileInformationPipe, //  23
+    FileInformationPipeLocal, //  24
+    FileInformationPipeRemote, //  25
+    FileInformationMailslotQuery, //  26
+    FileInformationMailslotSet, //  27
+    FileInformationCompression, //  28
+    FileInformationObjectId, //  29
+    FileInformationCompletion, //  30
+    FileInformationMoveCluster, //  31
+    FileInformationQuota, //  32
+    FileInformationReparsePoint, //  33
+    FileInformationNetworkOpen, //  34
+    FileInformationAttributeTag, //  35
+    FileInformationTracking, //  36
+    FileInformationIdBothDirectory, //  37
+    FileInformationIdFullDirectory, //  38
+    FileInformationValidDataLength, //  39
+    FileInformationShortName, //  40
+    FileInformationIoCompletionNotification, //  41
+    FileInformationIoStatusBlockRange, //  42
+    FileInformationIoPriorityHint, //  43
+    FileInformationSfioReserve, //  44
+    FileInformationSfioVolume, //  45
+    FileInformationHardLink, //  46
+    FileInformationProcessIdsUsingFile, //  47
+    FileInformationNormalizedName, //  48
+    FileInformationNetworkPhysicalName, //  49
+    FileInformationIdGlobalTxDirectory, //  50
+    FileInformationIsRemoteDevice, //  51
+    FileInformationAttributeCache, //  52
+    FileInformationMaximum,
+} NT_FILE_INFORMATION_CLASS, *PNT_FILE_INFORMATION_CLASS;
+
+#pragma pack(push, 4)
+typedef struct _FILE_STREAM_INFORMATION
+{
+    ULONG NextEntryOffset;
+    ULONG StreamNameLength;
+    LARGE_INTEGER StreamSize;
+    LARGE_INTEGER StreamAllocationSize;
+    WCHAR StreamName[1];
+} FILE_STREAM_INFORMATION, *PFILE_STREAM_INFORMATION;
+#pragma pack(pop)
+
+#ifndef DYNAMIC_NTNATIVE
 NTSTATUS
 NTAPI
 RtlGetVersion(
@@ -471,7 +540,7 @@ RtlGetVersion(
 PIMAGE_NT_HEADERS
 NTAPI
 RtlImageNtHeader(
-    IN PVOID Base
+    __in PVOID Base
 );
 
 PVOID
@@ -509,7 +578,7 @@ NtQueryIoCompletion(
     __in IO_COMPLETION_INFORMATION_CLASS InformationClass,
     __out PVOID IoCompletionInformation,
     __in ULONG InformationBufferLength,
-    __out PULONG RequiredLength OPTIONAL
+    __out_opt PULONG RequiredLength
 );
 
 NTSTATUS
@@ -539,7 +608,7 @@ NtQuerySection(
     __in SECTION_INFORMATION_CLASS SectionInformationClass,
     __out PVOID SectionInformation,
     __in ULONG SectionInformationLength,
-    __out PULONG ReturnLength OPTIONAL
+    __out_opt PULONG ReturnLength
  );
 
 NTSTATUS
@@ -549,7 +618,7 @@ NtQueryTimer(
     __in TIMER_INFORMATION_CLASS TimerInformationClass,
     __out PVOID TimerInformation,
     __in ULONG TimerInformationLength,
-    __out PULONG ReturnLength OPTIONAL
+    __out_opt PULONG ReturnLength
 );
 
 NTSTATUS
@@ -570,22 +639,6 @@ NtQueryDirectoryObject(
     __in BOOLEAN RestartScan,
     __inout PULONG Context,
     __out_opt PULONG ReturnLength
-);
-
-NTSTATUS
-NTAPI
-NtQueryDirectoryFile(
-    __in HANDLE FileHandle,
-    __in_opt HANDLE Event,
-    __in_opt PIO_APC_ROUTINE ApcRoutine,
-    __in_opt PVOID ApcContext,
-    __out PIO_STATUS_BLOCK IoStatusBlock,
-    __out_bcount(Length) PVOID FileInformation,
-    __in ULONG Length,
-    __in FILE_INFORMATION_CLASS FileInformationClass,
-    __in BOOLEAN ReturnSingleEntry,
-    __in_opt PUNICODE_STRING FileName,
-    __in BOOLEAN RestartScan
 );
 
 NTSTATUS
@@ -741,8 +794,8 @@ RtlDowncaseUnicodeString(
 NTSTATUS /* VOID in pre-Vista*/
 NTAPI
 RtlGenerate8dot3Name(
-    __in    PCUNICODE_STRING Name,
-    __in    BOOLEAN AllowExtendedCharacters,
+    __in PCUNICODE_STRING Name,
+    __in BOOLEAN AllowExtendedCharacters,
     __inout PGENERATE_NAME_CONTEXT Context,
     __inout PUNICODE_STRING Name8dot3
 );
@@ -788,6 +841,32 @@ NtUnmapViewOfSection(
     __in_opt PVOID BaseAddress
 );
 
+NTSTATUS
+NTAPI
+NtQueryDirectoryFile(
+    __in HANDLE FileHandle,
+    __in_opt HANDLE Event,
+    __in_opt PIO_APC_ROUTINE ApcRoutine,
+    __in_opt PVOID ApcContext,
+    __out PIO_STATUS_BLOCK IoStatusBlock,
+    __out_bcount(Length) PVOID FileInformation,
+    __in ULONG Length,
+    __in NT_FILE_INFORMATION_CLASS FileInformationClass,
+    __in BOOLEAN ReturnSingleEntry,
+    __in_opt PUNICODE_STRING FileName,
+    __in BOOLEAN RestartScan
+);
+
+NTSTATUS
+NTAPI
+NtQueryInformationFile(
+    __in HANDLE FileHandle,
+    __out PIO_STATUS_BLOCK IoStatusBlock,
+    __out_bcount(Length) PVOID FileInformation,
+    __in ULONG Length,
+    __in NT_FILE_INFORMATION_CLASS FileInformationClass
+);
+
 #if defined(DDKBUILD)
 NTSTATUS
 NTAPI
@@ -800,7 +879,7 @@ NtQueryObject(
    );
 
 NTSTATUS
-NTAPI 
+NTAPI
 NtOpenFile(
     __out PHANDLE FileHandle,
     __in ACCESS_MASK DesiredAccess,
@@ -810,6 +889,77 @@ NtOpenFile(
     __in ULONG OpenOptions
 );
 #endif // DDKBUILD
+#else
+typedef NTSTATUS (NTAPI *RtlGetVersion_t)(LPOSVERSIONINFOEXW);
+typedef PIMAGE_NT_HEADERS (NTAPI *RtlImageNtHeader_t)(__in PVOID);
+typedef PVOID (NTAPI *RtlImageDirectoryEntryToData_t)(__in PVOID, __in BOOLEAN, __in USHORT, __out PULONG);
+typedef PVOID (NTAPI *RtlImageRvaToVa_t)(__in PIMAGE_NT_HEADERS, __in PVOID, __in ULONG, __inout_opt PIMAGE_SECTION_HEADER *);
+typedef NTSTATUS (NTAPI *NtQueryEvent_t)(__in HANDLE, __in EVENT_INFORMATION_CLASS, __out PVOID, __in ULONG, __out_opt PULONG);
+typedef NTSTATUS (NTAPI *NtQueryIoCompletion_t)(__in HANDLE, __in IO_COMPLETION_INFORMATION_CLASS, __out PVOID, __in ULONG, __out_opt PULONG);
+typedef NTSTATUS (NTAPI *NtQueryMutant_t)(__in HANDLE, __in MUTANT_INFORMATION_CLASS, __out PVOID, __in ULONG, __out_opt PULONG);
+typedef NTSTATUS (NTAPI *NtQuerySemaphore_t)(__in HANDLE, __in SEMAPHORE_INFORMATION_CLASS, __out PVOID, __in ULONG, __out_opt PULONG);
+typedef NTSTATUS (NTAPI *NtQuerySection_t)(__in HANDLE, __in SECTION_INFORMATION_CLASS, __out PVOID, __in ULONG, __out PULONG);
+typedef NTSTATUS (NTAPI *NtQueryTimer_t)(__in HANDLE, __in TIMER_INFORMATION_CLASS, __out PVOID, __in ULONG, __out PULONG);
+typedef NTSTATUS (NTAPI *NtOpenDirectoryObject_t)(__out PHANDLE, __in ACCESS_MASK, __in POBJECT_ATTRIBUTES);
+typedef NTSTATUS (NTAPI *NtQueryDirectoryObject_t)(__in HANDLE, __out PVOID, __in ULONG, __in BOOLEAN, __in BOOLEAN, __inout PULONG, __out_opt PULONG);
+typedef NTSTATUS (NTAPI *NtOpenSymbolicLinkObject_t)(__out PHANDLE, __in ACCESS_MASK, __in POBJECT_ATTRIBUTES);
+typedef NTSTATUS (NTAPI *NtQuerySymbolicLinkObject_t)(__in HANDLE, __inout PUNICODE_STRING, __out_opt PULONG);
+typedef NTSTATUS (NTAPI *NtOpenEvent_t)(__out PHANDLE, __in ACCESS_MASK, __in POBJECT_ATTRIBUTES);
+typedef NTSTATUS (NTAPI *NtOpenMutant_t)(__out PHANDLE, __in ACCESS_MASK, __in POBJECT_ATTRIBUTES);
+typedef NTSTATUS (NTAPI *NtOpenSection_t)(__out PHANDLE, __in ACCESS_MASK, __in POBJECT_ATTRIBUTES);
+typedef NTSTATUS (NTAPI *NtOpenTimer_t)(__out PHANDLE, __in ACCESS_MASK, __in POBJECT_ATTRIBUTES);
+typedef NTSTATUS (NTAPI *NtOpenSemaphore_t)(__out PHANDLE, __in ACCESS_MASK, __in POBJECT_ATTRIBUTES);
+typedef NTSTATUS (NTAPI *NtOpenEventPair_t)(__out PHANDLE, __in ACCESS_MASK, __in POBJECT_ATTRIBUTES);
+typedef NTSTATUS (NTAPI *NtOpenIoCompletion_t)(__out PHANDLE, __in ACCESS_MASK, __in POBJECT_ATTRIBUTES);
+typedef NTSTATUS (NTAPI *NtOpenKey_t)(__out PHANDLE, __in ACCESS_MASK, __in POBJECT_ATTRIBUTES);
+typedef NTSTATUS (NTAPI *NtCreateKey_t)(__out PHANDLE, __in ACCESS_MASK, __in POBJECT_ATTRIBUTES, __reserved ULONG, __in_opt PUNICODE_STRING, __in ULONG, __out_opt PULONG);
+typedef NTSTATUS (NTAPI *NtEnumerateKey_t)(__in HANDLE, __in ULONG, __in KEY_INFORMATION_CLASS, __out PVOID, __in ULONG, __out PULONG);
+typedef NTSTATUS (NTAPI *NtEnumerateValueKey_t)(__in HANDLE, __in ULONG, __in KEY_VALUE_INFORMATION_CLASS, __out PVOID, __in ULONG, __out PULONG);
+typedef NTSTATUS (NTAPI *NtQueryKey_t)(__in HANDLE, __in KEY_INFORMATION_CLASS, __out PVOID, __in ULONG, __out PULONG);
+typedef NTSTATUS (NTAPI *NtQueryValueKey_t)(__in HANDLE, __in PUNICODE_STRING, __in KEY_VALUE_INFORMATION_CLASS, __out PVOID, __in ULONG, __out PULONG);
+typedef NTSTATUS (NTAPI *RtlValidateUnicodeString_t)(__in __reserved ULONG, __in PCUNICODE_STRING);
+typedef NTSTATUS (NTAPI *RtlDowncaseUnicodeString_t)(PUNICODE_STRING, __in PCUNICODE_STRING, __in BOOLEAN);
+typedef NTSTATUS (NTAPI *RtlGenerate8dot3Name_t)(__in PCUNICODE_STRING, __in BOOLEAN, __inout PGENERATE_NAME_CONTEXT, __inout PUNICODE_STRING);
+typedef NTSTATUS (NTAPI *RtlVolumeDeviceToDosName_t)(__in PVOID, __out PUNICODE_STRING);
+typedef NTSTATUS (NTAPI *NtCreateSection_t)(__out PHANDLE, __in ACCESS_MASK, __in_opt POBJECT_ATTRIBUTES, __in_opt PLARGE_INTEGER, __in ULONG, __in ULONG, __in_opt HANDLE);
+typedef NTSTATUS (NTAPI *NtMapViewOfSection_t)(__in HANDLE, __in HANDLE, __inout PVOID *, __in ULONG_PTR, __in SIZE_T, __inout_opt PLARGE_INTEGER, __inout PSIZE_T, __in SECTION_INHERIT, __in ULONG, __in ULONG);
+typedef NTSTATUS (NTAPI *NtUnmapViewOfSection_t)(__in HANDLE, __in_opt PVOID);
+typedef NTSTATUS (NTAPI *NtQueryDirectoryFile_t)(__in HANDLE, __in_opt HANDLE, __in_opt PIO_APC_ROUTINE, __in_opt PVOID, __out PIO_STATUS_BLOCK, __out PVOID, __in ULONG, __in NT_FILE_INFORMATION_CLASS, __in BOOLEAN, __in_opt PUNICODE_STRING, __in BOOLEAN);
+typedef NTSTATUS (NTAPI *NtQueryInformationFile_t)(__in HANDLE, __out PIO_STATUS_BLOCK, __out PVOID, __in ULONG, __in NT_FILE_INFORMATION_CLASS);
+typedef NTSTATUS (NTAPI *NtQueryObject_t)(__in_opt HANDLE, __in OBJECT_INFORMATION_CLASS, __out PVOID, __in ULONG, __out_opt PULONG);
+typedef NTSTATUS (NTAPI *NtOpenFile_t)(__out PHANDLE, __in ACCESS_MASK, __in POBJECT_ATTRIBUTES, __out PIO_STATUS_BLOCK, __in ULONG, __in ULONG);
+
+/*
+  Use this to declare a variable of the name of a native function and of its
+  proper type.
+    Example     : NTNATIVE_FUNC(RtlGetVersion);
+    Expands to  : RtlGetVersion_t RtlGetVersion;
+*/
+#define NTNATIVE_FUNC(x) x##_t x
+/*
+  Use to retrieve a function's pointer by passing a handle. Uses GetProcAddress()
+  to do the job.
+    Example     : NTNATIVE_GETPROCADDR(hNtDll, RtlGetVersion);
+    Expands to  : GetProcAddress(hNtDll, "RtlGetVersion");
+*/
+#define NTNATIVE_GETPROCADDR(mod, x) GetProcAddress(mod, #x)
+/*
+  Use to declare a variable of the same name as the function and assign it the
+  function's pointer by passing a module handle. Uses GetProcAddress() to do the
+  job.
+    Example     : NTNATIVE_DEFFUNC(hNtDll, RtlGetVersion);
+    Expands to  : RtlGetVersion_t RtlGetVersion = (RtlGetVersion_t)GetProcAddress(hNtDll, "RtlGetVersion");
+*/
+#define NTNATIVE_DEFFUNC(mod, x) NTNATIVE_FUNC(x) = (x##_t)NTNATIVE_GETPROCADDR(mod, x)
+/*
+  Use to declare a variable of the same name as the function and assign it the
+  function's pointer. Uses GetProcAddress() to do the job.
+    Example     : NTDLL_DEFFUNC(RtlGetVersion);
+    Expands to  : RtlGetVersion_t RtlGetVersion = (RtlGetVersion_t)GetProcAddress(hNtDll, "RtlGetVersion");
+*/
+#define NTDLL_DEFFUNC(x) NTNATIVE_DEFFUNC(hNtDll, x)
+
+#endif
 
 #define ZwClose NtClose
 #define ZwCreateFile NtCreateFile
@@ -829,7 +979,6 @@ NtOpenFile(
 #define ZwQueryTimer NtQueryTimer
 #define ZwOpenDirectoryObject NtOpenDirectoryObject
 #define ZwQueryDirectoryObject NtQueryDirectoryObject
-#define ZwQueryDirectoryFile NtQueryDirectoryFile
 #define ZwOpenSymbolicLinkObject NtOpenSymbolicLinkObject
 #define ZwQuerySymbolicLinkObject NtQuerySymbolicLinkObject
 #define ZwOpenEvent NtOpenEvent
@@ -847,6 +996,8 @@ NtOpenFile(
 #define ZwCreateSection NtCreateSection
 #define ZwMapViewOfSection NtMapViewOfSection
 #define ZwUnmapViewOfSection NtUnmapViewOfSection
+#define ZwQueryDirectoryFile NtQueryDirectoryFile
+#define ZwQueryInformationFile NtQueryInformationFile
 
 #if defined(__cplusplus)
 }

@@ -29,14 +29,16 @@
 ///////////////////////////////////////////////////////////////////////////////
 
 #ifndef __VERSIONINFO_H_VER__
-#define __VERSIONINFO_H_VER__ 2017091422
+#define __VERSIONINFO_H_VER__ 2017091820
 #if (defined(_MSC_VER) && (_MSC_VER >= 1020)) || defined(__MCPP)
 #pragma once
 #endif // Check for "#pragma once" support
 
 #include <Windows.h>
 #include <tchar.h>
+#pragma warning(disable:4995)
 #include <cstdio>
+#pragma warning(default:4995)
 #pragma comment(lib, "delayimp")
 
 class CVersionInfo
@@ -122,7 +124,6 @@ public:
             return NULL;
         }
         TCHAR const fmtstr[] = _T("\\StringFileInfo\\%04X%04X\\%s");
-        //_tprintf(_T("Size of fmtstr = %d\n"), sizeof(fmtstr));
         size_t const fmtbuflen = sizeof(fmtstr)/sizeof(fmtstr[0]) + addend;
         TCHAR fullName[fmtbuflen] = {0};
         _stprintf_s(fullName, fmtbuflen, fmtstr, LOWORD(m_useTranslation), HIWORD(m_useTranslation), lpszKey);

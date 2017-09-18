@@ -121,6 +121,15 @@
     <ClInclude Include="pugixml\pugixml.hpp">
       <Filter>pugixml</Filter>
     </ClInclude>
+    <ClInclude Include="util\LoadLibrary.h">
+      <Filter>Header Files\Utility classes</Filter>
+    </ClInclude>
+    <ClInclude Include="util\SimpleBuffer.h">
+      <Filter>Header Files\Utility classes</Filter>
+    </ClInclude>
+    <ClInclude Include="util\VersionInfo.h">
+      <Filter>Header Files\Utility classes</Filter>
+    </ClInclude>
     <ClInclude Include="exeversion.h">
       <Filter>Header Files</Filter>
     </ClInclude>
@@ -141,15 +150,6 @@
     </ClInclude>
     <ClInclude Include="stdafx.h">
       <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="util\LoadLibrary.h">
-      <Filter>Header Files\Utility classes</Filter>
-    </ClInclude>
-    <ClInclude Include="util\SimpleBuffer.h">
-      <Filter>Header Files\Utility classes</Filter>
-    </ClInclude>
-    <ClInclude Include="util\VersionInfo.h">
-      <Filter>Header Files\Utility classes</Filter>
     </ClInclude>
     <ClInclude Include="fake_commodule.hpp">
       <Filter>Header Files</Filter>

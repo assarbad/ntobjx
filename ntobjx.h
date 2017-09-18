@@ -78,7 +78,6 @@
 #include "util/LoadLibrary.h"
 #include "util/VersionInfo.h"
 #ifndef NTOBJX_NO_XML_EXPORT
-#define _ALLOW_RTCc_IN_STL
 #pragma warning(push) /* disable code analyzer warnings pugixml library */
 #pragma warning(disable:4995)
 #pragma warning(disable:6384) /* warning C6384: Dividing sizeof a pointer by another value. */

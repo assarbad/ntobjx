@@ -7,6 +7,7 @@
   ]]
 local action = _ACTION or ""
 local release = false
+local tgtname = "ntobjx"
 local cmdline = false
 if _OPTIONS["cmdline"] then
     cmdline = true
@@ -213,20 +214,19 @@ if _OPTIONS["msvcrt"] then
     end
 end
 
-solution ("ntobjx" .. iif(release, "_release", ""))
+solution (tgtname .. iif(release, "_release", ""))
     configurations  (iif(release, {"Release"}, {"Debug", "Release"}))
     platforms       (iif(_ACTION < "vs2005", {"x32"}, {"x32", "x64"}))
     location        ('.')
 
-    -- Main ntobjx project
-    project ("ntobjx" .. iif(release, "_release", ""))
+    project (tgtname .. iif(release, "_release", ""))
         local int_dir   = iif(release, "release_", "").."intermediate/" .. action .. "_$(" .. transformMN("Platform") .. ")_$(" .. transformMN("Configuration") .. ")\\$(ProjectName)"
         uuid            ("DE5A7539-C36C-4F2E-9CE3-18087DC72346")
         language        ("C++")
         kind            ("WindowedApp")
-        targetname      ("ntobjx")
+        targetname      (tgtname)
         flags           {"Unicode", "NativeWChar", "ExtraWarnings", "WinMain",}
-        targetdir       (iif(release, slnname, "build"))
+        targetdir       (iif(release, tgtname .. "_release", "build"))
         includedirs     {"wtl/Include", "pugixml"}
         objdir          (int_dir)
         links           {"ntdll-delayed", "version"}
@@ -296,7 +296,7 @@ solution ("ntobjx" .. iif(release, "_release", ""))
             flags           {"Symbols",}
 
         configuration {"*"}
-            prebuildcommands{"\"$(ProjectDir)\\hgid.cmd\"",}
+            prebuildcommands{"call \"$(ProjectDir)\\hgid.cmd\"",}
 
         configuration {"x64"}
             prebuildcommands{"lib.exe /nologo /nodefaultlib \"/def:ntdll-stubs\\ntdll-delayed.txt\" \"/out:$(IntDir)\\ntdll-delayed.lib\" /machine:x64",}
@@ -323,7 +323,7 @@ solution ("ntobjx" .. iif(release, "_release", ""))
             linkoptions     {"/subsystem:windows,5.02"}
 
         configuration {"vs2013 or vs2015 or vs2017"}
-            defines         {"WINVER=0x0501"}
+            defines         {"WINVER=0x0501", "_ALLOW_RTCc_IN_STL"}
 
         configuration {"vs2002 or vs2003 or vs2005 or vs2008 or vs2010 or vs2012", "x32"}
             defines         {"WINVER=0x0500"}
@@ -336,14 +336,14 @@ solution ("ntobjx" .. iif(release, "_release", ""))
 
     if cmdline then
         -- ntobjx_c project
-        project (iif(release, slnname, "ntobjx_c"))
+        project (tgtname .. "_c" .. iif(release, "_release", ""))
             local int_dir   = iif(release, "release_", "").."intermediate/" .. action .. "_$(" .. transformMN("Platform") .. ")_$(" .. transformMN("Configuration") .. ")\\$(ProjectName)"
             uuid            ("CA1F91D0-7D7E-4A9C-9DD1-6C65C2F37A59")
             language        ("C++")
             kind            ("ConsoleApp")
-            targetname      ("ntobjx_c")
+            targetname      (tgtname .. "_c")
             flags           {"StaticRuntime", "Unicode", "NativeWChar", "ExtraWarnings", "WinMain", "NoMinimalRebuild", "NoIncrementalLink", "NoEditAndContinue", "NoPCH"}
-            targetdir       (iif(release, slnname, "build"))
+            targetdir       (iif(release, tgtname .. "_release", "build"))
             objdir          (int_dir)
             links           {"ntdll-delayed"}
             resoptions      {"/nologo", "/l409"}
