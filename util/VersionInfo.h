@@ -6,7 +6,7 @@
 ///
 ///////////////////////////////////////////////////////////////////////////////
 ///
-/// Copyright (c) 2016 Oliver Schneider (assarbad.net)
+/// Copyright (c) 2016, 2017 Oliver Schneider (assarbad.net)
 ///
 /// Permission is hereby granted, free of charge, to any person obtaining a
 /// copy of this software and associated documentation files (the "Software"),
@@ -61,7 +61,7 @@ public:
                 {
                     if (LPVOID pVerInfoRO = ::LockResource(hVersionResourceData))
                     {
-                        if (NULL != (m_lpVerInfo = ::LocalAlloc(LMEM_FIXED, dwSize)))
+                        if (NULL != (m_lpVerInfo = ::LocalAlloc(LPTR, dwSize)))
                         {
                             ::CopyMemory(m_lpVerInfo, pVerInfoRO, dwSize);
                             UINT uLen;
@@ -110,11 +110,12 @@ public:
     virtual ~CVersionInfo()
     {
         ::LocalFree(m_lpVerInfo);
+        m_lpVerInfo = NULL;
     }
 
     LPCTSTR operator[](LPCTSTR lpszKey) const
     {
-        if (!lpszKey)
+        if (!m_lpVerInfo || !lpszKey)
         {
             return NULL;
         }
