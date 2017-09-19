@@ -29,7 +29,7 @@
 ///////////////////////////////////////////////////////////////////////////////
 
 #ifndef __NTNATIVE_H_VER__
-#define __NTNATIVE_H_VER__ 2017091921
+#define __NTNATIVE_H_VER__ 2017091922
 #if (defined(_MSC_VER) && (_MSC_VER >= 1020)) || defined(__MCPP)
 #pragma once
 #endif // Check for "#pragma once" support
@@ -594,7 +594,7 @@ typedef enum
     RtlPathTypeRootLocalDevice,
 } RTL_PATH_TYPE;
 
-#ifndef DYNAMIC_NTNATIVE
+#if !defined(DYNAMIC_NTNATIVE) || (!DYNAMIC_NTNATIVE)
 NTSTATUS
 NTAPI
 RtlGetVersion(
@@ -1029,7 +1029,8 @@ NtOpenFile(
     _In_ ULONG OpenOptions
 );
 #endif // DDKBUILD
-#else
+#endif // DYNAMIC_NTNATIVE
+
 typedef NTSTATUS (NTAPI *RtlGetVersion_t)(LPOSVERSIONINFOEXW);
 typedef PIMAGE_NT_HEADERS (NTAPI *RtlImageNtHeader_t)(_In_ PVOID);
 typedef PVOID (NTAPI *RtlImageDirectoryEntryToData_t)(_In_ PVOID, _In_ BOOLEAN, _In_ USHORT, _Out_ PULONG);
@@ -1108,8 +1109,6 @@ typedef NTSTATUS (NTAPI *NtOpenFile_t)(_Out_ PHANDLE, _In_ ACCESS_MASK, _In_ POB
     Expands to  : RtlGetVersion_t RtlGetVersion = (RtlGetVersion_t)GetProcAddress(hNtDll, "RtlGetVersion");
 */
 #define NTDLL_DEFFUNC(x) NTNATIVE_DEFFUNC(hNtDll, x)
-
-#endif
 
 #define ZwClose NtClose
 #define ZwCreateFile NtCreateFile
