@@ -229,19 +229,28 @@ solution (tgtname .. iif(release, "_release", ""))
         targetdir       (iif(release, tgtname .. "_release", "build"))
         includedirs     {"wtl/Include", "pugixml"}
         objdir          (int_dir)
+        libdirs         {"$(IntDir)"}
         links           {"ntdll-delayed", "version"}
         resoptions      {"/nologo", "/l409"}
         resincludedirs  {".", "$(IntDir)"}
-        linkoptions     {"\"/libpath:$(IntDir)\"", "/delay:nobind","/delayload:ntdll-delayed.dll","/delayload:version.dll"}
+        linkoptions     {"/delay:nobind","/delayload:ntdll-delayed.dll","/delayload:version.dll"}
         defines         {"WIN32", "_WINDOWS", "STRICT"}
         if not _OPTIONS["msvcrt"] then
             flags       {"StaticRuntime"}
         end
 
+        excludes
+        {
+            "ntobjx_c.cpp",
+            "ntobjx.txt",
+            "hgid.h",
+            "Backup*.*",
+        }
+
         files
         {
-            "wtl/Include/*.h",
             "ntdll-stubs/*.txt",
+            "wtl/Include/*.h",
             "pugixml/*.hpp",
             "util/*.h", "util/*.hpp",
             "*.rc",
@@ -250,12 +259,6 @@ solution (tgtname .. iif(release, "_release", ""))
             "*.hpp",
             "*.manifest",
             "*.cmd", "*.txt", "*.md", "*.rst", "premake4.lua",
-        }
-
-        excludes
-        {
-            "ntobjx_c.cpp",
-            "hgid.h", "ntobjx.txt",
         }
 
         vpaths
@@ -270,6 +273,15 @@ solution (tgtname .. iif(release, "_release", ""))
             ["Special Files/Module Definition Files/*"] = { "ntdll-stubs/*.txt", },
         }
 
+        configuration {"*"}
+            prebuildcommands{"call \"$(ProjectDir)\\hgid.cmd\"",}
+
+        configuration {"x64"}
+            prebuildcommands{"lib.exe /nologo /nodefaultlib \"/def:ntdll-stubs\\ntdll-delayed.txt\" \"/out:$(IntDir)\\ntdll-delayed.lib\" /machine:x64",}
+
+        configuration {"x32"}
+            prebuildcommands{"cl.exe /nologo /c /TC /Ob0 /Gz ntdll-stubs\\ntdll-delayed-stubs.c \"/Fo$(IntDir)\\ntdll-delayed-stubs.obj\"", "lib.exe /nologo \"/def:ntdll-stubs\\ntdll-delayed.txt\" \"/out:$(IntDir)\\ntdll-delayed.lib\" /machine:x86 \"$(IntDir)\\ntdll-delayed-stubs.obj\"",}
+
         configuration {"Debug", "x32"}
             targetsuffix    ("32D")
 
@@ -281,7 +293,6 @@ solution (tgtname .. iif(release, "_release", ""))
             if _OPTIONS["msvcrt"] then
                 links       {"comdlg32", "$(WLHBASE)\\lib\\crt\\i386\\msvcrt.lib", "$(WLHBASE)\\lib\\w2k\\i386\\strsafe.lib", "$(WLHBASE)\\lib\\w2k\\i386\\msvcrt_win2000.obj"}
                 defines     {"USE_W2K_COMPAT"}
-                linkoptions {"/delayload:msvcrt.dll",}
             end
 
         configuration {"Release", "x64"}
@@ -289,23 +300,14 @@ solution (tgtname .. iif(release, "_release", ""))
             if _OPTIONS["msvcrt"] then
                 links       {"comdlg32", "$(WLHBASE)\\lib\\crt\\amd64\\msvcrt.lib", "$(WLHBASE)\\lib\\wnet\\amd64\\strsafe.lib", "$(WLHBASE)\\lib\\wnet\\amd64\\msvcrt_win2003.obj"}
                 defines     {"USE_W2K_COMPAT"}
-                linkoptions {"/delayload:msvcrt.dll",}
             end
 
         configuration {"Debug"}
+            defines         {"_DEBUG"}
             flags           {"Symbols",}
 
-        configuration {"*"}
-            prebuildcommands{"call \"$(ProjectDir)\\hgid.cmd\"",}
-
-        configuration {"x64"}
-            prebuildcommands{"lib.exe /nologo /nodefaultlib \"/def:ntdll-stubs\\ntdll-delayed.txt\" \"/out:$(IntDir)\\ntdll-delayed.lib\" /machine:x64",}
-
-        configuration {"x32"}
-            prebuildcommands{"cl.exe /nologo /c /TC /Ob0 /Gz ntdll-stubs\\ntdll-delayed-stubs.c \"/Fo$(IntDir)\\ntdll-delayed-stubs.obj\"", "lib.exe /nologo \"/def:ntdll-stubs\\ntdll-delayed.txt\" \"/out:$(IntDir)\\ntdll-delayed.lib\" /machine:x86 \"$(IntDir)\\ntdll-delayed-stubs.obj\"",}
-
         configuration {"Release"}
-            defines         ("NDEBUG")
+            defines         {"NDEBUG"}
             flags           {"Optimize", "Symbols", "NoMinimalRebuild", "NoIncrementalLink", "NoEditAndContinue"}
             linkoptions     {"/release"}
             buildoptions    {"/Oi", "/Os", "/Gy"}

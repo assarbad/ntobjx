@@ -29,18 +29,17 @@
 ///////////////////////////////////////////////////////////////////////////////
 
 #ifndef __NTNATIVE_H_VER__
-#define __NTNATIVE_H_VER__ 2017091820
+#define __NTNATIVE_H_VER__ 2017091921
 #if (defined(_MSC_VER) && (_MSC_VER >= 1020)) || defined(__MCPP)
 #pragma once
 #endif // Check for "#pragma once" support
 
-// Fake the SAL annotations where they don't exist.
-// Now I am running VS2005 with Windows 7 SP1 SDK integrated. Possible that's why it works there.
-#if (_MSC_VER < 1400)
+// Fake the SAL1 annotations where they don't exist.
+#if !defined(__in_bcount) && !defined(_In_reads_bytes_)
 #   define __success(x)
 #   define __field_range(x, y)
-#   define __kernel_entry
 #   define __in
+#   define __in_z
 #   define __in_bcount(x)
 #   define __in_opt
 #   define __inout
@@ -52,6 +51,47 @@
 #   define __reserved
 #endif
 
+// Fake the SAL2 annotations where they don't exist.
+#if defined(__in_bcount) && !defined(_In_reads_bytes_)
+#   define _Success_(x) __success(x)
+#   define _Field_range_(x, y) __field_range(x, y)
+#   define _In_ __in
+#   define _In_z_ __in_z
+#   define _In_reads_bytes_(x) __in_bcount(x)
+#   define _In_opt_ __in_opt
+#   define _Inout_ __inout
+#   define _Inout_opt_ __inout_opt
+#   define _Out_ __out
+#   define _Out_writes_bytes_(x) __out_bcount(x)
+#   define _Out_opt_ __out_opt
+#   define _Out_writes_bytes_opt_(x) __out_bcount_opt(x)
+#   define _Reserved_ __reserved
+#endif
+
+#ifndef _Ret_maybenull_
+#   define _Ret_maybenull_
+#endif
+
+#ifndef _Post_writable_byte_size_
+#   define _Post_writable_byte_size_(Size)
+#endif
+
+#ifndef _Post_invalid_
+#   define _Post_invalid_
+#endif
+
+#ifndef _When_
+#   define _When_(x, y)
+#endif
+
+#ifndef _Out_range_
+#   define _Out_range_(x, y)
+#endif
+
+#ifndef _Frees_ptr_opt_
+#   define _Frees_ptr_opt_
+#endif
+
 #if defined(DDKBUILD)
 #   include <WinDef.h>
 #else
@@ -60,7 +100,9 @@
 #       undef NTSYSCALLAPI
 #       define NTSYSCALLAPI
 #   endif
+#   pragma warning(disable:4201)
 #   include <winternl.h>
+#   pragma warning(default:4201)
 #   pragma pop_macro("NTSYSCALLAPI")
 #endif // DDKBUILD
 #pragma warning(disable:4005)
@@ -90,7 +132,7 @@
     typedef OBJECT_ATTRIBUTES *POBJECT_ATTRIBUTES;
 
 #   ifndef _NTDEF_
-    typedef __success(return >= 0) LONG NTSTATUS;
+    typedef _Success_(return >= 0) LONG NTSTATUS;
     typedef NTSTATUS *PNTSTATUS;
 #   endif
 
@@ -110,7 +152,7 @@
     NTSTATUS
     NTAPI
     NtClose(
-        __in HANDLE Handle
+        _In_ HANDLE Handle
     );
 
     VOID
@@ -209,7 +251,7 @@ extern "C" {
 #endif // SYMBOLIC_LINK_ALL_ACCESS
 
 #ifndef _NTDEF_
-    typedef __success(return >= 0) LONG NTSTATUS;
+    typedef _Success_(return >= 0) LONG NTSTATUS;
     typedef NTSTATUS *PNTSTATUS;
 #   define NT_SUCCESS(Status) (((NTSTATUS)(Status)) >= 0)
 #   define NT_INFORMATION(Status) ((((ULONG)(Status)) >> 30) == 1)
@@ -388,6 +430,7 @@ typedef struct _SECTIONBASICINFO {
     LARGE_INTEGER MaximumSize;
 } SECTION_BASIC_INFORMATION, *PSECTION_BASIC_INFORMATION;
 
+#pragma warning(disable:4201 4214)
 typedef struct _SECTION_IMAGE_INFORMATION {
     PVOID TransferAddress;
     ULONG ZeroBits;
@@ -415,6 +458,7 @@ typedef struct _SECTION_IMAGE_INFORMATION {
     ULONG ImageFileSize;
     ULONG CheckSum;
 } SECTION_IMAGE_INFORMATION, *PSECTION_IMAGE_INFORMATION;
+#pragma warning(default:4201 4214)
 
 typedef struct _SEMAPHORE_BASIC_INFORMATION {
     ULONG CurrentCount;
@@ -443,10 +487,10 @@ typedef struct _GENERATE_NAME_CONTEXT {
     USHORT Checksum;
     BOOLEAN ChecksumInserted;
 
-    __field_range(<=, 8) UCHAR NameLength;        // not including extension
+    _Field_range_(<=, 8) UCHAR NameLength;        // not including extension
     WCHAR NameBuffer[8];                          // e.g., "ntoskrnl"
 
-    __field_range(<=, 4) ULONG ExtensionLength;   // including dot
+    _Field_range_(<=, 4) ULONG ExtensionLength;   // including dot
     WCHAR ExtensionBuffer[4];                     // e.g., ".exe"
 
     ULONG LastIndexValue;
@@ -457,7 +501,7 @@ typedef GENERATE_NAME_CONTEXT *PGENERATE_NAME_CONTEXT;
 #ifndef PIO_APC_ROUTINE_DEFINED
 #pragma warning(push) /* disable code analyzer warnings for ATL & WTL libraries */
 #pragma warning(disable:28301) /* warning C28301 : No annotations for first declaration of ... */
-typedef VOID (NTAPI *PIO_APC_ROUTINE) (__in PVOID ApcContext, __in PIO_STATUS_BLOCK IoStatusBlock, __in ULONG Reserved);
+typedef VOID (NTAPI *PIO_APC_ROUTINE) (_In_ PVOID ApcContext, _In_ PIO_STATUS_BLOCK IoStatusBlock, _In_ ULONG Reserved);
 #define PIO_APC_ROUTINE_DEFINED
 #pragma warning(pop) /* restore code analyzer warnings*/
 #endif // PIO_APC_ROUTINE_DEFINED
@@ -530,6 +574,26 @@ typedef struct _FILE_STREAM_INFORMATION
 } FILE_STREAM_INFORMATION, *PFILE_STREAM_INFORMATION;
 #pragma pack(pop)
 
+/* xref: https://googleprojectzero.blogspot.de/2016/02/the-definitive-guide-on-win32-to-nt.html */
+typedef struct _RTL_RELATIVE_NAME
+{
+    UNICODE_STRING RelativeName;
+    HANDLE ContainingDirectory;
+    void* CurDirRef;
+} RTL_RELATIVE_NAME, *PRTL_RELATIVE_NAME;
+
+typedef enum
+{
+    RtlPathTypeUnknown,
+    RtlPathTypeUncAbsolute,
+    RtlPathTypeDriveAbsolute,
+    RtlPathTypeDriveRelative,
+    RtlPathTypeRooted,
+    RtlPathTypeRelative,
+    RtlPathTypeLocalDevice,
+    RtlPathTypeRootLocalDevice,
+} RTL_PATH_TYPE;
+
 #ifndef DYNAMIC_NTNATIVE
 NTSTATUS
 NTAPI
@@ -540,394 +604,480 @@ RtlGetVersion(
 PIMAGE_NT_HEADERS
 NTAPI
 RtlImageNtHeader(
-    __in PVOID Base
+    _In_ PVOID Base
 );
 
 PVOID
 NTAPI
 RtlImageDirectoryEntryToData(
-    __in PVOID Base,
-    __in BOOLEAN MappedAsImage,
-    __in USHORT DirectoryEntry,
-    __out PULONG Size
+    _In_ PVOID Base,
+    _In_ BOOLEAN MappedAsImage,
+    _In_ USHORT DirectoryEntry,
+    _Out_ PULONG Size
 );
 
 PVOID
 NTAPI
 RtlImageRvaToVa(
-    __in PIMAGE_NT_HEADERS NtHeaders,
-    __in PVOID Base,
-    __in ULONG Rva,
-    __inout_opt PIMAGE_SECTION_HEADER *LastRvaSection
+    _In_ PIMAGE_NT_HEADERS NtHeaders,
+    _In_ PVOID Base,
+    _In_ ULONG Rva,
+    _Inout_opt_ PIMAGE_SECTION_HEADER *LastRvaSection
 );
 
 NTSTATUS
 NTAPI
 NtQueryEvent(
-    __in HANDLE EventHandle,
-    __in EVENT_INFORMATION_CLASS EventInformationClass,
-    __out_bcount(EventInformationLength) PVOID EventInformation,
-    __in ULONG EventInformationLength,
-    __out_opt PULONG ReturnLength
+    _In_ HANDLE EventHandle,
+    _In_ EVENT_INFORMATION_CLASS EventInformationClass,
+    _Out_writes_bytes_(EventInformationLength) PVOID EventInformation,
+    _In_ ULONG EventInformationLength,
+    _Out_opt_ PULONG ReturnLength
 );
 
 NTSTATUS
 NTAPI
 NtQueryIoCompletion(
-    __in HANDLE IoCompletionHandle,
-    __in IO_COMPLETION_INFORMATION_CLASS InformationClass,
-    __out PVOID IoCompletionInformation,
-    __in ULONG InformationBufferLength,
-    __out_opt PULONG RequiredLength
+    _In_ HANDLE IoCompletionHandle,
+    _In_ IO_COMPLETION_INFORMATION_CLASS InformationClass,
+    _Out_ PVOID IoCompletionInformation,
+    _In_ ULONG InformationBufferLength,
+    _Out_opt_ PULONG RequiredLength
 );
 
 NTSTATUS
 NTAPI
 NtQueryMutant(
-    __in HANDLE MutantHandle,
-    __in MUTANT_INFORMATION_CLASS MutantInformationClass,
-    __out_bcount(MutantInformationLength) PVOID MutantInformation,
-    __in ULONG MutantInformationLength,
-    __out_opt PULONG ReturnLength
+    _In_ HANDLE MutantHandle,
+    _In_ MUTANT_INFORMATION_CLASS MutantInformationClass,
+    _Out_writes_bytes_(MutantInformationLength) PVOID MutantInformation,
+    _In_ ULONG MutantInformationLength,
+    _Out_opt_ PULONG ReturnLength
 );
 
 NTSTATUS
 NTAPI
 NtQuerySemaphore(
-    __in HANDLE SemaphoreHandle,
-    __in SEMAPHORE_INFORMATION_CLASS SemaphoreInformationClass,
-    __out_bcount(SemaphoreInformationLength) PVOID SemaphoreInformation,
-    __in ULONG SemaphoreInformationLength,
-    __out_opt PULONG ReturnLength
+    _In_ HANDLE SemaphoreHandle,
+    _In_ SEMAPHORE_INFORMATION_CLASS SemaphoreInformationClass,
+    _Out_writes_bytes_(SemaphoreInformationLength) PVOID SemaphoreInformation,
+    _In_ ULONG SemaphoreInformationLength,
+    _Out_opt_ PULONG ReturnLength
 );
 
 NTSTATUS
 NTAPI
 NtQuerySection(
-    __in HANDLE SectionHandle,
-    __in SECTION_INFORMATION_CLASS SectionInformationClass,
-    __out PVOID SectionInformation,
-    __in ULONG SectionInformationLength,
-    __out_opt PULONG ReturnLength
+    _In_ HANDLE SectionHandle,
+    _In_ SECTION_INFORMATION_CLASS SectionInformationClass,
+    _Out_ PVOID SectionInformation,
+    _In_ ULONG SectionInformationLength,
+    _Out_opt_ PULONG ReturnLength
  );
 
 NTSTATUS
 NTAPI
 NtQueryTimer(
-    __in HANDLE TimerHandle,
-    __in TIMER_INFORMATION_CLASS TimerInformationClass,
-    __out PVOID TimerInformation,
-    __in ULONG TimerInformationLength,
-    __out_opt PULONG ReturnLength
+    _In_ HANDLE TimerHandle,
+    _In_ TIMER_INFORMATION_CLASS TimerInformationClass,
+    _Out_ PVOID TimerInformation,
+    _In_ ULONG TimerInformationLength,
+    _Out_opt_ PULONG ReturnLength
 );
 
 NTSTATUS
 NTAPI
 NtOpenDirectoryObject(
-    __out PHANDLE DirectoryHandle,
-    __in ACCESS_MASK DesiredAccess,
-    __in POBJECT_ATTRIBUTES ObjectAttributes
+    _Out_ PHANDLE DirectoryHandle,
+    _In_ ACCESS_MASK DesiredAccess,
+    _In_ POBJECT_ATTRIBUTES ObjectAttributes
 );
 
 NTSTATUS
 NTAPI
 NtQueryDirectoryObject(
-    __in HANDLE DirectoryHandle,
-    __out_bcount(Length) PVOID Buffer,
-    __in ULONG Length,
-    __in BOOLEAN ReturnSingleEntry,
-    __in BOOLEAN RestartScan,
-    __inout PULONG Context,
-    __out_opt PULONG ReturnLength
+    _In_ HANDLE DirectoryHandle,
+    _Out_writes_bytes_(Length) PVOID Buffer,
+    _In_ ULONG Length,
+    _In_ BOOLEAN ReturnSingleEntry,
+    _In_ BOOLEAN RestartScan,
+    _Inout_ PULONG Context,
+    _Out_opt_ PULONG ReturnLength
 );
 
 NTSTATUS
 NTAPI
 NtOpenSymbolicLinkObject(
-    __out PHANDLE LinkHandle,
-    __in ACCESS_MASK DesiredAccess,
-    __in POBJECT_ATTRIBUTES ObjectAttributes
+    _Out_ PHANDLE LinkHandle,
+    _In_ ACCESS_MASK DesiredAccess,
+    _In_ POBJECT_ATTRIBUTES ObjectAttributes
 );
 
 NTSTATUS
 NTAPI
 NtQuerySymbolicLinkObject(
-    __in HANDLE LinkHandle,
-    __inout PUNICODE_STRING LinkTarget,
-    __out_opt PULONG ReturnedLength
+    _In_ HANDLE LinkHandle,
+    _Inout_ PUNICODE_STRING LinkTarget,
+    _Out_opt_ PULONG ReturnedLength
 );
 
 NTSTATUS
 NTAPI
 NtOpenEvent(
-    __out PHANDLE EventHandle,
-    __in ACCESS_MASK DesiredAccess,
-    __in POBJECT_ATTRIBUTES ObjectAttributes
+    _Out_ PHANDLE EventHandle,
+    _In_ ACCESS_MASK DesiredAccess,
+    _In_ POBJECT_ATTRIBUTES ObjectAttributes
 );
 
 NTSTATUS
 NTAPI
 NtOpenMutant(
-    __out PHANDLE MutantHandle,
-    __in ACCESS_MASK DesiredAccess,
-    __in POBJECT_ATTRIBUTES ObjectAttributes
+    _Out_ PHANDLE MutantHandle,
+    _In_ ACCESS_MASK DesiredAccess,
+    _In_ POBJECT_ATTRIBUTES ObjectAttributes
 );
 
 NTSTATUS
 NTAPI
 NtOpenSection(
-    __out PHANDLE SectionHandle,
-    __in ACCESS_MASK DesiredAccess,
-    __in POBJECT_ATTRIBUTES ObjectAttributes
+    _Out_ PHANDLE SectionHandle,
+    _In_ ACCESS_MASK DesiredAccess,
+    _In_ POBJECT_ATTRIBUTES ObjectAttributes
 );
 
 NTSTATUS
 NTAPI
 NtOpenTimer(
-    __out PHANDLE TimerHandle,
-    __in ACCESS_MASK DesiredAccess,
-    __in POBJECT_ATTRIBUTES ObjectAttributes
+    _Out_ PHANDLE TimerHandle,
+    _In_ ACCESS_MASK DesiredAccess,
+    _In_ POBJECT_ATTRIBUTES ObjectAttributes
 );
 
 NTSTATUS
 NTAPI
 NtOpenSemaphore(
-    __out PHANDLE SemaphoreHandle,
-    __in ACCESS_MASK DesiredAccess,
-    __in POBJECT_ATTRIBUTES ObjectAttributes
+    _Out_ PHANDLE SemaphoreHandle,
+    _In_ ACCESS_MASK DesiredAccess,
+    _In_ POBJECT_ATTRIBUTES ObjectAttributes
 );
 
 NTSTATUS
 NTAPI
 NtOpenEventPair(
-    __out PHANDLE EventPairHandle,
-    __in ACCESS_MASK DesiredAccess,
-    __in POBJECT_ATTRIBUTES ObjectAttributes
+    _Out_ PHANDLE EventPairHandle,
+    _In_ ACCESS_MASK DesiredAccess,
+    _In_ POBJECT_ATTRIBUTES ObjectAttributes
 );
 
 NTSTATUS
 NTAPI
 NtOpenIoCompletion(
-    __out PHANDLE IoCompletionHandle,
-    __in ACCESS_MASK DesiredAccess,
-    __in POBJECT_ATTRIBUTES ObjectAttributes
+    _Out_ PHANDLE IoCompletionHandle,
+    _In_ ACCESS_MASK DesiredAccess,
+    _In_ POBJECT_ATTRIBUTES ObjectAttributes
 );
 
 NTSTATUS
 NTAPI
 NtOpenKey(
-    __out PHANDLE KeyHandle,
-    __in ACCESS_MASK DesiredAccess,
-    __in POBJECT_ATTRIBUTES ObjectAttributes
+    _Out_ PHANDLE KeyHandle,
+    _In_ ACCESS_MASK DesiredAccess,
+    _In_ POBJECT_ATTRIBUTES ObjectAttributes
 );
 
 NTSTATUS
 NTAPI
 NtCreateKey(
-    __out PHANDLE KeyHandle,
-    __in ACCESS_MASK DesiredAccess,
-    __in POBJECT_ATTRIBUTES ObjectAttributes,
-    __reserved ULONG TitleIndex,
-    __in_opt PUNICODE_STRING Class,
-    __in ULONG CreateOptions,
-    __out_opt PULONG Disposition
+    _Out_ PHANDLE KeyHandle,
+    _In_ ACCESS_MASK DesiredAccess,
+    _In_ POBJECT_ATTRIBUTES ObjectAttributes,
+    _Reserved_ ULONG TitleIndex,
+    _In_opt_ PUNICODE_STRING Class,
+    _In_ ULONG CreateOptions,
+    _Out_opt_ PULONG Disposition
 );
 
 NTSTATUS
 NTAPI
 NtEnumerateKey(
-    __in HANDLE KeyHandle,
-    __in ULONG Index,
-    __in KEY_INFORMATION_CLASS KeyInformationClass,
-    __out_bcount_opt(Length) PVOID KeyInformation,
-    __in ULONG Length,
-    __out PULONG ResultLength
+    _In_ HANDLE KeyHandle,
+    _In_ ULONG Index,
+    _In_ KEY_INFORMATION_CLASS KeyInformationClass,
+    _Out_writes_bytes_opt_(Length) PVOID KeyInformation,
+    _In_ ULONG Length,
+    _Out_ PULONG ResultLength
 );
 
 NTSTATUS
 NTAPI
 NtEnumerateValueKey(
-    __in HANDLE KeyHandle,
-    __in ULONG Index,
-    __in KEY_VALUE_INFORMATION_CLASS KeyValueInformationClass,
-    __out_bcount_opt(Length) PVOID KeyValueInformation,
-    __in ULONG Length,
-    __out PULONG ResultLength
+    _In_ HANDLE KeyHandle,
+    _In_ ULONG Index,
+    _In_ KEY_VALUE_INFORMATION_CLASS KeyValueInformationClass,
+    _Out_writes_bytes_opt_(Length) PVOID KeyValueInformation,
+    _In_ ULONG Length,
+    _Out_ PULONG ResultLength
 );
 
 NTSTATUS
 NTAPI
 NtQueryKey(
-    __in HANDLE KeyHandle,
-    __in KEY_INFORMATION_CLASS KeyInformationClass,
-    __out_bcount_opt(Length) PVOID KeyInformation,
-    __in ULONG Length,
-    __out PULONG ResultLength
+    _In_ HANDLE KeyHandle,
+    _In_ KEY_INFORMATION_CLASS KeyInformationClass,
+    _Out_writes_bytes_opt_(Length) PVOID KeyInformation,
+    _In_ ULONG Length,
+    _Out_ PULONG ResultLength
 );
 
 NTSTATUS
 NTAPI
 NtQueryValueKey(
-    __in HANDLE KeyHandle,
-    __in PUNICODE_STRING ValueName,
-    __in KEY_VALUE_INFORMATION_CLASS KeyValueInformationClass,
-    __out_bcount_opt(Length) PVOID KeyValueInformation,
-    __in ULONG Length,
-    __out PULONG ResultLength
+    _In_ HANDLE KeyHandle,
+    _In_ PUNICODE_STRING ValueName,
+    _In_ KEY_VALUE_INFORMATION_CLASS KeyValueInformationClass,
+    _Out_writes_bytes_opt_(Length) PVOID KeyValueInformation,
+    _In_ ULONG Length,
+    _Out_ PULONG ResultLength
 );
 
 NTSTATUS
 NTAPI
 RtlValidateUnicodeString(
-    __in __reserved ULONG Flags,
-    __in PCUNICODE_STRING String
+    _In_ _Reserved_ ULONG Flags,
+    _In_ PCUNICODE_STRING String
 );
 
 NTSTATUS
 NTAPI
 RtlDowncaseUnicodeString(
          PUNICODE_STRING DestinationString,
-    __in PCUNICODE_STRING SourceString,
-    __in BOOLEAN AllocateDestinationString
+    _In_ PCUNICODE_STRING SourceString,
+    _In_ BOOLEAN AllocateDestinationString
 );
 
 NTSTATUS /* VOID in pre-Vista*/
 NTAPI
 RtlGenerate8dot3Name(
-    __in PCUNICODE_STRING Name,
-    __in BOOLEAN AllowExtendedCharacters,
-    __inout PGENERATE_NAME_CONTEXT Context,
-    __inout PUNICODE_STRING Name8dot3
+    _In_ PCUNICODE_STRING Name,
+    _In_ BOOLEAN AllowExtendedCharacters,
+    _Inout_ PGENERATE_NAME_CONTEXT Context,
+    _Inout_ PUNICODE_STRING Name8dot3
 );
 
 NTSTATUS
 NTAPI
 RtlVolumeDeviceToDosName(
-    __in PVOID VolumeDeviceObject,
-    __out PUNICODE_STRING DosName
+    _In_ PVOID VolumeDeviceObject,
+    _Out_ PUNICODE_STRING DosName
 );
 
 NTSTATUS
 NTAPI
 NtCreateSection(
-    __out PHANDLE SectionHandle,
-    __in ACCESS_MASK DesiredAccess,
-    __in_opt POBJECT_ATTRIBUTES ObjectAttributes,
-    __in_opt PLARGE_INTEGER MaximumSize,
-    __in ULONG SectionPageProtection,
-    __in ULONG AllocationAttributes,
-    __in_opt HANDLE FileHandle
+    _Out_ PHANDLE SectionHandle,
+    _In_ ACCESS_MASK DesiredAccess,
+    _In_opt_ POBJECT_ATTRIBUTES ObjectAttributes,
+    _In_opt_ PLARGE_INTEGER MaximumSize,
+    _In_ ULONG SectionPageProtection,
+    _In_ ULONG AllocationAttributes,
+    _In_opt_ HANDLE FileHandle
 );
 
 NTSTATUS
 NTAPI
 NtMapViewOfSection(
-    __in HANDLE SectionHandle,
-    __in HANDLE ProcessHandle,
-    __inout PVOID *BaseAddress,
-    __in ULONG_PTR ZeroBits,
-    __in SIZE_T CommitSize,
-    __inout_opt PLARGE_INTEGER SectionOffset,
-    __inout PSIZE_T ViewSize,
-    __in SECTION_INHERIT InheritDisposition,
-    __in ULONG AllocationType,
-    __in ULONG Win32Protect
+    _In_ HANDLE SectionHandle,
+    _In_ HANDLE ProcessHandle,
+    _Inout_ PVOID *BaseAddress,
+    _In_ ULONG_PTR ZeroBits,
+    _In_ SIZE_T CommitSize,
+    _Inout_opt_ PLARGE_INTEGER SectionOffset,
+    _Inout_ PSIZE_T ViewSize,
+    _In_ SECTION_INHERIT InheritDisposition,
+    _In_ ULONG AllocationType,
+    _In_ ULONG Win32Protect
 );
 
 NTSTATUS
 NTAPI
 NtUnmapViewOfSection(
-    __in HANDLE ProcessHandle,
-    __in_opt PVOID BaseAddress
+    _In_ HANDLE ProcessHandle,
+    _In_opt_ PVOID BaseAddress
 );
 
 NTSTATUS
 NTAPI
 NtQueryDirectoryFile(
-    __in HANDLE FileHandle,
-    __in_opt HANDLE Event,
-    __in_opt PIO_APC_ROUTINE ApcRoutine,
-    __in_opt PVOID ApcContext,
-    __out PIO_STATUS_BLOCK IoStatusBlock,
-    __out_bcount(Length) PVOID FileInformation,
-    __in ULONG Length,
-    __in NT_FILE_INFORMATION_CLASS FileInformationClass,
-    __in BOOLEAN ReturnSingleEntry,
-    __in_opt PUNICODE_STRING FileName,
-    __in BOOLEAN RestartScan
+    _In_ HANDLE FileHandle,
+    _In_opt_ HANDLE Event,
+    _In_opt_ PIO_APC_ROUTINE ApcRoutine,
+    _In_opt_ PVOID ApcContext,
+    _Out_ PIO_STATUS_BLOCK IoStatusBlock,
+    _Out_writes_bytes_(Length) PVOID FileInformation,
+    _In_ ULONG Length,
+    _In_ NT_FILE_INFORMATION_CLASS FileInformationClass,
+    _In_ BOOLEAN ReturnSingleEntry,
+    _In_opt_ PUNICODE_STRING FileName,
+    _In_ BOOLEAN RestartScan
 );
 
 NTSTATUS
 NTAPI
 NtQueryInformationFile(
-    __in HANDLE FileHandle,
-    __out PIO_STATUS_BLOCK IoStatusBlock,
-    __out_bcount(Length) PVOID FileInformation,
-    __in ULONG Length,
-    __in NT_FILE_INFORMATION_CLASS FileInformationClass
+    _In_ HANDLE FileHandle,
+    _Out_ PIO_STATUS_BLOCK IoStatusBlock,
+    _Out_writes_bytes_(Length) PVOID FileInformation,
+    _In_ ULONG Length,
+    _In_ NT_FILE_INFORMATION_CLASS FileInformationClass
+);
+
+_Ret_maybenull_
+_Post_writable_byte_size_(Size)
+PVOID
+NTAPI
+RtlAllocateHeap(
+    _In_ PVOID HeapHandle,
+    _In_ ULONG Flags,
+    _In_ SIZE_T Size
+);
+
+_Success_(return != 0)
+BOOLEAN
+NTAPI
+RtlFreeHeap(
+    _In_ PVOID HeapHandle,
+    _In_opt_ ULONG Flags,
+    _Frees_ptr_opt_ PVOID BaseAddress
+);
+
+NTSTATUS
+NTAPI
+RtlInitializeCriticalSection(
+    _In_ PRTL_CRITICAL_SECTION CriticalSection
+);
+
+NTSTATUS
+NTAPI
+RtlDeleteCriticalSection(
+    _In_ PRTL_CRITICAL_SECTION CriticalSection
+);
+
+NTSTATUS
+NTAPI
+RtlEnterCriticalSection(
+    _In_ PRTL_CRITICAL_SECTION CriticalSection
+);
+
+NTSTATUS
+NTAPI
+RtlLeaveCriticalSection(
+    _In_ PRTL_CRITICAL_SECTION CriticalSection
+);
+
+_When_(Status < 0, _Out_range_(> , 0))
+_When_(Status >= 0, _Out_range_(== , 0))
+ULONG
+NTAPI
+RtlNtStatusToDosError(
+    NTSTATUS Status
+);
+
+/* xref: https://googleprojectzero.blogspot.de/2016/02/the-definitive-guide-on-win32-to-nt.html */
+BOOLEAN
+NTAPI
+RtlDosPathNameToRelativeNtPathName_U(
+    _In_ PCWSTR DosFileName,
+    _Out_ PUNICODE_STRING NtFileName,
+    _Out_opt_ PWSTR* FilePath,
+    _Out_opt_ PRTL_RELATIVE_NAME RelativeName
+);
+
+RTL_PATH_TYPE
+NTAPI
+RtlDetermineDosPathNameType_U(
+    _In_ PCWSTR Path
+);
+
+ULONG
+NTAPI
+RtlGetFullPathName_U(
+    _In_ PWSTR FileName,
+    _In_ ULONG BufferLength,
+    _Out_writes_bytes_(BufferLength) PWSTR Buffer,
+    _Out_opt_ PWSTR *FilePart
 );
 
 #if defined(DDKBUILD)
 NTSTATUS
 NTAPI
 NtQueryObject(
-   __in_opt HANDLE Handle,
-   __in OBJECT_INFORMATION_CLASS ObjectInformationClass,
-   __out_bcount_opt(ObjectInformationLength) PVOID ObjectInformation,
-   __in ULONG ObjectInformationLength,
-   __out_opt PULONG ReturnLength
+   _In_opt_ HANDLE Handle,
+   _In_ OBJECT_INFORMATION_CLASS ObjectInformationClass,
+   _Out_writes_bytes_opt_(ObjectInformationLength) PVOID ObjectInformation,
+   _In_ ULONG ObjectInformationLength,
+   _Out_opt_ PULONG ReturnLength
    );
 
 NTSTATUS
 NTAPI
 NtOpenFile(
-    __out PHANDLE FileHandle,
-    __in ACCESS_MASK DesiredAccess,
-    __in POBJECT_ATTRIBUTES ObjectAttributes,
-    __out PIO_STATUS_BLOCK IoStatusBlock,
-    __in ULONG ShareAccess,
-    __in ULONG OpenOptions
+    _Out_ PHANDLE FileHandle,
+    _In_ ACCESS_MASK DesiredAccess,
+    _In_ POBJECT_ATTRIBUTES ObjectAttributes,
+    _Out_ PIO_STATUS_BLOCK IoStatusBlock,
+    _In_ ULONG ShareAccess,
+    _In_ ULONG OpenOptions
 );
 #endif // DDKBUILD
 #else
 typedef NTSTATUS (NTAPI *RtlGetVersion_t)(LPOSVERSIONINFOEXW);
-typedef PIMAGE_NT_HEADERS (NTAPI *RtlImageNtHeader_t)(__in PVOID);
-typedef PVOID (NTAPI *RtlImageDirectoryEntryToData_t)(__in PVOID, __in BOOLEAN, __in USHORT, __out PULONG);
-typedef PVOID (NTAPI *RtlImageRvaToVa_t)(__in PIMAGE_NT_HEADERS, __in PVOID, __in ULONG, __inout_opt PIMAGE_SECTION_HEADER *);
-typedef NTSTATUS (NTAPI *NtQueryEvent_t)(__in HANDLE, __in EVENT_INFORMATION_CLASS, __out PVOID, __in ULONG, __out_opt PULONG);
-typedef NTSTATUS (NTAPI *NtQueryIoCompletion_t)(__in HANDLE, __in IO_COMPLETION_INFORMATION_CLASS, __out PVOID, __in ULONG, __out_opt PULONG);
-typedef NTSTATUS (NTAPI *NtQueryMutant_t)(__in HANDLE, __in MUTANT_INFORMATION_CLASS, __out PVOID, __in ULONG, __out_opt PULONG);
-typedef NTSTATUS (NTAPI *NtQuerySemaphore_t)(__in HANDLE, __in SEMAPHORE_INFORMATION_CLASS, __out PVOID, __in ULONG, __out_opt PULONG);
-typedef NTSTATUS (NTAPI *NtQuerySection_t)(__in HANDLE, __in SECTION_INFORMATION_CLASS, __out PVOID, __in ULONG, __out PULONG);
-typedef NTSTATUS (NTAPI *NtQueryTimer_t)(__in HANDLE, __in TIMER_INFORMATION_CLASS, __out PVOID, __in ULONG, __out PULONG);
-typedef NTSTATUS (NTAPI *NtOpenDirectoryObject_t)(__out PHANDLE, __in ACCESS_MASK, __in POBJECT_ATTRIBUTES);
-typedef NTSTATUS (NTAPI *NtQueryDirectoryObject_t)(__in HANDLE, __out PVOID, __in ULONG, __in BOOLEAN, __in BOOLEAN, __inout PULONG, __out_opt PULONG);
-typedef NTSTATUS (NTAPI *NtOpenSymbolicLinkObject_t)(__out PHANDLE, __in ACCESS_MASK, __in POBJECT_ATTRIBUTES);
-typedef NTSTATUS (NTAPI *NtQuerySymbolicLinkObject_t)(__in HANDLE, __inout PUNICODE_STRING, __out_opt PULONG);
-typedef NTSTATUS (NTAPI *NtOpenEvent_t)(__out PHANDLE, __in ACCESS_MASK, __in POBJECT_ATTRIBUTES);
-typedef NTSTATUS (NTAPI *NtOpenMutant_t)(__out PHANDLE, __in ACCESS_MASK, __in POBJECT_ATTRIBUTES);
-typedef NTSTATUS (NTAPI *NtOpenSection_t)(__out PHANDLE, __in ACCESS_MASK, __in POBJECT_ATTRIBUTES);
-typedef NTSTATUS (NTAPI *NtOpenTimer_t)(__out PHANDLE, __in ACCESS_MASK, __in POBJECT_ATTRIBUTES);
-typedef NTSTATUS (NTAPI *NtOpenSemaphore_t)(__out PHANDLE, __in ACCESS_MASK, __in POBJECT_ATTRIBUTES);
-typedef NTSTATUS (NTAPI *NtOpenEventPair_t)(__out PHANDLE, __in ACCESS_MASK, __in POBJECT_ATTRIBUTES);
-typedef NTSTATUS (NTAPI *NtOpenIoCompletion_t)(__out PHANDLE, __in ACCESS_MASK, __in POBJECT_ATTRIBUTES);
-typedef NTSTATUS (NTAPI *NtOpenKey_t)(__out PHANDLE, __in ACCESS_MASK, __in POBJECT_ATTRIBUTES);
-typedef NTSTATUS (NTAPI *NtCreateKey_t)(__out PHANDLE, __in ACCESS_MASK, __in POBJECT_ATTRIBUTES, __reserved ULONG, __in_opt PUNICODE_STRING, __in ULONG, __out_opt PULONG);
-typedef NTSTATUS (NTAPI *NtEnumerateKey_t)(__in HANDLE, __in ULONG, __in KEY_INFORMATION_CLASS, __out PVOID, __in ULONG, __out PULONG);
-typedef NTSTATUS (NTAPI *NtEnumerateValueKey_t)(__in HANDLE, __in ULONG, __in KEY_VALUE_INFORMATION_CLASS, __out PVOID, __in ULONG, __out PULONG);
-typedef NTSTATUS (NTAPI *NtQueryKey_t)(__in HANDLE, __in KEY_INFORMATION_CLASS, __out PVOID, __in ULONG, __out PULONG);
-typedef NTSTATUS (NTAPI *NtQueryValueKey_t)(__in HANDLE, __in PUNICODE_STRING, __in KEY_VALUE_INFORMATION_CLASS, __out PVOID, __in ULONG, __out PULONG);
-typedef NTSTATUS (NTAPI *RtlValidateUnicodeString_t)(__in __reserved ULONG, __in PCUNICODE_STRING);
-typedef NTSTATUS (NTAPI *RtlDowncaseUnicodeString_t)(PUNICODE_STRING, __in PCUNICODE_STRING, __in BOOLEAN);
-typedef NTSTATUS (NTAPI *RtlGenerate8dot3Name_t)(__in PCUNICODE_STRING, __in BOOLEAN, __inout PGENERATE_NAME_CONTEXT, __inout PUNICODE_STRING);
-typedef NTSTATUS (NTAPI *RtlVolumeDeviceToDosName_t)(__in PVOID, __out PUNICODE_STRING);
-typedef NTSTATUS (NTAPI *NtCreateSection_t)(__out PHANDLE, __in ACCESS_MASK, __in_opt POBJECT_ATTRIBUTES, __in_opt PLARGE_INTEGER, __in ULONG, __in ULONG, __in_opt HANDLE);
-typedef NTSTATUS (NTAPI *NtMapViewOfSection_t)(__in HANDLE, __in HANDLE, __inout PVOID *, __in ULONG_PTR, __in SIZE_T, __inout_opt PLARGE_INTEGER, __inout PSIZE_T, __in SECTION_INHERIT, __in ULONG, __in ULONG);
-typedef NTSTATUS (NTAPI *NtUnmapViewOfSection_t)(__in HANDLE, __in_opt PVOID);
-typedef NTSTATUS (NTAPI *NtQueryDirectoryFile_t)(__in HANDLE, __in_opt HANDLE, __in_opt PIO_APC_ROUTINE, __in_opt PVOID, __out PIO_STATUS_BLOCK, __out PVOID, __in ULONG, __in NT_FILE_INFORMATION_CLASS, __in BOOLEAN, __in_opt PUNICODE_STRING, __in BOOLEAN);
-typedef NTSTATUS (NTAPI *NtQueryInformationFile_t)(__in HANDLE, __out PIO_STATUS_BLOCK, __out PVOID, __in ULONG, __in NT_FILE_INFORMATION_CLASS);
-typedef NTSTATUS (NTAPI *NtQueryObject_t)(__in_opt HANDLE, __in OBJECT_INFORMATION_CLASS, __out PVOID, __in ULONG, __out_opt PULONG);
-typedef NTSTATUS (NTAPI *NtOpenFile_t)(__out PHANDLE, __in ACCESS_MASK, __in POBJECT_ATTRIBUTES, __out PIO_STATUS_BLOCK, __in ULONG, __in ULONG);
+typedef PIMAGE_NT_HEADERS (NTAPI *RtlImageNtHeader_t)(_In_ PVOID);
+typedef PVOID (NTAPI *RtlImageDirectoryEntryToData_t)(_In_ PVOID, _In_ BOOLEAN, _In_ USHORT, _Out_ PULONG);
+typedef PVOID (NTAPI *RtlImageRvaToVa_t)(_In_ PIMAGE_NT_HEADERS, _In_ PVOID, _In_ ULONG, _Inout_opt_ PIMAGE_SECTION_HEADER *);
+typedef NTSTATUS (NTAPI *NtQueryEvent_t)(_In_ HANDLE, _In_ EVENT_INFORMATION_CLASS, _Out_ PVOID, _In_ ULONG, _Out_opt_ PULONG);
+typedef NTSTATUS (NTAPI *NtQueryIoCompletion_t)(_In_ HANDLE, _In_ IO_COMPLETION_INFORMATION_CLASS, _Out_ PVOID, _In_ ULONG, _Out_opt_ PULONG);
+typedef NTSTATUS (NTAPI *NtQueryMutant_t)(_In_ HANDLE, _In_ MUTANT_INFORMATION_CLASS, _Out_ PVOID, _In_ ULONG, _Out_opt_ PULONG);
+typedef NTSTATUS (NTAPI *NtQuerySemaphore_t)(_In_ HANDLE, _In_ SEMAPHORE_INFORMATION_CLASS, _Out_ PVOID, _In_ ULONG, _Out_opt_ PULONG);
+typedef NTSTATUS (NTAPI *NtQuerySection_t)(_In_ HANDLE, _In_ SECTION_INFORMATION_CLASS, _Out_ PVOID, _In_ ULONG, _Out_ PULONG);
+typedef NTSTATUS (NTAPI *NtQueryTimer_t)(_In_ HANDLE, _In_ TIMER_INFORMATION_CLASS, _Out_ PVOID, _In_ ULONG, _Out_ PULONG);
+typedef NTSTATUS (NTAPI *NtOpenDirectoryObject_t)(_Out_ PHANDLE, _In_ ACCESS_MASK, _In_ POBJECT_ATTRIBUTES);
+typedef NTSTATUS (NTAPI *NtQueryDirectoryObject_t)(_In_ HANDLE, _Out_ PVOID, _In_ ULONG, _In_ BOOLEAN, _In_ BOOLEAN, _Inout_ PULONG, _Out_opt_ PULONG);
+typedef NTSTATUS (NTAPI *NtOpenSymbolicLinkObject_t)(_Out_ PHANDLE, _In_ ACCESS_MASK, _In_ POBJECT_ATTRIBUTES);
+typedef NTSTATUS (NTAPI *NtQuerySymbolicLinkObject_t)(_In_ HANDLE, _Inout_ PUNICODE_STRING, _Out_opt_ PULONG);
+typedef NTSTATUS (NTAPI *NtOpenEvent_t)(_Out_ PHANDLE, _In_ ACCESS_MASK, _In_ POBJECT_ATTRIBUTES);
+typedef NTSTATUS (NTAPI *NtOpenMutant_t)(_Out_ PHANDLE, _In_ ACCESS_MASK, _In_ POBJECT_ATTRIBUTES);
+typedef NTSTATUS (NTAPI *NtOpenSection_t)(_Out_ PHANDLE, _In_ ACCESS_MASK, _In_ POBJECT_ATTRIBUTES);
+typedef NTSTATUS (NTAPI *NtOpenTimer_t)(_Out_ PHANDLE, _In_ ACCESS_MASK, _In_ POBJECT_ATTRIBUTES);
+typedef NTSTATUS (NTAPI *NtOpenSemaphore_t)(_Out_ PHANDLE, _In_ ACCESS_MASK, _In_ POBJECT_ATTRIBUTES);
+typedef NTSTATUS (NTAPI *NtOpenEventPair_t)(_Out_ PHANDLE, _In_ ACCESS_MASK, _In_ POBJECT_ATTRIBUTES);
+typedef NTSTATUS (NTAPI *NtOpenIoCompletion_t)(_Out_ PHANDLE, _In_ ACCESS_MASK, _In_ POBJECT_ATTRIBUTES);
+typedef NTSTATUS (NTAPI *NtOpenKey_t)(_Out_ PHANDLE, _In_ ACCESS_MASK, _In_ POBJECT_ATTRIBUTES);
+typedef NTSTATUS (NTAPI *NtCreateKey_t)(_Out_ PHANDLE, _In_ ACCESS_MASK, _In_ POBJECT_ATTRIBUTES, _Reserved_ ULONG, _In_opt_ PUNICODE_STRING, _In_ ULONG, _Out_opt_ PULONG);
+typedef NTSTATUS (NTAPI *NtEnumerateKey_t)(_In_ HANDLE, _In_ ULONG, _In_ KEY_INFORMATION_CLASS, _Out_ PVOID, _In_ ULONG, _Out_ PULONG);
+typedef NTSTATUS (NTAPI *NtEnumerateValueKey_t)(_In_ HANDLE, _In_ ULONG, _In_ KEY_VALUE_INFORMATION_CLASS, _Out_ PVOID, _In_ ULONG, _Out_ PULONG);
+typedef NTSTATUS (NTAPI *NtQueryKey_t)(_In_ HANDLE, _In_ KEY_INFORMATION_CLASS, _Out_ PVOID, _In_ ULONG, _Out_ PULONG);
+typedef NTSTATUS (NTAPI *NtQueryValueKey_t)(_In_ HANDLE, _In_ PUNICODE_STRING, _In_ KEY_VALUE_INFORMATION_CLASS, _Out_ PVOID, _In_ ULONG, _Out_ PULONG);
+typedef NTSTATUS (NTAPI *RtlValidateUnicodeString_t)(_In_ _Reserved_ ULONG, _In_ PCUNICODE_STRING);
+typedef NTSTATUS (NTAPI *RtlDowncaseUnicodeString_t)(PUNICODE_STRING, _In_ PCUNICODE_STRING, _In_ BOOLEAN);
+typedef NTSTATUS (NTAPI *RtlGenerate8dot3Name_t)(_In_ PCUNICODE_STRING, _In_ BOOLEAN, _Inout_ PGENERATE_NAME_CONTEXT, _Inout_ PUNICODE_STRING);
+typedef NTSTATUS (NTAPI *RtlVolumeDeviceToDosName_t)(_In_ PVOID, _Out_ PUNICODE_STRING);
+typedef NTSTATUS (NTAPI *NtCreateSection_t)(_Out_ PHANDLE, _In_ ACCESS_MASK, _In_opt_ POBJECT_ATTRIBUTES, _In_opt_ PLARGE_INTEGER, _In_ ULONG, _In_ ULONG, _In_opt_ HANDLE);
+typedef NTSTATUS (NTAPI *NtMapViewOfSection_t)(_In_ HANDLE, _In_ HANDLE, _Inout_ PVOID *, _In_ ULONG_PTR, _In_ SIZE_T, _Inout_opt_ PLARGE_INTEGER, _Inout_ PSIZE_T, _In_ SECTION_INHERIT, _In_ ULONG, _In_ ULONG);
+typedef NTSTATUS (NTAPI *NtUnmapViewOfSection_t)(_In_ HANDLE, _In_opt_ PVOID);
+typedef NTSTATUS (NTAPI *NtQueryDirectoryFile_t)(_In_ HANDLE, _In_opt_ HANDLE, _In_opt_ PIO_APC_ROUTINE, _In_opt_ PVOID, _Out_ PIO_STATUS_BLOCK, _Out_ PVOID, _In_ ULONG, _In_ NT_FILE_INFORMATION_CLASS, _In_ BOOLEAN, _In_opt_ PUNICODE_STRING, _In_ BOOLEAN);
+typedef NTSTATUS (NTAPI *NtQueryInformationFile_t)(_In_ HANDLE, _Out_ PIO_STATUS_BLOCK, _Out_ PVOID, _In_ ULONG, _In_ NT_FILE_INFORMATION_CLASS);
+typedef PVOID (NTAPI *RtlAllocateHeap_t)(_In_ PVOID, _In_ ULONG, _In_ SIZE_T);
+typedef BOOLEAN (NTAPI *RtlFreeHeap_t)(_In_ PVOID, _In_opt_ ULONG, _Frees_ptr_opt_ PVOID);
+typedef NTSTATUS (NTAPI *RtlInitializeCriticalSection_t)(_In_ PRTL_CRITICAL_SECTION);
+typedef NTSTATUS (NTAPI *RtlDeleteCriticalSection_t)(_In_ PRTL_CRITICAL_SECTION);
+typedef NTSTATUS (NTAPI *RtlEnterCriticalSection_t)(_In_ PRTL_CRITICAL_SECTION);
+typedef NTSTATUS (NTAPI *RtlLeaveCriticalSection_t)(_In_ PRTL_CRITICAL_SECTION);
+typedef ULONG (NTAPI *RtlNtStatusToDosError_t)(NTSTATUS);
+typedef BOOLEAN (NTAPI *RtlDosPathNameToRelativeNtPathName_U_t)(_In_ PCWSTR, _Out_ PUNICODE_STRING, _Out_opt_ PWSTR*, _Out_opt_ PRTL_RELATIVE_NAME);
+typedef RTL_PATH_TYPE (NTAPI *RtlDetermineDosPathNameType_U_t)(_In_ PCWSTR);
+typedef ULONG (NTAPI *RtlGetFullPathName_U_t)(_In_ PWSTR, _In_ ULONG, _Out_ PWSTR, _Out_opt_ PWSTR*);
+typedef NTSTATUS (NTAPI *NtQueryObject_t)(_In_opt_ HANDLE, _In_ OBJECT_INFORMATION_CLASS, _Out_ PVOID, _In_ ULONG, _Out_opt_ PULONG);
+typedef NTSTATUS (NTAPI *NtOpenFile_t)(_Out_ PHANDLE, _In_ ACCESS_MASK, _In_ POBJECT_ATTRIBUTES, _Out_ PIO_STATUS_BLOCK, _In_ ULONG, _In_ ULONG);
 
 /*
   Use this to declare a variable of the name of a native function and of its

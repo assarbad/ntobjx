@@ -1,9 +1,14 @@
 LIBRARY ntdll-delayed.dll
 
 EXPORTS
+    ; from winternl.h in the order they appear there
     NtClose
     NtCreateFile
     NtOpenFile
+    NtRenameKey
+    ; NtNotifyChangeMultipleKeys
+    ; NtQueryMultipleValueKey
+    ; NtSetInformationKey
     NtDeviceIoControlFile
     NtWaitForSingleObject
     RtlIsNameLegalDOS8Dot3
@@ -27,34 +32,34 @@ EXPORTS
     RtlUnicodeToMultiByteSize
     RtlCharToInteger
     RtlConvertSidToUnicodeString
-    ; locally declared symbols (not in winternl.h)
+    ; RtlUniform
+    ; locally declared symbols (not in winternl.h), ordered as in ntnative.h
     RtlGetVersion
     RtlImageNtHeader
     RtlImageDirectoryEntryToData
     RtlImageRvaToVa
     NtQueryEvent
     NtQueryIoCompletion
-    NtQueryKey
     NtQueryMutant
     NtQuerySemaphore
     NtQuerySection
     NtQueryTimer
     NtOpenDirectoryObject
     NtQueryDirectoryObject
-    NtQueryDirectoryFile
     NtOpenSymbolicLinkObject
     NtQuerySymbolicLinkObject
     NtOpenEvent
     NtOpenMutant
     NtOpenSection
-    NtOpenSemaphore
     NtOpenTimer
+    NtOpenSemaphore
     NtOpenEventPair
     NtOpenIoCompletion
     NtOpenKey
     NtCreateKey
     NtEnumerateKey
     NtEnumerateValueKey
+    NtQueryKey
     NtQueryValueKey
     RtlValidateUnicodeString
     RtlDowncaseUnicodeString
@@ -63,3 +68,14 @@ EXPORTS
     NtCreateSection
     NtMapViewOfSection
     NtUnmapViewOfSection
+    NtQueryDirectoryFile
+    NtQueryInformationFile
+    RtlAllocateHeap
+    RtlFreeHeap
+    RtlInitializeCriticalSection
+    RtlDeleteCriticalSection
+    RtlEnterCriticalSection
+    RtlLeaveCriticalSection
+    RtlDosPathNameToRelativeNtPathName_U
+    RtlDetermineDosPathNameType_U
+    RtlGetFullPathName_U
