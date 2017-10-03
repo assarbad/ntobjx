@@ -624,6 +624,26 @@ RtlLeaveCriticalSection(
 
 /* not repeating RtlNtStatusToDosError */
 
+_Success_(return != 0)
+BOOLEAN
+NTAPI
+RtlDosPathNameToNtPathName_U(
+    _In_ PCWSTR DosFileName,
+    _Out_ PUNICODE_STRING NtFileName,
+    _Out_opt_ PWSTR *FilePart,
+    _Out_opt_ PRTL_RELATIVE_NAME RelativeName
+    ) { return FALSE; }
+
+NTSTATUS
+NTAPI
+RtlDosPathNameToNtPathName_U_WithStatus(
+    _In_ PCWSTR DosFileName,
+    _Out_ PUNICODE_STRING NtFileName,
+    _Out_opt_ PWSTR *FilePart,
+    _Out_opt_ PRTL_RELATIVE_NAME RelativeName
+    ) { return 0; }
+
+_Success_(return != 0)
 BOOLEAN
 NTAPI
 RtlDosPathNameToRelativeNtPathName_U(

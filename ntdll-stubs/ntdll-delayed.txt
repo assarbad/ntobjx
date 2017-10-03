@@ -76,6 +76,8 @@ EXPORTS
     RtlDeleteCriticalSection
     RtlEnterCriticalSection
     RtlLeaveCriticalSection
+    RtlDosPathNameToNtPathName_U
+    RtlDosPathNameToNtPathName_U_WithStatus
     RtlDosPathNameToRelativeNtPathName_U
     RtlDetermineDosPathNameType_U
     RtlGetFullPathName_U

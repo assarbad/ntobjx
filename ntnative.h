@@ -29,7 +29,7 @@
 ///////////////////////////////////////////////////////////////////////////////
 
 #ifndef __NTNATIVE_H_VER__
-#define __NTNATIVE_H_VER__ 2017091922
+#define __NTNATIVE_H_VER__ 2017100300
 #if (defined(_MSC_VER) && (_MSC_VER >= 1020)) || defined(__MCPP)
 #pragma once
 #endif // Check for "#pragma once" support
@@ -563,7 +563,6 @@ typedef enum _NT_FILE_INFORMATION_CLASS
     FileInformationMaximum,
 } NT_FILE_INFORMATION_CLASS, *PNT_FILE_INFORMATION_CLASS;
 
-#pragma pack(push, 4)
 typedef struct _FILE_STREAM_INFORMATION
 {
     ULONG NextEntryOffset;
@@ -572,7 +571,91 @@ typedef struct _FILE_STREAM_INFORMATION
     LARGE_INTEGER StreamAllocationSize;
     WCHAR StreamName[1];
 } FILE_STREAM_INFORMATION, *PFILE_STREAM_INFORMATION;
-#pragma pack(pop)
+
+typedef struct _FILE_DIRECTORY_INFORMATION
+{
+    ULONG NextEntryOffset;
+    ULONG FileIndex;
+    LARGE_INTEGER CreationTime;
+    LARGE_INTEGER LastAccessTime;
+    LARGE_INTEGER LastWriteTime;
+    LARGE_INTEGER ChangeTime;
+    LARGE_INTEGER EndOfFile;
+    LARGE_INTEGER AllocationSize;
+    ULONG FileAttributes;
+    ULONG FileNameLength;
+    WCHAR FileName[1];
+} FILE_DIRECTORY_INFORMATION, *PFILE_DIRECTORY_INFORMATION;
+
+typedef struct _FILE_FULL_DIR_INFORMATION
+{
+    ULONG NextEntryOffset;
+    ULONG FileIndex;
+    LARGE_INTEGER CreationTime;
+    LARGE_INTEGER LastAccessTime;
+    LARGE_INTEGER LastWriteTime;
+    LARGE_INTEGER ChangeTime;
+    LARGE_INTEGER EndOfFile;
+    LARGE_INTEGER AllocationSize;
+    ULONG FileAttributes;
+    ULONG FileNameLength;
+    ULONG EaSize;
+    WCHAR FileName[1];
+} FILE_FULL_DIR_INFORMATION, *PFILE_FULL_DIR_INFORMATION;
+
+typedef struct _FILE_ID_FULL_DIR_INFORMATION
+{
+    ULONG NextEntryOffset;
+    ULONG FileIndex;
+    LARGE_INTEGER CreationTime;
+    LARGE_INTEGER LastAccessTime;
+    LARGE_INTEGER LastWriteTime;
+    LARGE_INTEGER ChangeTime;
+    LARGE_INTEGER EndOfFile;
+    LARGE_INTEGER AllocationSize;
+    ULONG FileAttributes;
+    ULONG FileNameLength;
+    ULONG EaSize;
+    LARGE_INTEGER FileId;
+    WCHAR FileName[1];
+} FILE_ID_FULL_DIR_INFORMATION, *PFILE_ID_FULL_DIR_INFORMATION;
+
+typedef struct _FILE_BOTH_DIR_INFORMATION
+{
+    ULONG NextEntryOffset;
+    ULONG FileIndex;
+    LARGE_INTEGER CreationTime;
+    LARGE_INTEGER LastAccessTime;
+    LARGE_INTEGER LastWriteTime;
+    LARGE_INTEGER ChangeTime;
+    LARGE_INTEGER EndOfFile;
+    LARGE_INTEGER AllocationSize;
+    ULONG FileAttributes;
+    ULONG FileNameLength;
+    ULONG EaSize;
+    CCHAR ShortNameLength;
+    WCHAR ShortName[12];
+    WCHAR FileName[1];
+} FILE_BOTH_DIR_INFORMATION, *PFILE_BOTH_DIR_INFORMATION;
+
+typedef struct _FILE_ID_BOTH_DIR_INFORMATION
+{
+    ULONG NextEntryOffset;
+    ULONG FileIndex;
+    LARGE_INTEGER CreationTime;
+    LARGE_INTEGER LastAccessTime;
+    LARGE_INTEGER LastWriteTime;
+    LARGE_INTEGER ChangeTime;
+    LARGE_INTEGER EndOfFile;
+    LARGE_INTEGER AllocationSize;
+    ULONG FileAttributes;
+    ULONG FileNameLength;
+    ULONG EaSize;
+    CCHAR ShortNameLength;
+    WCHAR ShortName[12];
+    LARGE_INTEGER FileId;
+    WCHAR FileName[1];
+} FILE_ID_BOTH_DIR_INFORMATION, *PFILE_ID_BOTH_DIR_INFORMATION;
 
 /* xref: https://googleprojectzero.blogspot.de/2016/02/the-definitive-guide-on-win32-to-nt.html */
 typedef struct _RTL_RELATIVE_NAME
@@ -601,12 +684,16 @@ RtlGetVersion(
     LPOSVERSIONINFOEXW lpVersionInformation
 );
 
+_Ret_maybenull_
+_Success_(return != NULL)
 PIMAGE_NT_HEADERS
 NTAPI
 RtlImageNtHeader(
     _In_ PVOID Base
 );
 
+_Ret_maybenull_
+_Success_(return != NULL)
 PVOID
 NTAPI
 RtlImageDirectoryEntryToData(
@@ -616,6 +703,8 @@ RtlImageDirectoryEntryToData(
     _Out_ PULONG Size
 );
 
+_Ret_maybenull_
+_Success_(return != NULL)
 PVOID
 NTAPI
 RtlImageRvaToVa(
@@ -855,7 +944,7 @@ RtlDowncaseUnicodeString(
     _In_ BOOLEAN AllocateDestinationString
 );
 
-NTSTATUS /* VOID in pre-Vista*/
+NTSTATUS /* VOID in pre-Vista */
 NTAPI
 RtlGenerate8dot3Name(
     _In_ PCUNICODE_STRING Name,
@@ -982,7 +1071,27 @@ RtlNtStatusToDosError(
     NTSTATUS Status
 );
 
+_Success_(return != 0)
+BOOLEAN
+NTAPI
+RtlDosPathNameToNtPathName_U(
+    _In_ PCWSTR DosFileName,
+    _Out_ PUNICODE_STRING NtFileName,
+    _Out_opt_ PWSTR *FilePart,
+    _Out_opt_ PRTL_RELATIVE_NAME RelativeName
+);
+
+NTSTATUS
+NTAPI
+RtlDosPathNameToNtPathName_U_WithStatus(
+    _In_ PCWSTR DosFileName,
+    _Out_ PUNICODE_STRING NtFileName,
+    _Out_opt_ PWSTR *FilePart,
+    _Out_opt_ PRTL_RELATIVE_NAME RelativeName
+);
+
 /* xref: https://googleprojectzero.blogspot.de/2016/02/the-definitive-guide-on-win32-to-nt.html */
+_Success_(return != 0)
 BOOLEAN
 NTAPI
 RtlDosPathNameToRelativeNtPathName_U(
@@ -1074,6 +1183,8 @@ typedef NTSTATUS (NTAPI *RtlDeleteCriticalSection_t)(_In_ PRTL_CRITICAL_SECTION)
 typedef NTSTATUS (NTAPI *RtlEnterCriticalSection_t)(_In_ PRTL_CRITICAL_SECTION);
 typedef NTSTATUS (NTAPI *RtlLeaveCriticalSection_t)(_In_ PRTL_CRITICAL_SECTION);
 typedef ULONG (NTAPI *RtlNtStatusToDosError_t)(NTSTATUS);
+typedef BOOLEAN (NTAPI *RtlDosPathNameToNtPathName_U_t)(_In_ PCWSTR, _Out_ PUNICODE_STRING, _Out_opt_ PWSTR *, _Out_opt_ PRTL_RELATIVE_NAME);
+typedef NTSTATUS (NTAPI *RtlDosPathNameToNtPathName_U_WithStatus_t)(_In_ PCWSTR, _Out_ PUNICODE_STRING, _Out_opt_ PWSTR *, _Out_opt_ PRTL_RELATIVE_NAME);
 typedef BOOLEAN (NTAPI *RtlDosPathNameToRelativeNtPathName_U_t)(_In_ PCWSTR, _Out_ PUNICODE_STRING, _Out_opt_ PWSTR*, _Out_opt_ PRTL_RELATIVE_NAME);
 typedef RTL_PATH_TYPE (NTAPI *RtlDetermineDosPathNameType_U_t)(_In_ PCWSTR);
 typedef ULONG (NTAPI *RtlGetFullPathName_U_t)(_In_ PWSTR, _In_ ULONG, _Out_ PWSTR, _Out_opt_ PWSTR*);
