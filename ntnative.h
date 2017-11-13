@@ -29,7 +29,7 @@
 ///////////////////////////////////////////////////////////////////////////////
 
 #ifndef __NTNATIVE_H_VER__
-#define __NTNATIVE_H_VER__ 2017100300
+#define __NTNATIVE_H_VER__ 2017111319
 #if (defined(_MSC_VER) && (_MSC_VER >= 1020)) || defined(__MCPP)
 #pragma once
 #endif // Check for "#pragma once" support
@@ -38,6 +38,7 @@
 #if !defined(__in_bcount) && !defined(_In_reads_bytes_)
 #   define __success(x)
 #   define __field_range(x, y)
+#   define __field_nullterminated
 #   define __in
 #   define __in_z
 #   define __in_bcount(x)
@@ -55,6 +56,7 @@
 #if defined(__in_bcount) && !defined(_In_reads_bytes_)
 #   define _Success_(x) __success(x)
 #   define _Field_range_(x, y) __field_range(x, y)
+#   define _Field_z_ __field_nullterminated
 #   define _In_ __in
 #   define _In_z_ __in_z
 #   define _In_reads_bytes_(x) __in_bcount(x)
@@ -70,6 +72,10 @@
 
 #ifndef _Ret_maybenull_
 #   define _Ret_maybenull_
+#endif
+
+#ifndef _Ret_writes_bytes_maybenull_
+#   define _Ret_writes_bytes_maybenull_(Size)
 #endif
 
 #ifndef _Post_writable_byte_size_
@@ -336,6 +342,19 @@ typedef enum _KEY_VALUE_INFORMATION_CLASS {
     KeyValuePartialInformationAlign64,
     MaxKeyValueInfoClass  // MaxKeyValueInfoClass should always be the last enum
 } KEY_VALUE_INFORMATION_CLASS;
+
+#if !defined(_WDMDDK_) && !defined(_WDM_INCLUDED_) && !defined(_DDK_DRIVER_) && !defined(WINAPI_FAMILY_PARTITION) && !defined(WINAPI_PARTITION_DESKTOP) && !defined(WINAPI_PARTITION_SYSTEM)
+/* newer Windows Kits have this one, so we check for WINAPI_FAMILY_PARTITION and friends */
+typedef enum _KEY_SET_INFORMATION_CLASS {
+    KeyWriteTimeInformation,
+    KeyWow64FlagsInformation,
+    KeyControlFlagsInformation,
+    KeySetVirtualizationInformation,
+    KeySetDebugInformation,
+    KeySetHandleTagsInformation,
+    MaxKeySetInfoClass  // MaxKeySetInfoClass should always be the last enum
+} KEY_SET_INFORMATION_CLASS;
+#endif
 
 typedef enum _MUTANT_INFORMATION_CLASS
 {
@@ -931,6 +950,13 @@ NtQueryValueKey(
 
 NTSTATUS
 NTAPI
+NtRenameKey(
+    _In_ HANDLE KeyHandle,
+    _In_ PUNICODE_STRING NewName
+);
+
+NTSTATUS
+NTAPI
 RtlValidateUnicodeString(
     _In_ _Reserved_ ULONG Flags,
     _In_ PCUNICODE_STRING String
@@ -1167,6 +1193,7 @@ typedef NTSTATUS (NTAPI *NtEnumerateKey_t)(_In_ HANDLE, _In_ ULONG, _In_ KEY_INF
 typedef NTSTATUS (NTAPI *NtEnumerateValueKey_t)(_In_ HANDLE, _In_ ULONG, _In_ KEY_VALUE_INFORMATION_CLASS, _Out_ PVOID, _In_ ULONG, _Out_ PULONG);
 typedef NTSTATUS (NTAPI *NtQueryKey_t)(_In_ HANDLE, _In_ KEY_INFORMATION_CLASS, _Out_ PVOID, _In_ ULONG, _Out_ PULONG);
 typedef NTSTATUS (NTAPI *NtQueryValueKey_t)(_In_ HANDLE, _In_ PUNICODE_STRING, _In_ KEY_VALUE_INFORMATION_CLASS, _Out_ PVOID, _In_ ULONG, _Out_ PULONG);
+typedef NTSTATUS (NTAPI *NtRenameKey_t)(_In_ HANDLE, _In_ PUNICODE_STRING);
 typedef NTSTATUS (NTAPI *RtlValidateUnicodeString_t)(_In_ _Reserved_ ULONG, _In_ PCUNICODE_STRING);
 typedef NTSTATUS (NTAPI *RtlDowncaseUnicodeString_t)(PUNICODE_STRING, _In_ PCUNICODE_STRING, _In_ BOOLEAN);
 typedef NTSTATUS (NTAPI *RtlGenerate8dot3Name_t)(_In_ PCUNICODE_STRING, _In_ BOOLEAN, _Inout_ PGENERATE_NAME_CONTEXT, _Inout_ PUNICODE_STRING);
@@ -1188,8 +1215,38 @@ typedef NTSTATUS (NTAPI *RtlDosPathNameToNtPathName_U_WithStatus_t)(_In_ PCWSTR,
 typedef BOOLEAN (NTAPI *RtlDosPathNameToRelativeNtPathName_U_t)(_In_ PCWSTR, _Out_ PUNICODE_STRING, _Out_opt_ PWSTR*, _Out_opt_ PRTL_RELATIVE_NAME);
 typedef RTL_PATH_TYPE (NTAPI *RtlDetermineDosPathNameType_U_t)(_In_ PCWSTR);
 typedef ULONG (NTAPI *RtlGetFullPathName_U_t)(_In_ PWSTR, _In_ ULONG, _Out_ PWSTR, _Out_opt_ PWSTR*);
-typedef NTSTATUS (NTAPI *NtQueryObject_t)(_In_opt_ HANDLE, _In_ OBJECT_INFORMATION_CLASS, _Out_ PVOID, _In_ ULONG, _Out_opt_ PULONG);
-typedef NTSTATUS (NTAPI *NtOpenFile_t)(_Out_ PHANDLE, _In_ ACCESS_MASK, _In_ POBJECT_ATTRIBUTES, _Out_ PIO_STATUS_BLOCK, _In_ ULONG, _In_ ULONG);
+/* Those from wintrnl.h */
+typedef NTSTATUS (NTAPI *NtClose_t)(_In_ HANDLE);
+typedef NTSTATUS (NTAPI *NtCreateFile_t)(_Out_ PHANDLE, _In_ ACCESS_MASK, _In_ POBJECT_ATTRIBUTES, _Out_ PIO_STATUS_BLOCK, _In_opt_ PLARGE_INTEGER AllocationSize, _In_ ULONG FileAttributes, _In_ ULONG ShareAccess, _In_ ULONG CreateDisposition, _In_ ULONG CreateOptions, _In_opt_ PVOID EaBuffer, _In_ ULONG EaLength);
+typedef NTSTATUS (NTAPI *NtOpenFile_t)(_Out_ PHANDLE, _In_ ACCESS_MASK, _In_ POBJECT_ATTRIBUTES, _Out_ PIO_STATUS_BLOCK IoStatusBlock, _In_ ULONG ShareAccess, _In_ ULONG);
+typedef NTSTATUS (NTAPI *NtRenameKey_t)(_In_ HANDLE, _In_ PUNICODE_STRING);
+typedef NTSTATUS (NTAPI *NtNotifyChangeMultipleKeys_t)(_In_ HANDLE, _In_opt_ ULONG, _In_opt_ OBJECT_ATTRIBUTES[], _In_opt_ HANDLE, _In_opt_ PIO_APC_ROUTINE, _In_opt_ PVOID, _Out_ PIO_STATUS_BLOCK, _In_ ULONG, _In_ BOOLEAN, _Out_writes_bytes_opt_(BufferSize) PVOID, _In_ ULONG, _In_ BOOLEAN);
+typedef NTSTATUS (NTAPI *NtQueryMultipleValueKey_t)(_In_ HANDLE, _Inout_ PKEY_VALUE_ENTRY, _In_ ULONG, _Out_ PVOID, _Inout_ PULONG, _Out_opt_ PULONG);
+typedef NTSTATUS (NTAPI *NtSetInformationKey_t)(_In_ HANDLE, _In_ KEY_SET_INFORMATION_CLASS, _In_ PVOID, _In_ ULONG);
+typedef NTSTATUS (NTAPI *NtDeviceIoControlFile_t)(_In_ HANDLE, _In_opt_ HANDLE, _In_opt_ PIO_APC_ROUTINE, _In_opt_ PVOID, _Out_ PIO_STATUS_BLOCK, _In_ ULONG, _In_ PVOID, _In_ ULONG, _Out_opt_ PVOID, _In_ ULONG);
+typedef NTSTATUS (NTAPI *NtWaitForSingleObject_t)(_In_ HANDLE, _In_ BOOLEAN, _In_opt_ PLARGE_INTEGER);
+typedef BOOLEAN (NTAPI *RtlIsNameLegalDOS8Dot3_t)(_In_ PUNICODE_STRING, _Inout_opt_ POEM_STRING, _Inout_opt_ PBOOLEAN);
+typedef ULONG (NTAPI *RtlNtStatusToDosError_t)(NTSTATUS);
+typedef NTSTATUS (NTAPI *NtQueryInformationProcess_t)(_In_ HANDLE, _In_ PROCESSINFOCLASS, _Out_ PVOID, _In_ ULONG, _Out_opt_ PULONG);
+typedef NTSTATUS (NTAPI *NtQueryInformationThread_t)(_In_ HANDLE, _In_ THREADINFOCLASS, _Out_ PVOID, _In_ ULONG, _Out_opt_ PULONG);
+typedef NTSTATUS (NTAPI *NtQueryObject_t)(_In_opt_ HANDLE, _In_ OBJECT_INFORMATION_CLASS, _Out_opt_ PVOID, _In_ ULONG, _Out_opt_ PULONG);
+typedef NTSTATUS (NTAPI *NtQuerySystemInformation_t)(_In_ SYSTEM_INFORMATION_CLASS, _Out_ PVOID, _In_ ULONG, _Out_opt_ PULONG);
+typedef NTSTATUS (NTAPI *NtQuerySystemTime_t)(_Out_ PLARGE_INTEGER);
+typedef NTSTATUS (NTAPI *RtlLocalTimeToSystemTime_t)(_In_ PLARGE_INTEGER, _Out_ PLARGE_INTEGER);
+typedef BOOLEAN (NTAPI *RtlTimeToSecondsSince1970_t)(_In_ PLARGE_INTEGER, _Out_ PULONG);
+typedef VOID (NTAPI *RtlFreeAnsiString_t)(PANSI_STRING);
+typedef VOID (NTAPI *RtlFreeUnicodeString_t)(PUNICODE_STRING);
+typedef VOID (NTAPI *RtlFreeOemString_t)(POEM_STRING);
+typedef VOID (NTAPI *RtlInitString_t)(PSTRING, PCSZ);
+typedef VOID (NTAPI *RtlInitAnsiString_t)(PANSI_STRING, PCSZ);
+typedef VOID (NTAPI *RtlInitUnicodeString_t)(PUNICODE_STRING, PCWSTR);
+typedef NTSTATUS (NTAPI *RtlAnsiStringToUnicodeString_t)(PUNICODE_STRING, PCANSI_STRING, BOOLEAN);
+typedef NTSTATUS (NTAPI *RtlUnicodeStringToAnsiString_t)(PANSI_STRING, PCUNICODE_STRING, BOOLEAN);
+typedef NTSTATUS (NTAPI *RtlUnicodeStringToOemString_t)(POEM_STRING, PCUNICODE_STRING, BOOLEAN);
+typedef NTSTATUS (NTAPI *RtlUnicodeToMultiByteSize_t)(_Out_ PULONG, _In_ PWCH, _In_ ULONG);
+typedef NTSTATUS (NTAPI *RtlCharToInteger_t)(PCSZ, ULONG, PULONG);
+typedef NTSTATUS (NTAPI *RtlConvertSidToUnicodeString_t)(PUNICODE_STRING, PSID, BOOLEAN);
+typedef ULONG (NTAPI *RtlUniform_t)(PULONG);
 
 /*
   Use this to declare a variable of the name of a native function and of its
@@ -1253,6 +1310,7 @@ typedef NTSTATUS (NTAPI *NtOpenFile_t)(_Out_ PHANDLE, _In_ ACCESS_MASK, _In_ POB
 #define ZwEnumerateKey NtEnumerateKey
 #define ZwEnumerateValueKey NtEnumerateValueKey
 #define ZwQueryValueKey NtQueryValueKey
+#define ZwRenameKey NtRenameKey
 #define ZwCreateSection NtCreateSection
 #define ZwMapViewOfSection NtMapViewOfSection
 #define ZwUnmapViewOfSection NtUnmapViewOfSection

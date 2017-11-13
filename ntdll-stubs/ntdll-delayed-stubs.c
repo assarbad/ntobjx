@@ -48,13 +48,6 @@ NtOpenFile (
 
 NTSTATUS
 NTAPI
-NtRenameKey(
-    _In_ HANDLE KeyHandle,
-    _In_ PUNICODE_STRING NewName
-) { return 0; }
-
-NTSTATUS
-NTAPI
 NtDeviceIoControlFile (
     _In_ HANDLE FileHandle,
     _In_opt_ HANDLE Event,
@@ -486,6 +479,13 @@ NtQueryValueKey(
     _Out_writes_bytes_opt_(Length) PVOID KeyValueInformation,
     _In_ ULONG Length,
     _Out_ PULONG ResultLength
+    ) { return 0; }
+
+NTSTATUS
+NTAPI
+NtRenameKey(
+    _In_ HANDLE KeyHandle,
+    _In_ PUNICODE_STRING NewName
     ) { return 0; }
 
 NTSTATUS

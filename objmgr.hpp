@@ -27,7 +27,7 @@
 ///////////////////////////////////////////////////////////////////////////////
 
 #ifndef __OBJMGR_HPP_VER__
-#define __OBJMGR_HPP_VER__ 2017062820
+#define __OBJMGR_HPP_VER__ 2017100819
 #if (defined(_MSC_VER) && (_MSC_VER >= 1020)) || defined(__MCPP)
 #pragma once
 #endif // Check for "#pragma once" support
@@ -1065,6 +1065,7 @@ namespace NtObjMgr{
             {
                 ATLTRACE2(_T("Success. Returning handle %p.\n"), hObject);
                 ULONG retLen = 0;
+                // TODO: https://wj32.org/wp/2012/11/30/obquerytypeinfo-and-ntqueryobject-buffer-overrun-in-windows-8/
                 queryStatus = ::NtQueryObject(hObject, ObjectBasicInformation, &obi, static_cast<ULONG>(sizeof(obi)), &retLen);
                 if (NT_SUCCESS(queryStatus))
                 {
