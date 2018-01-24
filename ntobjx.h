@@ -2230,7 +2230,7 @@ public:
         : baseClass()
         , m_strID(strID)
     {
-        SetPaneContainerExtendedStyle(PANECNT_VERTICAL, PANECNT_VERTICAL);
+        SetPaneContainerExtendedStyle(PANECNT_VERTICAL | PANECNT_NOCLOSEBUTTON);
     }
 
     HWND Create(HWND hWndParent, LPCTSTR lpstrTitle = NULL)
@@ -2466,14 +2466,13 @@ public:
     CObjectImageList m_imagelist;
     CNtObjectsStatusBar m_status;
     CNtObjectsSplitter m_vsplit;
-#if FEATURE_FIND_OBJECT
-    CNtObjectsFoundSplitter m_hsplit;
-#endif // FEATURE_FIND_OBJECT
     CNtObjectsTreeView m_treeview;
     CNtObjectsListView m_listview;
 #if FEATURE_FIND_OBJECT
+    CNtObjectsFoundSplitter m_hsplit;
     CNtObjectsFindResults m_findresults;
     CSearchPane m_searchPane;
+    int m_bSearchSplitPct;
 #endif // FEATURE_FIND_OBJECT
     bool m_bFirstOnIdle;
     GenericObject* m_activeObject;
@@ -2494,6 +2493,7 @@ public:
 #if FEATURE_FIND_OBJECT
         , m_findresults(m_imagelist)
         , m_searchPane(ID_OBJSEARCH_CAPTION)
+        , m_bSearchSplitPct(75)
 #endif // FEATURE_FIND_OBJECT
         , m_bFirstOnIdle(true) // to force initial refresh
         , m_activeObject(0)
@@ -2568,6 +2568,7 @@ public:
         ATLVERIFY(NULL != m_listview.Create(m_vsplit));
 #if FEATURE_FIND_OBJECT
         ATLVERIFY(NULL != m_searchPane.Create(m_hsplit));
+        ATLVERIFY(NULL != m_findresults.Create(m_searchPane, rcDefault));
 #endif // FEATURE_FIND_OBJECT
 
         ATLASSERT(::IsWindow(m_hWndStatusBar));
@@ -2581,17 +2582,13 @@ public:
         ATLASSERT(::IsWindow(m_listview));
 
         ATLTRACE2(_T("Control ID for vertical splitter: %i\n"), ::GetDlgCtrlID(m_vsplit));
-#if FEATURE_FIND_OBJECT
-        ATLTRACE2(_T("Control ID for horizontal splitter: %i\n"), ::GetDlgCtrlID(m_hsplit));
-#endif // FEATURE_FIND_OBJECT
         ATLTRACE2(_T("Control ID for treeview: %i\n"), ::GetDlgCtrlID(m_treeview));
         ATLTRACE2(_T("Control ID for listview: %i\n"), ::GetDlgCtrlID(m_listview));
-#if FEATURE_FIND_OBJECT
-        ATLVERIFY(::IsWindow(m_searchPane));
-#endif // FEATURE_FIND_OBJECT
         ATLASSERT(m_treeview == ::GetDlgItem(m_vsplit, ::GetDlgCtrlID(m_treeview)));
         ATLASSERT(m_listview == ::GetDlgItem(m_vsplit, ::GetDlgCtrlID(m_listview)));
 #if FEATURE_FIND_OBJECT
+        ATLTRACE2(_T("Control ID for horizontal splitter: %i\n"), ::GetDlgCtrlID(m_hsplit));
+        ATLVERIFY(::IsWindow(m_searchPane));
         ATLASSERT(m_hsplit == ::GetDlgItem(m_hWnd, ::GetDlgCtrlID(m_hsplit)));
         ATLASSERT(m_vsplit == ::GetDlgItem(m_hsplit, ::GetDlgCtrlID(m_vsplit)));
 #else
@@ -2605,8 +2602,8 @@ public:
         ATLVERIFY(m_vsplit.SetSplitterPane(SPLIT_PANE_LEFT, m_treeview));
         ATLVERIFY(m_vsplit.SetSplitterPane(SPLIT_PANE_RIGHT, m_listview));
 #if FEATURE_FIND_OBJECT
-        ATLVERIFY(m_hsplit.SetSplitterPane(SPLIT_PANE_TOP, m_vsplit));
-        ATLVERIFY(m_hsplit.SetSplitterPane(SPLIT_PANE_BOTTOM, m_searchPane));
+        m_searchPane.SetClient(m_findresults);
+        m_hsplit.SetSplitterPanes(m_vsplit, m_searchPane);
 #endif // FEATURE_FIND_OBJECT
 
         UpdateLayout();
@@ -2721,8 +2718,23 @@ public:
 #if FEATURE_FIND_OBJECT
     LRESULT OnFindObject(WORD /*wNotifyCode*/, WORD /*wID*/, HWND /*hWndCtl*/, BOOL& /*bHandled*/)
     {
-        m_hsplit.SetSinglePaneMode();
-        m_hsplit.SetSplitterPosPct(75);
+        ATLTRACE2(_T("Single pane mode before toggling search pane: %d\n"), m_hsplit.GetSinglePaneMode());
+        switch (m_hsplit.GetSinglePaneMode())
+        {
+        case SPLIT_PANE_NONE:
+            m_bSearchSplitPct = m_hsplit.GetSplitterPosPct(); // save old splitter position percentage
+            m_hsplit.SetSinglePaneMode(SPLIT_PANE_TOP);
+            m_hsplit.SetSplitterPosPct(100);
+            break;
+        case SPLIT_PANE_TOP:
+            m_hsplit.SetSinglePaneMode(SPLIT_PANE_NONE);
+            m_hsplit.SetSplitterPosPct(m_bSearchSplitPct);
+            break;
+        case SPLIT_PANE_BOTTOM:
+            ATLASSERT(!_T("Not expecting SPLIT_PANE_BOTTOM here."));
+            break;
+        }
+        ATLTRACE2(_T("Pane position now at %i %%\n"), m_hsplit.GetSplitterPosPct());
         return 0;
     }
 #endif // FEATURE_FIND_OBJECT
