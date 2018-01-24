@@ -50,7 +50,7 @@
 #define TEXT_FILEDESC          Inspects the NT object manager namespace // component description
 #define TEXT_COMPANY           Oliver Schneider (assarbad.net) // company
 #define TEXT_MODULE            ntobjx // module name
-#define TEXT_COPYRIGHT         Copyright (c) EXE_YEAR TEXT_AUTHOR // copyright information
+#define TEXT_COPYRIGHT         Copyright \xA9 EXE_YEAR TEXT_AUTHOR // copyright information
 #define TEXT_INTERNALNAME      ntobjx.exe
 #define HG_REPOSITORY          "https://bitbucket.org/assarbad/ntobjx"
 #define TEXT_PORTIONSCOPYRIGHT "Portions (WTL, pugixml, FRISK utility classes), see source code for details:\nCopyright (c) Microsoft Corporation, WTL Team. All rights reserved.\nCopyright (c) Arseny Kapoulkine.\nCopyright (c) FRISK Software International (FRISK). All rights reserved."
