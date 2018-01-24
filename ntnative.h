@@ -6,7 +6,7 @@
 ///
 ///////////////////////////////////////////////////////////////////////////////
 ///
-/// Copyright (c) 2016, 2017 Oliver Schneider (assarbad.net)
+/// Copyright (c) 2016-2018 Oliver Schneider (assarbad.net)
 ///
 /// Permission is hereby granted, free of charge, to any person obtaining a
 /// copy of this software and associated documentation files (the "Software"),
@@ -29,7 +29,7 @@
 ///////////////////////////////////////////////////////////////////////////////
 
 #ifndef __NTNATIVE_H_VER__
-#define __NTNATIVE_H_VER__ 2017111319
+#define __NTNATIVE_H_VER__ 2018012420
 #if (defined(_MSC_VER) && (_MSC_VER >= 1020)) || defined(__MCPP)
 #pragma once
 #endif // Check for "#pragma once" support
@@ -948,6 +948,7 @@ NtQueryValueKey(
     _Out_ PULONG ResultLength
 );
 
+__kernel_entry
 NTSTATUS
 NTAPI
 NtRenameKey(

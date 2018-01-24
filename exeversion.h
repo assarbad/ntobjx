@@ -1,6 +1,6 @@
 ///////////////////////////////////////////////////////////////////////////////
 ///
-/// Copyright (c) 2016-2017 Oliver Schneider (assarbad.net)
+/// Copyright (c) 2016-2018 Oliver Schneider (assarbad.net)
 ///
 /// Permission is hereby granted, free of charge, to any person obtaining a
 /// copy of this software and associated documentation files (the "Software"),
@@ -22,7 +22,7 @@
 ///
 ///////////////////////////////////////////////////////////////////////////////
 #ifndef __EXEVERSION_H_VER__
-#define __EXEVERSION_H_VER__ 2017070913
+#define __EXEVERSION_H_VER__ 2018012420
 
 #if defined(_MSC_VER) && (_MSC_VER >= 1020)
 #pragma once
@@ -44,7 +44,7 @@
 #define FILE_PATCH             PRD_PATCH // patch number
 #define FILE_BUILD             PRD_BUILD // build number
 #define FILE_BUILD_NUMERIC     PRD_BUILD_NUMERIC // build number for product
-#define EXE_YEAR               2016-2017 // current year or timespan (e.g. 2003-2007)
+#define EXE_YEAR               2016-2018 // current year or timespan (e.g. 2003-2007)
 #define TEXT_WEBSITE           https:/##/assarbad.net // website
 #define TEXT_PRODUCTNAME       NT Objects // product's name
 #define TEXT_FILEDESC          Inspects the NT object manager namespace // component description
