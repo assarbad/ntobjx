@@ -86,6 +86,11 @@
 #endif
 
 #define FEATURE_FIND_OBJECT 0
+#ifdef DDKBUILD
+#define FEATURE_OBJECT_SECURITY 0
+#else
+#define FEATURE_OBJECT_SECURITY 1
+#endif // DDKBUILD
 
 using ATL::CAccessToken;
 using ATL::CAtlMap;
@@ -161,8 +166,16 @@ namespace
         return FALSE;
     }
 
+    CString getObjectDetailsString(GenericObject* obj)
+    {
+        UNREFERENCED_PARAMETER(obj);
+        ATLTRACE2(_T("Copying object details to clipboard as text.\n"));
+        return _T("Not yet implemented"); // FIXME
+    }
+
     void copyItemToClipboard(HWND hWndSource, int idCmd, GenericObject* obj)
     {
+        ATLASSERT(obj != NULL);
         if(::OpenClipboard(hWndSource))
         {
             CString s;
@@ -245,6 +258,9 @@ namespace
                     s = symlink->target();
                     ATLTRACE2(_T("Copy symlink target: %s\n"), s.GetString());
                 }
+                break;
+            case ID_COPY_DETAILS:
+                s = getObjectDetailsString(obj);
                 break;
             }
             ATLVERIFY(setClipboardString(s.GetString()));
@@ -453,13 +469,13 @@ private:
     }
 };
 
-#ifndef DDKBUILD
+#if FEATURE_OBJECT_SECURITY
 #   include <Aclui.h>
 #   ifndef __ACCESS_CONTROL_API__
 #       include <Aclapi.h>
 #   endif
 #   pragma comment(lib, "aclui.lib")
-#endif // !DDKBUILD
+#endif // FEATURE_OBJECT_SECURITY
 
 template <typename T> class CObjectPropertySheetT :
     public CPropertySheetImpl<CObjectPropertySheetT<T> >
@@ -570,6 +586,7 @@ template <typename T> class CObjectPropertySheetT :
         typedef CPropertyPageImpl<CObjectDetailsPage> baseClass;
         GenericObject*  m_obj;
         ObjectHandle&   m_objHdl;
+        HACCEL          m_hAccel;
         CEdit           m_edtName;
         CEdit           m_edtFullname;
         CEdit           m_edtType;
@@ -596,6 +613,8 @@ template <typename T> class CObjectPropertySheetT :
         BEGIN_MSG_MAP(CObjectDetailsPage)
             MESSAGE_HANDLER(WM_INITDIALOG, OnInitDialog)
             MESSAGE_HANDLER(WM_CTLCOLORSTATIC, OnCtlColorStatic)
+            MESSAGE_HANDLER(WM_DESTROY, OnDestroy)
+            COMMAND_ID_HANDLER(ID_COPY_DETAILS, OnCopyObjectDetails)
             CHAIN_MSG_MAP(baseClass)
         END_MSG_MAP()
 
@@ -604,6 +623,7 @@ template <typename T> class CObjectPropertySheetT :
             : baseClass()
             , m_obj(obj)
             , m_objHdl(objHdl)
+            , m_hAccel(NULL)
         {
         }
 
@@ -695,6 +715,14 @@ template <typename T> class CObjectPropertySheetT :
             m_edtExplanation.ModifyStyle(ES_NOHIDESEL, 0);
             m_edtExplanation.SetSelNone(TRUE);
 
+            // Load the accelerator table corresponding to the dialog's resource ID
+            HACCEL hNewAccel = ::LoadAccelerators(ModuleHelper::GetResourceInstance(), MAKEINTRESOURCE(IDD));
+            ATLASSERT(hNewAccel != NULL);
+            if(hNewAccel)
+            {
+                m_hAccel = hNewAccel;
+            }
+
             return TRUE;
         }
 
@@ -717,6 +745,35 @@ template <typename T> class CObjectPropertySheetT :
                 break;
             }
             bHandled = FALSE;
+            return FALSE;
+        }
+
+        LRESULT OnDestroy(UINT /*uMsg*/, WPARAM /*wParam*/, LPARAM /*lParam*/, BOOL& /*bHandled*/)
+        {
+            if(m_hAccel)
+            {
+                ATLVERIFY(::DestroyAcceleratorTable(m_hAccel));
+                m_hAccel = NULL;
+            }
+            return FALSE;
+        }
+
+        LRESULT OnTranslateAccelerator(MSG* pMsg)
+        {
+            if(m_hAccel)
+            {
+                if(TranslateAccelerator(m_hWnd, m_hAccel, pMsg))
+                {
+                    return PSNRET_MESSAGEHANDLED;
+                }
+            }
+            return PSNRET_NOERROR;
+        }
+
+        LRESULT OnCopyObjectDetails(WORD /*wNotifyCode*/, WORD wID, HWND /*hWndCtl*/, BOOL& /*bHandled*/)
+        {
+            ATLASSERT(wID == ID_COPY_DETAILS);
+            copyItemToClipboard(m_hWnd, wID, m_obj);
             return FALSE;
         }
 
@@ -1088,7 +1145,7 @@ template <typename T> class CObjectPropertySheetT :
         }
     };
 
-#ifndef DDKBUILD
+#if FEATURE_OBJECT_SECURITY
     class CSecurityInformation :
         public ISecurityInformation
     {
@@ -1183,15 +1240,15 @@ template <typename T> class CObjectPropertySheetT :
             ATLTRACENOTIMPL(_T(__FUNCTION__));
         }
     };
-#endif // !DDKBUILD
+#endif // FEATURE_OBJECT_SECURITY
 
     typedef CPropertySheetImpl<CObjectPropertySheetT<T> > baseClass;
     GenericObject* m_obj;
     ObjectHandle   m_objHdl;
     CObjectDetailsPage m_details;
-#ifndef DDKBUILD
+#if FEATURE_OBJECT_SECURITY
     ATL::CAutoPtr<CSecurityInformation> m_security;
-#endif // !DDKBUILD
+#endif // FEATURE_OBJECT_SECURITY
     ATL::CAutoPtr<CObjectSecurityNAPage> m_securityNA;
 public:
     BEGIN_MSG_MAP(CObjectPropertySheetT<T>)
@@ -1217,7 +1274,7 @@ public:
         ATLTRACE2(_T("Adding 'Object Details' property page\n"));
         AddPage(m_details);
 
-#ifndef DDKBUILD
+#if FEATURE_OBJECT_SECURITY
         if(!m_objHdl)
         {
             m_securityNA.Attach(new CObjectSecurityNAPage(m_obj, m_objHdl));
@@ -1230,11 +1287,11 @@ public:
             ATLTRACE2(_T("Adding 'Security' property page\n"));
             AddPage(::CreateSecurityPage(m_security));
         }
-#else // DDKBUILD
+#else // FEATURE_OBJECT_SECURITY
         m_securityNA.Attach(new CObjectSecurityNAPage(m_obj, m_objHdl, true));
         ATLTRACE2(_T("Adding 'Security (N/A)' property page - feature not built into program\n"));
         AddPage(*m_securityNA);
-#endif // !DDKBUILD
+#endif // FEATURE_OBJECT_SECURITY
 
         SetTitle(obj->name(), PSH_PROPTITLE);
     }
@@ -3007,7 +3064,7 @@ public:
 
         if(m_activeObject)
         {
-#           ifndef DDKBUILD
+#           if FEATURE_OBJECT_SECURITY
             // First time the user wants to see the properties (and security settings), we enable two privileges
             if(!m_Token.GetHandle())
             {
@@ -3028,7 +3085,7 @@ public:
                     }
                 }
             }
-#           endif // !DDKBUILD
+#           endif // FEATURE_OBJECT_SECURITY
             ATLTRACE2(_T("last selected = %p -> %s\n"), m_activeObject, m_activeObject->fullname().GetString());
             CObjectPropertySheet objprop(m_activeObject, m_imagelist);
             (void)objprop.DoModal(m_hWnd);

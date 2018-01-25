@@ -16,17 +16,15 @@
 // German (Germany) resources
 
 #if !defined(AFX_RESOURCE_DLL) || defined(AFX_TARG_DEU)
-#ifdef _WIN32
 LANGUAGE LANG_GERMAN, SUBLANG_GERMAN
 #pragma code_page(1252)
-#endif //_WIN32
 
 /////////////////////////////////////////////////////////////////////////////
 //
 // Menu
 //
 
-IDR_MAINFRAME MENU 
+IDR_MAINFRAME MENU
 BEGIN
     POPUP "&Datei"
     BEGIN
@@ -51,7 +49,7 @@ BEGIN
     MENUITEM "Online&hilfe",                ID_SHOW_ONLINEHELP
 END
 
-IDR_POPUP_HYPERLINK1 MENU 
+IDR_POPUP_HYPERLINK1 MENU
 BEGIN
     POPUP "Hyperlink context menu"
     BEGIN
@@ -59,7 +57,7 @@ BEGIN
     END
 END
 
-IDR_POPUP_MENU1 MENU 
+IDR_POPUP_MENU1 MENU
 BEGIN
     POPUP "Beliebiges Objekt"
     BEGIN
@@ -95,7 +93,7 @@ END
 // Accelerator
 //
 
-IDR_MAINFRAME ACCELERATORS 
+IDR_MAINFRAME ACCELERATORS
 BEGIN
     "S",            ID_FILE_SAVE_AS,        VIRTKEY, CONTROL, NOINVERT
     VK_F12,         ID_SHOW_ABOUT,          VIRTKEY, NOINVERT
@@ -103,6 +101,11 @@ BEGIN
     VK_F10,         ID_VIEW_PROPERTIES,     VIRTKEY, NOINVERT
     VK_F5,          ID_VIEW_REFRESH,        VIRTKEY, NOINVERT
     VK_F11,         ID_SWITCHLANGUAGE_POPUP, VIRTKEY, NOINVERT
+END
+
+IDD_PROPERTIES ACCELERATORS
+BEGIN
+    "C",            ID_COPY_DETAILS,        VIRTKEY, CONTROL, NOINVERT
 END
 
 
@@ -177,7 +180,7 @@ END
 //
 
 #ifdef APSTUDIO_INVOKED
-GUIDELINES DESIGNINFO 
+GUIDELINES DESIGNINFO
 BEGIN
     IDD_ABOUT, DIALOG
     BEGIN
@@ -208,27 +211,27 @@ END
 
 /////////////////////////////////////////////////////////////////////////////
 //
-// 32766
+// AFX_DIALOG_LAYOUT
 //
 
-IDD_ABOUT 32766 
+IDD_ABOUT AFX_DIALOG_LAYOUT
 BEGIN
-    0x0000
+    0
 END
 
-IDD_FIND_OBJECT 32766 
+IDD_FIND_OBJECT AFX_DIALOG_LAYOUT
 BEGIN
-    0x0000
+    0
 END
 
-IDD_PROPERTIES 32766 
+IDD_PROPERTIES AFX_DIALOG_LAYOUT
 BEGIN
-    0x0000
+    0
 END
 
-IDD_SECURITY_NOT_AVAILABLE 32766 
+IDD_SECURITY_NOT_AVAILABLE AFX_DIALOG_LAYOUT
 BEGIN
-    0x0000
+    0
 END
 
 
@@ -237,7 +240,7 @@ END
 // String Table
 //
 
-STRINGTABLE 
+STRINGTABLE
 BEGIN
     IDR_MAINFRAME           "ntobjx - NT Objekte"
     IDS_PROGRAM_DESCRIPTION "Inspiziert den Namensraum des NT-Objektmanagers"
@@ -257,7 +260,7 @@ BEGIN
                             "%s (Verzeichnisse: %u, Verknüpfungen: %u, Alle: %u)"
 END
 
-STRINGTABLE 
+STRINGTABLE
 BEGIN
     IDS_ABOUT_DESCRIPTION   "Über dieses Programm"
     ID_SWITCHLANGUAGE_GERMAN 
@@ -266,13 +269,13 @@ BEGIN
                             "Anwendungssprache für diese Sitzung auf Englisch setzen"
 END
 
-STRINGTABLE 
+STRINGTABLE
 BEGIN
     ID_APP_ABOUT            "Zeige Programminformationen, Versionsnummer und Copyright\nÜber"
     ID_APP_EXIT             "Anwendung beenden\nBeenden"
 END
 
-STRINGTABLE 
+STRINGTABLE
 BEGIN
     ID_VIEW_PROPERTIES      "Zeige die Eigenschaften des ausgewählten Objekts\nEigenschaften"
     ID_POPUPMENU_COPYNAME   "Kopiere Objektnamen in Zwischenablage"
@@ -285,18 +288,18 @@ BEGIN
     ID_COLNAME_OBJLNKTGT    "Weitere Informationen"
 END
 
-STRINGTABLE 
+STRINGTABLE
 BEGIN
     ID_VIEW_REFRESH         "Objektliste aktualisieren\nAktualisieren"
 END
 
-STRINGTABLE 
+STRINGTABLE
 BEGIN
     IDS_PROPERTIES          "Eigenschaften von"
     ID_VIEW_FIND            "Suche Objekt"
 END
 
-STRINGTABLE 
+STRINGTABLE
 BEGIN
     ATL_IDS_SCSIZE          "Fenstergröße anpassen"
     ATL_IDS_SCMOVE          "Fensterposition anpassen"
@@ -307,23 +310,23 @@ BEGIN
     ATL_IDS_SCCLOSE         "Schließt das aktive Fenster und fordert zum Abspeichern auf"
 END
 
-STRINGTABLE 
+STRINGTABLE
 BEGIN
     ATL_IDS_SCRESTORE       "Wiederherstellen der normalen Fenstergröße"
     ATL_IDS_SCTASKLIST      "Aufgabenliste aktivieren"
 END
 
-STRINGTABLE 
+STRINGTABLE
 BEGIN
     ATL_IDS_IDLEMESSAGE     "Bereit"
 END
 
-STRINGTABLE 
+STRINGTABLE
 BEGIN
     ID_FILE_SAVE_AS         "Speichere Objektbaum als (UTF-8) Textdatei oder XML-Datei"
 END
 
-STRINGTABLE 
+STRINGTABLE
 BEGIN
     IDS_OBJSPEC_NAME1_IOCOMPLETION "Tiefe:"
     IDS_OBJSPEC_NAME1_KEY   "Zuletzt geschrieben:"
@@ -338,7 +341,7 @@ BEGIN
     IDS_OBJSPEC_NAME2_SEMAPHORE "Zählergrenze:"
 END
 
-STRINGTABLE 
+STRINGTABLE
 BEGIN
     IDS_OBJSPEC_NAME1_TIMER "Timer-Zustand:"
     IDS_OBJSPEC_NAME2_TIMER "Verbleibende Zeit:"
@@ -359,7 +362,7 @@ BEGIN
     IDS_OBJTT_PSXSS         "Objekte mit Bezug zum POSIX Subsystem(Subsystem für UNIX-Anwendungen)"
 END
 
-STRINGTABLE 
+STRINGTABLE
 BEGIN
     IDS_TITLEBAR_FMTSTR     "%s: Version %s, %d-Bit"
     IDS_FEATURE_UNAVAILABLE "Diese Funktion ist nicht verfügbar, da sie nicht in diese Programmversion eingebaut wurde."
@@ -377,7 +380,7 @@ BEGIN
     ID_OBJSEARCH_TEXT       "Suchbegriff"
 END
 
-STRINGTABLE 
+STRINGTABLE
 BEGIN
     IDS_OBJTT_RPCCTL        "ALPC-Ports die von RPC-Aufrufen benutzt werden, sowie Events welche Conhost .exe als Teil des Isolierungsmechanismus der Konsole benutzt\nQuelle:: Windows Internals, 6te Auflage"
     IDS_OBJTT_SECURITY      "ALPC-Ports und Events die von dem Sicherheitssubsystem zugehörigen Objekten benutzt werden\nQuelle:: Windows Internals, 6te Auflage"
@@ -399,20 +402,18 @@ END
 
 
 /////////////////////////////////////////////////////////////////////////////
-// English (U.S.) resources
+// English (United States) resources
 
 #if !defined(AFX_RESOURCE_DLL) || defined(AFX_TARG_ENU)
-#ifdef _WIN32
 LANGUAGE LANG_ENGLISH, SUBLANG_ENGLISH_US
 #pragma code_page(1252)
-#endif //_WIN32
 
 /////////////////////////////////////////////////////////////////////////////
 //
 // Menu
 //
 
-IDR_MAINFRAME MENU 
+IDR_MAINFRAME MENU
 BEGIN
     POPUP "&File"
     BEGIN
@@ -437,7 +438,7 @@ BEGIN
     MENUITEM "Online &help",                ID_SHOW_ONLINEHELP
 END
 
-IDR_POPUP_MENU1 MENU 
+IDR_POPUP_MENU1 MENU
 BEGIN
     POPUP "Generic object"
     BEGIN
@@ -467,7 +468,7 @@ BEGIN
     END
 END
 
-IDR_POPUP_HYPERLINK1 MENU 
+IDR_POPUP_HYPERLINK1 MENU
 BEGIN
     POPUP "Hyperlink context menu"
     BEGIN
@@ -481,7 +482,7 @@ END
 // Accelerator
 //
 
-IDR_MAINFRAME ACCELERATORS 
+IDR_MAINFRAME ACCELERATORS
 BEGIN
     "S",            ID_FILE_SAVE_AS,        VIRTKEY, CONTROL, NOINVERT
     VK_F12,         ID_SHOW_ABOUT,          VIRTKEY, NOINVERT
@@ -489,6 +490,11 @@ BEGIN
     VK_F10,         ID_VIEW_PROPERTIES,     VIRTKEY, NOINVERT
     VK_F5,          ID_VIEW_REFRESH,        VIRTKEY, NOINVERT
     VK_F11,         ID_SWITCHLANGUAGE_POPUP, VIRTKEY, NOINVERT
+END
+
+IDD_PROPERTIES ACCELERATORS
+BEGIN
+    "C",            ID_COPY_DETAILS,        VIRTKEY, CONTROL, NOINVERT
 END
 
 
@@ -563,7 +569,7 @@ END
 //
 
 #ifdef APSTUDIO_INVOKED
-GUIDELINES DESIGNINFO 
+GUIDELINES DESIGNINFO
 BEGIN
     IDD_ABOUT, DIALOG
     BEGIN
@@ -594,27 +600,27 @@ END
 
 /////////////////////////////////////////////////////////////////////////////
 //
-// 32766
+// AFX_DIALOG_LAYOUT
 //
 
-IDD_FIND_OBJECT 32766 
+IDD_FIND_OBJECT AFX_DIALOG_LAYOUT
 BEGIN
-    0x0000
+    0
 END
 
-IDD_PROPERTIES 32766 
+IDD_PROPERTIES AFX_DIALOG_LAYOUT
 BEGIN
-    0x0000
+    0
 END
 
-IDD_SECURITY_NOT_AVAILABLE 32766 
+IDD_SECURITY_NOT_AVAILABLE AFX_DIALOG_LAYOUT
 BEGIN
-    0x0000
+    0
 END
 
-IDD_ABOUT 32766 
+IDD_ABOUT AFX_DIALOG_LAYOUT
 BEGIN
-    0x0000
+    0
 END
 
 
@@ -652,12 +658,13 @@ END
 // remains consistent on all systems.
 IDR_MAINFRAME           ICON                    "res\\ntobjx.ico"
 
+
 /////////////////////////////////////////////////////////////////////////////
 //
 // String Table
 //
 
-STRINGTABLE 
+STRINGTABLE
 BEGIN
     IDR_MAINFRAME           "ntobjx - NT Objects"
     IDS_PROGRAM_DESCRIPTION "Inspects the NT object manager namespace"
@@ -676,7 +683,7 @@ BEGIN
     IDS_STATUSBAR_DIR_DETAILS "%s (directories: %u, links: %u, all: %u)"
 END
 
-STRINGTABLE 
+STRINGTABLE
 BEGIN
     IDS_ABOUT_DESCRIPTION   "About this program"
     ID_SWITCHLANGUAGE_GERMAN 
@@ -685,13 +692,13 @@ BEGIN
                             "Set application language to English for this session"
 END
 
-STRINGTABLE 
+STRINGTABLE
 BEGIN
     ID_APP_ABOUT            "Display program information, version number and copyright\nAbout"
     ID_APP_EXIT             "Quit the application\nExit"
 END
 
-STRINGTABLE 
+STRINGTABLE
 BEGIN
     ID_VIEW_PROPERTIES      "Show the properties of the selected object\nProperties"
     ID_POPUPMENU_COPYNAME   "Copy name of object to clipboard"
@@ -703,18 +710,18 @@ BEGIN
     ID_COLNAME_OBJLNKTGT    "Additional information"
 END
 
-STRINGTABLE 
+STRINGTABLE
 BEGIN
     ID_VIEW_REFRESH         "Refresh the list of objects\nRefresh"
 END
 
-STRINGTABLE 
+STRINGTABLE
 BEGIN
     IDS_PROPERTIES          "Properties of "
     ID_VIEW_FIND            "Find an object by substring"
 END
 
-STRINGTABLE 
+STRINGTABLE
 BEGIN
     ATL_IDS_SCSIZE          "Change the window size"
     ATL_IDS_SCMOVE          "Change the window position"
@@ -725,23 +732,23 @@ BEGIN
     ATL_IDS_SCCLOSE         "Closes the active window and prompts to save the documents"
 END
 
-STRINGTABLE 
+STRINGTABLE
 BEGIN
     ATL_IDS_SCRESTORE       "Restore the window to normal size"
     ATL_IDS_SCTASKLIST      "Activate Task List"
 END
 
-STRINGTABLE 
+STRINGTABLE
 BEGIN
     ATL_IDS_IDLEMESSAGE     "Ready"
 END
 
-STRINGTABLE 
+STRINGTABLE
 BEGIN
     ID_FILE_SAVE_AS         "Save object tree as flat (UTF-8) text or XML file"
 END
 
-STRINGTABLE 
+STRINGTABLE
 BEGIN
     IDS_OBJSPEC_NAME1_IOCOMPLETION "Depth:"
     IDS_OBJSPEC_NAME1_KEY   "Last write time:"
@@ -756,7 +763,7 @@ BEGIN
     IDS_OBJSPEC_NAME2_SEMAPHORE "Maximum count:"
 END
 
-STRINGTABLE 
+STRINGTABLE
 BEGIN
     IDS_OBJSPEC_NAME1_TIMER "Timer state:"
     IDS_OBJSPEC_NAME2_TIMER "Remaining time:"
@@ -777,7 +784,7 @@ BEGIN
     IDS_OBJTT_PSXSS         "Objects relating to the POSIX subsystem (Subsystem for UNIX Applications)"
 END
 
-STRINGTABLE 
+STRINGTABLE
 BEGIN
     IDS_TITLEBAR_FMTSTR     "%s: version %s, %d-bit"
     IDS_FEATURE_UNAVAILABLE "The feature has not been included in this build."
@@ -795,7 +802,7 @@ BEGIN
     ID_OBJSEARCH_TEXT       "Search term"
 END
 
-STRINGTABLE 
+STRINGTABLE
 BEGIN
     IDS_OBJTT_RPCCTL        "ALPC ports used by remote procedure calls (RPCs), and events used by Conhost .exe as part of the console isolation mechanism\nSource: Windows Internals, 6th ed."
     IDS_OBJTT_SECURITY      "ALPC ports and events used by objects specific to the security subsystem\nSource: Windows Internals, 6th ed."
@@ -812,7 +819,7 @@ BEGIN
     IDS_OBJTT_REGISTRY      "The root of the registry as seen outside the Win32 subsystem"
 END
 
-#endif    // English (U.S.) resources
+#endif    // English (United States) resources
 /////////////////////////////////////////////////////////////////////////////
 
 
