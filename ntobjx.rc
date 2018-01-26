@@ -214,6 +214,7 @@ END
 // AFX_DIALOG_LAYOUT
 //
 
+#ifdef APSTUDIO_INVOKED
 IDD_ABOUT AFX_DIALOG_LAYOUT
 BEGIN
     0
@@ -233,6 +234,7 @@ IDD_SECURITY_NOT_AVAILABLE AFX_DIALOG_LAYOUT
 BEGIN
     0
 END
+#endif    // APSTUDIO_INVOKED
 
 
 /////////////////////////////////////////////////////////////////////////////
@@ -603,6 +605,7 @@ END
 // AFX_DIALOG_LAYOUT
 //
 
+#ifdef APSTUDIO_INVOKED
 IDD_FIND_OBJECT AFX_DIALOG_LAYOUT
 BEGIN
     0
@@ -622,6 +625,7 @@ IDD_ABOUT AFX_DIALOG_LAYOUT
 BEGIN
     0
 END
+#endif    // APSTUDIO_INVOKED
 
 
 #ifdef APSTUDIO_INVOKED

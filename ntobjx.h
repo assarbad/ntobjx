@@ -166,14 +166,24 @@ namespace
         return FALSE;
     }
 
-    CString getObjectDetailsString(GenericObject* obj)
+    CString getObjectDetailsString(GenericObject* obj, ObjectHandle* objHdl)
     {
-        UNREFERENCED_PARAMETER(obj);
-        ATLTRACE2(_T("Copying object details to clipboard as text.\n"));
-        return _T("Not yet implemented"); // FIXME
+        ATLASSERT(obj != NULL);
+        ATLASSERT(objHdl != NULL);
+        CString sObjDetails, str;
+        ATLVERIFY(str.LoadString(ID_COLNAME_OBJNAME));
+        sObjDetails.AppendFormat(_T("%s: %s\n"), LPCTSTR(str), LPCTSTR(obj->fullname()));
+        ATLVERIFY(str.LoadString(ID_COLNAME_OBJTYPE));
+        sObjDetails.AppendFormat(_T("%s: %s\n"), LPCTSTR(str), LPCTSTR(obj->type()));
+        if(SymbolicLink* symlink = dynamic_cast<SymbolicLink*>(obj))
+        {
+            ATLVERIFY(str.LoadString(ID_COLNAME_OBJLNKTGT));
+            sObjDetails.AppendFormat(_T("%s: %s\n"), LPCTSTR(str), LPCTSTR(symlink->target()));
+        }
+        return sObjDetails;
     }
 
-    void copyItemToClipboard(HWND hWndSource, int idCmd, GenericObject* obj)
+    void copyItemToClipboard(HWND hWndSource, int idCmd, GenericObject* obj, ObjectHandle* objHdl = NULL)
     {
         ATLASSERT(obj != NULL);
         if(::OpenClipboard(hWndSource))
@@ -260,7 +270,7 @@ namespace
                 }
                 break;
             case ID_COPY_DETAILS:
-                s = getObjectDetailsString(obj);
+                s = getObjectDetailsString(obj, objHdl);
                 break;
             }
             ATLVERIFY(setClipboardString(s.GetString()));
@@ -773,7 +783,7 @@ template <typename T> class CObjectPropertySheetT :
         LRESULT OnCopyObjectDetails(WORD /*wNotifyCode*/, WORD wID, HWND /*hWndCtl*/, BOOL& /*bHandled*/)
         {
             ATLASSERT(wID == ID_COPY_DETAILS);
-            copyItemToClipboard(m_hWnd, wID, m_obj);
+            copyItemToClipboard(m_hWnd, wID, m_obj, &m_objHdl);
             return FALSE;
         }
 
@@ -848,7 +858,7 @@ template <typename T> class CObjectPropertySheetT :
 #ifndef SEC_IMAGE_NO_EXECUTE
 #   define SEC_IMAGE_NO_EXECUTE (SEC_IMAGE | SEC_NOCACHE)
 #endif
-        CString getReadableAllocationAttributesString_(ULONG aa)
+        static CString getReadableAllocationAttributesString_(ULONG aa)
         {
             // TBD: should we localize these strings or rather not?
             CString str;
@@ -2273,7 +2283,7 @@ class CSearchPane : public CPaneContainerImpl<CSearchPane>
 {
     typedef CPaneContainerImpl<CSearchPane> baseClass;
 
-    UINT m_strID;
+    UINT const m_strID;
 public:
     DECLARE_WND_CLASS(_T("SearchPane"))
 
@@ -2283,9 +2293,9 @@ public:
         FORWARD_NOTIFICATIONS()
     END_MSG_MAP()
 
-    CSearchPane(UINT strID)
+    CSearchPane()
         : baseClass()
-        , m_strID(strID)
+        , m_strID(ID_OBJSEARCH_CAPTION)
     {
         SetPaneContainerExtendedStyle(PANECNT_VERTICAL | PANECNT_NOCLOSEBUTTON);
     }
@@ -2301,6 +2311,15 @@ public:
             }
         }
         return baseClass::Create(hWndParent, lpstrTitle);
+    }
+
+    void renewVisibleTexts()
+    {
+        CString caption;
+        if(caption.LoadString(m_strID))
+        {
+            SetTitle(caption);
+        }
     }
 };
 #endif // FEATURE_FIND_OBJECT
@@ -2549,7 +2568,7 @@ public:
         , m_listview(m_imagelist)
 #if FEATURE_FIND_OBJECT
         , m_findresults(m_imagelist)
-        , m_searchPane(ID_OBJSEARCH_CAPTION)
+        , m_searchPane()
         , m_bSearchSplitPct(75)
 #endif // FEATURE_FIND_OBJECT
         , m_bFirstOnIdle(true) // to force initial refresh
@@ -2811,6 +2830,7 @@ public:
         m_listview.reloadColumnNames();
         renewStatusBar_();
         renewAboutInSystemMenu_();
+        m_searchPane.renewVisibleTexts();
 
         switch (m_currentLang)
         {
