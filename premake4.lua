@@ -226,7 +226,7 @@ solution (tgtname .. iif(release, "_release", ""))
         kind            ("WindowedApp")
         targetname      (tgtname)
         flags           {"Unicode", "NativeWChar", "ExtraWarnings", "WinMain",}
-        targetdir       (iif(release, tgtname .. "_release", "build"))
+        targetdir       (iif(release, tgtname .. "_release", "build." .. action))
         includedirs     {"wtl/Include", "pugixml"}
         objdir          (int_dir)
         libdirs         {"$(IntDir)"}
@@ -253,6 +253,7 @@ solution (tgtname .. iif(release, "_release", ""))
             "wtl/Include/*.h",
             "pugixml/*.hpp",
             "util/*.h", "util/*.hpp",
+            "res/*.ico",
             "*.rc",
             "*.cpp",
             "*.h",
@@ -264,10 +265,10 @@ solution (tgtname .. iif(release, "_release", ""))
         vpaths
         {
             ["Header Files/WTL/*"] = { "wtl/Include/*.h" },
+            ["Header Files/pugixml/*"] = { "pugixml/*.hpp" },
             ["Header Files/Utility classes/*"] = { "util/*.h", "util/*.hpp" },
             ["Header Files/*"] = { "*.h" },
-            ["Resource Files/*"] = { "**.rc" },
-            ["Resource Files/res/*"] = { "res/*.*" },
+            ["Resource Files/*"] = { "**.rc", "res/*.ico" },
             ["Source Files/*"] = { "*.cpp" },
             ["Special Files/*"] = { "**.cmd", "premake4.lua", "**.manifest", },
             ["Special Files/Module Definition Files/*"] = { "ntdll-stubs/*.txt", },
@@ -345,7 +346,7 @@ solution (tgtname .. iif(release, "_release", ""))
             kind            ("ConsoleApp")
             targetname      (tgtname .. "_c")
             flags           {"StaticRuntime", "Unicode", "NativeWChar", "ExtraWarnings", "WinMain", "NoMinimalRebuild", "NoIncrementalLink", "NoEditAndContinue", "NoPCH"}
-            targetdir       (iif(release, tgtname .. "_release", "build"))
+            targetdir       (iif(release, tgtname .. "_release", "build." .. action))
             objdir          (int_dir)
             links           {"ntdll-delayed"}
             resoptions      {"/nologo", "/l409"}

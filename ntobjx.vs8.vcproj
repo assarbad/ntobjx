@@ -20,7 +20,7 @@
 	<Configurations>
 		<Configuration
 			Name="Debug|Win32"
-			OutputDirectory="build"
+			OutputDirectory="build.vs2005"
 			IntermediateDirectory="intermediate\vs2005_$(PlatformName)_$(ConfigurationName)\$(ProjectName)"
 			ConfigurationType="1"
 			CharacterSet="1"
@@ -45,7 +45,7 @@
 				Name="VCCLCompilerTool"
 				Optimization="0"
 				AdditionalIncludeDirectories="wtl\Include;pugixml"
-				PreprocessorDefinitions="WIN32;_WINDOWS;STRICT;WINVER=0x0500"
+				PreprocessorDefinitions="WIN32;_WINDOWS;STRICT;_DEBUG;WINVER=0x0500"
 				MinimalRebuild="true"
 				BasicRuntimeChecks="3"
 				RuntimeLibrary="1"
@@ -62,7 +62,7 @@
 			<Tool
 				Name="VCResourceCompilerTool"
 				AdditionalOptions="/nologo /l409"
-				PreprocessorDefinitions="WIN32;_WINDOWS;STRICT;WINVER=0x0500"
+				PreprocessorDefinitions="WIN32;_WINDOWS;STRICT;_DEBUG;WINVER=0x0500"
 				AdditionalIncludeDirectories="wtl\Include;pugixml;.;$(IntDir)"
 			/>
 			<Tool
@@ -70,11 +70,11 @@
 			/>
 			<Tool
 				Name="VCLinkerTool"
-				AdditionalOptions="&quot;/libpath:$(IntDir)&quot; /delay:nobind /delayload:ntdll-delayed.dll /delayload:version.dll"
+				AdditionalOptions="/delay:nobind /delayload:ntdll-delayed.dll /delayload:version.dll"
 				AdditionalDependencies="ntdll-delayed.lib version.lib"
 				OutputFile="$(OutDir)\ntobjx32D.exe"
 				LinkIncremental="2"
-				AdditionalLibraryDirectories=""
+				AdditionalLibraryDirectories="$(IntDir);$(IntDir)"
 				GenerateDebugInformation="true"
 				SubSystem="2"
 				TargetMachine="1"
@@ -107,7 +107,7 @@
 		</Configuration>
 		<Configuration
 			Name="Debug|x64"
-			OutputDirectory="build"
+			OutputDirectory="build.vs2005"
 			IntermediateDirectory="intermediate\vs2005_$(PlatformName)_$(ConfigurationName)\$(ProjectName)"
 			ConfigurationType="1"
 			CharacterSet="1"
@@ -133,7 +133,7 @@
 				Name="VCCLCompilerTool"
 				Optimization="0"
 				AdditionalIncludeDirectories="wtl\Include;pugixml"
-				PreprocessorDefinitions="WIN32;_WINDOWS;STRICT;WINVER=0x0501"
+				PreprocessorDefinitions="WIN32;_WINDOWS;STRICT;_DEBUG;WINVER=0x0501"
 				MinimalRebuild="true"
 				BasicRuntimeChecks="3"
 				RuntimeLibrary="1"
@@ -150,7 +150,7 @@
 			<Tool
 				Name="VCResourceCompilerTool"
 				AdditionalOptions="/nologo /l409"
-				PreprocessorDefinitions="WIN32;_WINDOWS;STRICT;WINVER=0x0501"
+				PreprocessorDefinitions="WIN32;_WINDOWS;STRICT;_DEBUG;WINVER=0x0501"
 				AdditionalIncludeDirectories="wtl\Include;pugixml;.;$(IntDir)"
 			/>
 			<Tool
@@ -158,11 +158,11 @@
 			/>
 			<Tool
 				Name="VCLinkerTool"
-				AdditionalOptions="&quot;/libpath:$(IntDir)&quot; /delay:nobind /delayload:ntdll-delayed.dll /delayload:version.dll"
+				AdditionalOptions="/delay:nobind /delayload:ntdll-delayed.dll /delayload:version.dll"
 				AdditionalDependencies="ntdll-delayed.lib version.lib"
 				OutputFile="$(OutDir)\ntobjx64D.exe"
 				LinkIncremental="2"
-				AdditionalLibraryDirectories=""
+				AdditionalLibraryDirectories="$(IntDir);$(IntDir)"
 				GenerateDebugInformation="true"
 				SubSystem="2"
 				TargetMachine="17"
@@ -195,7 +195,7 @@
 		</Configuration>
 		<Configuration
 			Name="Release|Win32"
-			OutputDirectory="build"
+			OutputDirectory="build.vs2005"
 			IntermediateDirectory="intermediate\vs2005_$(PlatformName)_$(ConfigurationName)\$(ProjectName)"
 			ConfigurationType="1"
 			CharacterSet="1"
@@ -245,11 +245,11 @@
 			/>
 			<Tool
 				Name="VCLinkerTool"
-				AdditionalOptions="&quot;/libpath:$(IntDir)&quot; /delay:nobind /delayload:ntdll-delayed.dll /delayload:version.dll /release /subsystem:windows,5.00 /opt:nowin98"
+				AdditionalOptions="/delay:nobind /delayload:ntdll-delayed.dll /delayload:version.dll /release /subsystem:windows,5.00 /opt:nowin98"
 				AdditionalDependencies="ntdll-delayed.lib version.lib"
 				OutputFile="$(OutDir)\ntobjx32.exe"
 				LinkIncremental="1"
-				AdditionalLibraryDirectories=""
+				AdditionalLibraryDirectories="$(IntDir);$(IntDir)"
 				GenerateDebugInformation="true"
 				SubSystem="2"
 				OptimizeReferences="2"
@@ -284,7 +284,7 @@
 		</Configuration>
 		<Configuration
 			Name="Release|x64"
-			OutputDirectory="build"
+			OutputDirectory="build.vs2005"
 			IntermediateDirectory="intermediate\vs2005_$(PlatformName)_$(ConfigurationName)\$(ProjectName)"
 			ConfigurationType="1"
 			CharacterSet="1"
@@ -335,11 +335,11 @@
 			/>
 			<Tool
 				Name="VCLinkerTool"
-				AdditionalOptions="&quot;/libpath:$(IntDir)&quot; /delay:nobind /delayload:ntdll-delayed.dll /delayload:version.dll /release /subsystem:windows,5.02 /opt:nowin98"
+				AdditionalOptions="/delay:nobind /delayload:ntdll-delayed.dll /delayload:version.dll /release /subsystem:windows,5.02 /opt:nowin98"
 				AdditionalDependencies="ntdll-delayed.lib version.lib"
 				OutputFile="$(OutDir)\ntobjx64.exe"
 				LinkIncremental="1"
-				AdditionalLibraryDirectories=""
+				AdditionalLibraryDirectories="$(IntDir);$(IntDir)"
 				GenerateDebugInformation="true"
 				SubSystem="2"
 				OptimizeReferences="2"
@@ -514,6 +514,19 @@
 				RelativePath="objtypes.h"
 				>
 			</File>
+			<Filter
+				Name="pugixml"
+				Filter=""
+				>
+				<File
+					RelativePath="pugixml\pugiconfig.hpp"
+					>
+				</File>
+				<File
+					RelativePath="pugixml\pugixml.hpp"
+					>
+				</File>
+			</Filter>
 			<File
 				RelativePath="reslang.h"
 				>
@@ -541,6 +554,10 @@
 			>
 			<File
 				RelativePath="exeversion.rc"
+				>
+			</File>
+			<File
+				RelativePath="res\ntobjx.ico"
 				>
 			</File>
 			<File
@@ -604,19 +621,6 @@
 			</File>
 			<File
 				RelativePath="setvcvars.cmd"
-				>
-			</File>
-		</Filter>
-		<Filter
-			Name="pugixml"
-			Filter=""
-			>
-			<File
-				RelativePath="pugixml\pugiconfig.hpp"
-				>
-			</File>
-			<File
-				RelativePath="pugixml\pugixml.hpp"
 				>
 			</File>
 		</Filter>

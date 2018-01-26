@@ -1,20 +1,20 @@
 <?xml version="1.0" encoding="utf-8"?>
 <Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
   <ItemGroup>
-    <Filter Include="Header Files">
-      <UniqueIdentifier>{65BCED7C-5FA8-CAC5-6E75-4B28C447F95A}</UniqueIdentifier>
-    </Filter>
-    <Filter Include="Header Files\WTL">
-      <UniqueIdentifier>{96616F0F-F735-3EF5-FC35-A96C891F724C}</UniqueIdentifier>
-    </Filter>
     <Filter Include="Special Files">
       <UniqueIdentifier>{1340A817-3DBB-1832-9493-18CD996EA715}</UniqueIdentifier>
     </Filter>
     <Filter Include="Special Files\Module Definition Files">
       <UniqueIdentifier>{6EC51922-1D06-709D-5F9B-6C62A5BC1B1C}</UniqueIdentifier>
     </Filter>
-    <Filter Include="pugixml">
-      <UniqueIdentifier>{A370B2F0-BDCB-9393-8886-AC538A6016A6}</UniqueIdentifier>
+    <Filter Include="Header Files">
+      <UniqueIdentifier>{65BCED7C-5FA8-CAC5-6E75-4B28C447F95A}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Header Files\WTL">
+      <UniqueIdentifier>{96616F0F-F735-3EF5-FC35-A96C891F724C}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Header Files\pugixml">
+      <UniqueIdentifier>{CCCB1A24-53CF-5497-4164-7FEBFB53439B}</UniqueIdentifier>
     </Filter>
     <Filter Include="Header Files\Utility classes">
       <UniqueIdentifier>{23012514-E9F7-21A2-7325-3281D54D92B9}</UniqueIdentifier>
@@ -29,6 +29,9 @@
   <ItemGroup>
     <None Include="ntdll-stubs\ntdll-delayed.txt">
       <Filter>Special Files\Module Definition Files</Filter>
+    </None>
+    <None Include="res\ntobjx.ico">
+      <Filter>Resource Files</Filter>
     </None>
     <None Include="ntobjx.manifest">
       <Filter>Special Files</Filter>
@@ -116,10 +119,10 @@
       <Filter>Header Files\WTL</Filter>
     </ClInclude>
     <ClInclude Include="pugixml\pugiconfig.hpp">
-      <Filter>pugixml</Filter>
+      <Filter>Header Files\pugixml</Filter>
     </ClInclude>
     <ClInclude Include="pugixml\pugixml.hpp">
-      <Filter>pugixml</Filter>
+      <Filter>Header Files\pugixml</Filter>
     </ClInclude>
     <ClInclude Include="util\LoadLibrary.h">
       <Filter>Header Files\Utility classes</Filter>
