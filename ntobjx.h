@@ -166,7 +166,7 @@ namespace
         return FALSE;
     }
 
-    CString getObjectDetailsString(GenericObject* obj, ObjectHandle* objHdl)
+    CString getObjectDetailsString(GenericObject* obj, ObjectHandle* /*objHdl*/)
     {
         ATLASSERT(obj != NULL);
         ATLASSERT(objHdl != NULL);
@@ -2830,7 +2830,9 @@ public:
         m_listview.reloadColumnNames();
         renewStatusBar_();
         renewAboutInSystemMenu_();
+#if FEATURE_FIND_OBJECT
         m_searchPane.renewVisibleTexts();
+#endif // FEATURE_FIND_OBJECT
 
         switch (m_currentLang)
         {
