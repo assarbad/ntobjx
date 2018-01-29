@@ -166,7 +166,7 @@ namespace
         return FALSE;
     }
 
-    CString getObjectDetailsString(GenericObject* obj, ObjectHandle* /*objHdl*/)
+    CString getObjectDetailsString(GenericObject* obj, ObjectHandle* objHdl)
     {
         ATLASSERT(obj != NULL);
         ATLASSERT(objHdl != NULL);
@@ -2549,6 +2549,7 @@ public:
     CNtObjectsFindResults m_findresults;
     CSearchPane m_searchPane;
     int m_bSearchSplitPct;
+    int m_cxySplitterMin;
 #endif // FEATURE_FIND_OBJECT
     bool m_bFirstOnIdle;
     GenericObject* m_activeObject;
@@ -2570,6 +2571,7 @@ public:
         , m_findresults(m_imagelist)
         , m_searchPane()
         , m_bSearchSplitPct(75)
+        , m_cxySplitterMin(-1)
 #endif // FEATURE_FIND_OBJECT
         , m_bFirstOnIdle(true) // to force initial refresh
         , m_activeObject(0)
@@ -2730,8 +2732,8 @@ public:
     {
         LPMINMAXINFO lpMMI = reinterpret_cast<LPMINMAXINFO>(lParam);
 
-        lpMMI->ptMinTrackSize.x = 640;
-        lpMMI->ptMinTrackSize.y = 480;
+        lpMMI->ptMinTrackSize.x = 600;
+        lpMMI->ptMinTrackSize.y = 400;
         lpMMI->ptMaxTrackSize.x = ::GetSystemMetrics(SM_CXMAXTRACK);
         lpMMI->ptMaxTrackSize.y = ::GetSystemMetrics(SM_CYMAXTRACK);
 
@@ -2800,10 +2802,14 @@ public:
         case SPLIT_PANE_NONE:
             m_bSearchSplitPct = m_hsplit.GetSplitterPosPct(); // save old splitter position percentage
             m_hsplit.SetSinglePaneMode(SPLIT_PANE_TOP);
+            m_hsplit.m_cxyMin = m_cxySplitterMin; // reset to default
             m_hsplit.SetSplitterPosPct(100);
             break;
         case SPLIT_PANE_TOP:
             m_hsplit.SetSinglePaneMode(SPLIT_PANE_NONE);
+            if(m_cxySplitterMin < 0)
+                m_cxySplitterMin = m_hsplit.m_cxyMin;
+            m_hsplit.m_cxyMin = 100;
             m_hsplit.SetSplitterPosPct(m_bSearchSplitPct);
             break;
         case SPLIT_PANE_BOTTOM:
