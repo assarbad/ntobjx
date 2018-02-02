@@ -85,7 +85,7 @@
 #pragma warning(pop)
 #endif
 
-#define FEATURE_FIND_OBJECT 0
+#define FEATURE_FIND_OBJECT 1
 #ifdef DDKBUILD
 #define FEATURE_OBJECT_SECURITY 0
 #else
@@ -1503,9 +1503,6 @@ public:
 
 typedef CWinTraitsOR<WS_TABSTOP | TVS_HASLINES | TVS_HASBUTTONS | TVS_SHOWSELALWAYS | TVS_INFOTIP, WS_EX_CLIENTEDGE, CControlWinTraits> CNtObjectsTreeViewTraits;
 typedef CWinTraitsOR<WS_TABSTOP | LVS_SHAREIMAGELISTS | LVS_SINGLESEL, LVS_EX_FULLROWSELECT | LVS_EX_INFOTIP, CSortListViewCtrlTraits> CNtObjectsListViewTraits;
-#if FEATURE_FIND_OBJECT
-typedef CWinTraitsOR<WS_TABSTOP | LVS_SHAREIMAGELISTS | LVS_SINGLESEL, LVS_EX_FULLROWSELECT | LVS_EX_INFOTIP, CSortListViewCtrlTraits> CNtObjectsFindResultsTraits;
-#endif // FEATURE_FIND_OBJECT
 
 template <typename T> class CNtObjectsTreeViewT :
     public CWindowImpl<CNtObjectsTreeViewT<T>, CTreeViewCtrlEx, CNtObjectsTreeViewTraits>
@@ -2250,11 +2247,13 @@ private:
 typedef CNtObjectsListViewT<CObjectImageList> CNtObjectsListView;
 
 #if FEATURE_FIND_OBJECT
+typedef CWinTraitsOR<WS_TABSTOP | LVS_SHAREIMAGELISTS | LVS_SINGLESEL, LVS_EX_FULLROWSELECT | LVS_EX_INFOTIP, CSortListViewCtrlTraits> CNtObjectsFindResultsTraits;
+
 template <typename T> class CNtObjectsFindResultsT :
     public CSortListViewCtrlImpl<CNtObjectsFindResultsT<T>, CListViewCtrl, CNtObjectsFindResultsTraits>
 {
     HWND m_hFrameWnd;
-    CObjectImageList& m_imagelist;
+    T& m_imagelist;
     typedef CSortListViewCtrlImpl<CNtObjectsFindResultsT<T>, CListViewCtrl, CNtObjectsFindResultsTraits> baseClass;
 public:
     /*lint -save -e446 */
@@ -2322,6 +2321,102 @@ public:
         }
     }
 };
+
+template <typename T> class CNtObjectsFoundSplitterT : public CSplitterWindowImpl<CNtObjectsFoundSplitterT<T> >
+{
+    typedef CSplitterWindowImpl<CNtObjectsFoundSplitterT<T> > baseClass;
+    T& m_imagelist;
+    CNtObjectsFindResultsT<T> m_findresults;
+    CSearchPane m_searchPane;
+    int m_bSearchSplitPct;
+    int m_cxySplitterMin;
+    HRESULT(CALLBACK* DllGetVersion)(DLLVERSIONINFO *);
+public:
+    DECLARE_WND_CLASS_EX(_T("NtObjectsFoundSplitter"), CS_DBLCLKS, COLOR_INFOBK)
+
+    CNtObjectsFoundSplitterT(T& imagelist)
+        : baseClass(false)
+        , m_imagelist(imagelist)
+        , m_findresults(imagelist)
+        , m_searchPane()
+        , m_bSearchSplitPct(75)
+        , m_cxySplitterMin(-1)
+        , DllGetVersion(0)
+    {
+        HMODULE hShell32 = ::GetModuleHandle(_T("shell32.dll"));
+        if(hShell32)
+        {
+            *(FARPROC*)&DllGetVersion = ::GetProcAddress(hShell32, "DllGetVersion");
+        }
+    }
+
+    void initialize(HWND hFrameWnd)
+    {
+        ATLVERIFY(NULL != m_searchPane.Create(*this));
+        ATLVERIFY(::IsWindow(m_searchPane));
+        ATLVERIFY(NULL != m_findresults.Create(m_searchPane, rcDefault));
+        ATLVERIFY(::IsWindow(m_findresults));
+        m_searchPane.SetClient(m_findresults);
+
+        if(DllGetVersion)
+        {
+            DLLVERSIONINFO dllvi = { sizeof(DLLVERSIONINFO), 0, 0, 0, 0 };
+            if(SUCCEEDED(DllGetVersion(&dllvi)) && dllvi.dwMajorVersion >= 6)
+            {
+                m_findresults.SetExtendedListViewStyle(CNtObjectsFindResultsTraits::GetWndExStyle(LVS_EX_DOUBLEBUFFER));
+            }
+            else
+            {
+                m_findresults.SetExtendedListViewStyle(CNtObjectsFindResultsTraits::GetWndExStyle(0));
+            }
+        }
+        m_findresults.setFrameWindow(hFrameWnd); // make the frame window known to the listview control for found objects
+    }
+
+    void setTopPane(HWND hTopPane, bool bUpdate = true)
+    {
+        SetSplitterPanes(hTopPane, m_searchPane, bUpdate);
+    }
+
+    void setDefaultHidden()
+    {
+        SetSplitterPosPct(100);
+        ATLVERIFY(SetSinglePaneMode(SPLIT_PANE_TOP));
+    }
+
+    void toggleHidden()
+    {
+        ATLTRACE2(_T("Single pane mode before toggling search pane: %d\n"), GetSinglePaneMode());
+        switch(GetSinglePaneMode())
+        {
+        case SPLIT_PANE_NONE:
+            m_bSearchSplitPct = GetSplitterPosPct(); // save old splitter position percentage
+            SetSinglePaneMode(SPLIT_PANE_TOP);
+            m_cxyMin = m_cxySplitterMin; // reset to default
+            SetSplitterPosPct(100);
+            break;
+        case SPLIT_PANE_TOP:
+            SetSinglePaneMode(SPLIT_PANE_NONE);
+            if(m_cxySplitterMin < 0)
+                m_cxySplitterMin = m_cxyMin;
+            m_cxyMin = 100;
+            SetSplitterPosPct(m_bSearchSplitPct);
+            break;
+        case SPLIT_PANE_BOTTOM:
+            ATLASSERT(!_T("Not expecting SPLIT_PANE_BOTTOM here."));
+            break;
+        }
+        ATLTRACE2(_T("Pane position now at %i %%\n"), GetSplitterPosPct());
+    }
+
+    void renewVisibleTexts()
+    {
+        m_searchPane.renewVisibleTexts();
+    }
+private:
+    CNtObjectsFoundSplitterT(); // hide
+};
+typedef CNtObjectsFoundSplitterT<CObjectImageList> CNtObjectsFoundSplitter;
 #endif // FEATURE_FIND_OBJECT
 
 class CNtObjectsStatusBar : public CMultiPaneStatusBarCtrlImpl<CNtObjectsStatusBar>
@@ -2360,18 +2455,6 @@ public:
 
     CNtObjectsSplitter()
         : baseClass(true)
-    {
-    }
-};
-
-class CNtObjectsFoundSplitter : public CSplitterWindowImpl<CNtObjectsFoundSplitter>
-{
-    typedef CSplitterWindowImpl<CNtObjectsFoundSplitter> baseClass;
-public:
-    DECLARE_WND_CLASS_EX(_T("NtObjectsFoundSplitter"), CS_DBLCLKS, COLOR_INFOBK)
-
-    CNtObjectsFoundSplitter()
-        : baseClass(false)
     {
     }
 };
@@ -2535,6 +2618,7 @@ class CNtObjectsMainFrame :
     public CMessageFilter,
     public CIdleHandler
 {
+    typedef CFrameWindowImpl<CNtObjectsMainFrame> baseClass;
 public:
     DECLARE_FRAME_WND_CLASS(_T("NtObjectsMainFrame"), IDR_MAINFRAME)
 
@@ -2545,11 +2629,7 @@ public:
     CNtObjectsTreeView m_treeview;
     CNtObjectsListView m_listview;
 #if FEATURE_FIND_OBJECT
-    CNtObjectsFoundSplitter m_hsplit;
-    CNtObjectsFindResults m_findresults;
-    CSearchPane m_searchPane;
-    int m_bSearchSplitPct;
-    int m_cxySplitterMin;
+    CNtObjectsFoundSplitter m_splitFind;
 #endif // FEATURE_FIND_OBJECT
     bool m_bFirstOnIdle;
     GenericObject* m_activeObject;
@@ -2568,10 +2648,7 @@ public:
         , m_treeview()
         , m_listview(m_imagelist)
 #if FEATURE_FIND_OBJECT
-        , m_findresults(m_imagelist)
-        , m_searchPane()
-        , m_bSearchSplitPct(75)
-        , m_cxySplitterMin(-1)
+        , m_splitFind(m_imagelist)
 #endif // FEATURE_FIND_OBJECT
         , m_bFirstOnIdle(true) // to force initial refresh
         , m_activeObject(0)
@@ -2636,22 +2713,19 @@ public:
     {
         ATLVERIFY(NULL != (m_hWndStatusBar = createStatusBar_()));
 #if FEATURE_FIND_OBJECT
-        ATLVERIFY(NULL != (m_hWndClient = createSplitter_(m_hsplit, m_hWnd)));
-        ATLVERIFY(NULL != createSplitter_(m_vsplit, m_hsplit));
+        ATLVERIFY(NULL != (m_hWndClient = createSplitter_(m_splitFind, m_hWnd)));
+        ATLVERIFY(NULL != createSplitter_(m_vsplit, m_splitFind));
 #else
         ATLVERIFY(NULL != (m_hWndClient = createSplitter_(m_vsplit, m_hWnd)));
 #endif // FEATURE_FIND_OBJECT
 
         ATLVERIFY(NULL != m_treeview.Create(m_vsplit));
         ATLVERIFY(NULL != m_listview.Create(m_vsplit));
-#if FEATURE_FIND_OBJECT
-        ATLVERIFY(NULL != m_searchPane.Create(m_hsplit));
-        ATLVERIFY(NULL != m_findresults.Create(m_searchPane, rcDefault));
-#endif // FEATURE_FIND_OBJECT
 
         ATLASSERT(::IsWindow(m_hWndStatusBar));
 #if FEATURE_FIND_OBJECT
-        ATLASSERT(::IsWindow(m_hsplit) && (m_hWndClient == m_hsplit));
+        m_splitFind.initialize(m_hWnd);
+        ATLASSERT(::IsWindow(m_splitFind) && (m_hWndClient == m_splitFind));
         ATLASSERT(::IsWindow(m_vsplit));
 #else
         ATLASSERT(::IsWindow(m_vsplit) && (m_hWndClient == m_vsplit));
@@ -2665,10 +2739,9 @@ public:
         ATLASSERT(m_treeview == ::GetDlgItem(m_vsplit, ::GetDlgCtrlID(m_treeview)));
         ATLASSERT(m_listview == ::GetDlgItem(m_vsplit, ::GetDlgCtrlID(m_listview)));
 #if FEATURE_FIND_OBJECT
-        ATLTRACE2(_T("Control ID for horizontal splitter: %i\n"), ::GetDlgCtrlID(m_hsplit));
-        ATLVERIFY(::IsWindow(m_searchPane));
-        ATLASSERT(m_hsplit == ::GetDlgItem(m_hWnd, ::GetDlgCtrlID(m_hsplit)));
-        ATLASSERT(m_vsplit == ::GetDlgItem(m_hsplit, ::GetDlgCtrlID(m_vsplit)));
+        ATLTRACE2(_T("Control ID for horizontal splitter: %i\n"), ::GetDlgCtrlID(m_splitFind));
+        ATLASSERT(m_splitFind == ::GetDlgItem(m_hWnd, ::GetDlgCtrlID(m_splitFind)));
+        ATLASSERT(m_vsplit == ::GetDlgItem(m_splitFind, ::GetDlgCtrlID(m_vsplit)));
 #else
         ATLASSERT(m_vsplit == ::GetDlgItem(m_hWnd, ::GetDlgCtrlID(m_vsplit)));
 #endif // FEATURE_FIND_OBJECT
@@ -2679,17 +2752,8 @@ public:
 
         ATLVERIFY(m_vsplit.SetSplitterPane(SPLIT_PANE_LEFT, m_treeview));
         ATLVERIFY(m_vsplit.SetSplitterPane(SPLIT_PANE_RIGHT, m_listview));
-#if FEATURE_FIND_OBJECT
-        m_searchPane.SetClient(m_findresults);
-        m_hsplit.SetSplitterPanes(m_vsplit, m_searchPane);
-#endif // FEATURE_FIND_OBJECT
 
         UpdateLayout();
-
-#if FEATURE_FIND_OBJECT
-        m_hsplit.SetSplitterPosPct(100);
-        ATLVERIFY(m_hsplit.SetSinglePaneMode(SPLIT_PANE_TOP));
-#endif // FEATURE_FIND_OBJECT
 
         m_vsplit.SetSplitterPosPct(20);
         m_vsplit.m_cxyMin = 180; //  minimum width of the treeview
@@ -2703,6 +2767,19 @@ public:
         pLoop->AddIdleHandler(this);
 
         return 0;
+    }
+
+    void UpdateLayout(BOOL bResizeBars = TRUE)
+    {
+#if FEATURE_FIND_OBJECT
+        m_splitFind.setTopPane(m_vsplit);
+#endif // FEATURE_FIND_OBJECT
+
+        baseClass::UpdateLayout(bResizeBars);
+
+#if FEATURE_FIND_OBJECT
+        m_splitFind.setDefaultHidden();
+#endif // FEATURE_FIND_OBJECT
     }
 
     virtual BOOL OnIdle()
@@ -2796,27 +2873,7 @@ public:
 #if FEATURE_FIND_OBJECT
     LRESULT OnFindObject(WORD /*wNotifyCode*/, WORD /*wID*/, HWND /*hWndCtl*/, BOOL& /*bHandled*/)
     {
-        ATLTRACE2(_T("Single pane mode before toggling search pane: %d\n"), m_hsplit.GetSinglePaneMode());
-        switch (m_hsplit.GetSinglePaneMode())
-        {
-        case SPLIT_PANE_NONE:
-            m_bSearchSplitPct = m_hsplit.GetSplitterPosPct(); // save old splitter position percentage
-            m_hsplit.SetSinglePaneMode(SPLIT_PANE_TOP);
-            m_hsplit.m_cxyMin = m_cxySplitterMin; // reset to default
-            m_hsplit.SetSplitterPosPct(100);
-            break;
-        case SPLIT_PANE_TOP:
-            m_hsplit.SetSinglePaneMode(SPLIT_PANE_NONE);
-            if(m_cxySplitterMin < 0)
-                m_cxySplitterMin = m_hsplit.m_cxyMin;
-            m_hsplit.m_cxyMin = 100;
-            m_hsplit.SetSplitterPosPct(m_bSearchSplitPct);
-            break;
-        case SPLIT_PANE_BOTTOM:
-            ATLASSERT(!_T("Not expecting SPLIT_PANE_BOTTOM here."));
-            break;
-        }
-        ATLTRACE2(_T("Pane position now at %i %%\n"), m_hsplit.GetSplitterPosPct());
+        m_splitFind.toggleHidden();
         return 0;
     }
 #endif // FEATURE_FIND_OBJECT
@@ -2837,7 +2894,7 @@ public:
         renewStatusBar_();
         renewAboutInSystemMenu_();
 #if FEATURE_FIND_OBJECT
-        m_searchPane.renewVisibleTexts();
+        m_splitFind.renewVisibleTexts();
 #endif // FEATURE_FIND_OBJECT
 
         switch (m_currentLang)
@@ -3563,16 +3620,10 @@ private:
             {
                 m_treeview.ModifyStyleEx(0, TVS_EX_DOUBLEBUFFER);
                 m_listview.SetExtendedListViewStyle(CNtObjectsListViewTraits::GetWndExStyle(LVS_EX_DOUBLEBUFFER));
-#if FEATURE_FIND_OBJECT
-                m_findresults.SetExtendedListViewStyle(CNtObjectsFindResultsTraits::GetWndExStyle(LVS_EX_DOUBLEBUFFER));
-#endif // FEATURE_FIND_OBJECT
             }
             else
             {
                 m_listview.SetExtendedListViewStyle(CNtObjectsListViewTraits::GetWndExStyle(0));
-#if FEATURE_FIND_OBJECT
-                m_findresults.SetExtendedListViewStyle(CNtObjectsFindResultsTraits::GetWndExStyle(0));
-#endif // FEATURE_FIND_OBJECT
             }
         }
         else
@@ -3585,9 +3636,6 @@ private:
     {
         m_treeview.setFrameWindow(m_hWnd); // make the frame window known to the treeview control
         m_listview.setFrameWindow(m_hWnd); // make the frame window known to the listview control
-#if FEATURE_FIND_OBJECT
-        m_findresults.setFrameWindow(m_hWnd); // make the frame window known to the listview control for found objects
-#endif // FEATURE_FIND_OBJECT
     }
 
 };
