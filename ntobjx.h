@@ -206,12 +206,12 @@ namespace
         }
         if(objHdl)
         {
-            sObjDetails.Append(_T("\n"));
+            sObjDetails.Append(_T("\r\n"));
             if(!NT_SUCCESS(objHdl->getOpenStatus()))
             {
                 CSimpleBuf<TCHAR> status(getStatusString(objHdl->getOpenStatus()));
                 sObjDetails.AppendFormat(IDS_OBJPROPERTY_OPEN_STATUS, objHdl->getOpenStatus());
-                sObjDetails.AppendFormat(_T("    %s\n"), status.Buffer());
+                sObjDetails.AppendFormat(_T("    %s\r\n"), status.Buffer());
             }
             else
             {
@@ -219,7 +219,7 @@ namespace
                 {
                     CSimpleBuf<TCHAR> status(getStatusString(objHdl->getQueryStatus()));
                     sObjDetails.AppendFormat(IDS_OBJPROPERTY_QUERY_STATUS, objHdl->getQueryStatus());
-                    sObjDetails.AppendFormat(_T("    %s\n"), status.Buffer());
+                    sObjDetails.AppendFormat(_T("    %s\r\n"), status.Buffer());
                 }
             }
             if(objHdl->hasObjectInfo())

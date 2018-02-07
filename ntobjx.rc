@@ -385,8 +385,8 @@ BEGIN
     IDS_URL_ONLINEHELP      "https://bitbucket.org/assarbad/ntobjx/wiki/help/Deutsch"
     ID_OBJSEARCH_CAPTION    "Objektsuche"
     ID_OBJSEARCH_TEXT       "Suchbegriff"
-    IDS_MERCURIAL_REVISION  "Mercurial-Revision: %s\n"
-    IDS_MERCURIAL_REVURL    "Mercurial Revisions-URL: %s\n"
+    IDS_MERCURIAL_REVISION  "Mercurial-Revision: %s\r\n"
+    IDS_MERCURIAL_REVURL    "Mercurial Revisions-URL: %s\r\n"
 END
 
 STRINGTABLE
@@ -404,26 +404,26 @@ BEGIN
     IDS_OBJTT_NAMEDPIPE     "Das Ger‰t welches Pipes ihren eigenen 'DOS'-Namensraum bietet"
     IDS_OBJTT_PHYSMEM       "Section welche 'physischen' Speicher repr‰sentiert; nur vom Kernelmodus aus zugreifbar (war auf ‰lteren Windowsversionen zugreifbar)"
     IDS_OBJTT_REGISTRY      "Die Wurzel der Registrierdatenbank (Registry) auﬂerhalb des Win32-Subsystems"
-    IDS_OBJPROPERTY_HANDLE_COUNT "Anzahl von Handles: %u\n"
-    IDS_OBJPROPERTY_REFERENCE_COUNT "Anzahl Referenzen: %u\n"
-    IDS_OBJPROPERTY_NONPAGEDPOOL "Nutzung des NonPagedPool-Speichers: %u\n"
+    IDS_OBJPROPERTY_HANDLE_COUNT "Anzahl von Handles: %u\r\n"
+    IDS_OBJPROPERTY_REFERENCE_COUNT "Anzahl Referenzen: %u\r\n"
+    IDS_OBJPROPERTY_NONPAGEDPOOL "Nutzung des NonPagedPool-Speichers: %u\r\n"
 END
 
 STRINGTABLE
 BEGIN
-    IDS_OBJPROPERTY_NAME    "Objektname: %s\n"
-    IDS_OBJPROPERTY_FULLPATH "Vollst‰ndiger Objektpfad: %s\n"
-    IDS_OBJPROPERTY_SYMLINKTGT "Ziel des symbolischen Links: %s\n"
-    IDS_OBJPROPERTY_TYPE    "Objekttyp: %s\n"
-    IDS_OBJPROPERTY_OPEN_STATUS "Status beim ÷ffnen des Objekts: 0x%08X\n"
+    IDS_OBJPROPERTY_NAME    "Objektname: %s\r\n"
+    IDS_OBJPROPERTY_FULLPATH "Vollst‰ndiger Objektpfad: %s\r\n"
+    IDS_OBJPROPERTY_SYMLINKTGT "Ziel des symbolischen Links: %s\r\n"
+    IDS_OBJPROPERTY_TYPE    "Objekttyp: %s\r\n"
+    IDS_OBJPROPERTY_OPEN_STATUS "Status beim ÷ffnen des Objekts: 0x%08X\r\n"
     IDS_OBJPROPERTY_QUERY_STATUS 
-                            "Status beim Ermitteln der Objektdetails: 0x%08X\n"
+                            "Status beim Ermitteln der Objektdetails: 0x%08X\r\n"
 END
 
 STRINGTABLE
 BEGIN
-    IDS_OBJPROPERTY_PAGEDPOOL "Nutzung des PagedPool-Speichers: %u\n"
-    IDS_OBJPROPERTY_CREATION_TIME "Zeit der Objekterzeugung: %s\n"
+    IDS_OBJPROPERTY_PAGEDPOOL "Nutzung des PagedPool-Speichers: %u\r\n"
+    IDS_OBJPROPERTY_CREATION_TIME "Zeit der Objekterzeugung: %s\r\n"
 END
 
 #endif    // German (Germany) resources
@@ -836,8 +836,8 @@ BEGIN
     IDS_URL_ONLINEHELP      "https://bitbucket.org/assarbad/ntobjx/wiki/help/English"
     ID_OBJSEARCH_CAPTION    "Object search"
     ID_OBJSEARCH_TEXT       "Search term"
-    IDS_MERCURIAL_REVISION  "Mercurial revision: %s\n"
-    IDS_MERCURIAL_REVURL    "Mercurial URL: %s\n"
+    IDS_MERCURIAL_REVISION  "Mercurial revision: %s\r\n"
+    IDS_MERCURIAL_REVURL    "Mercurial URL: %s\r\n"
 END
 
 STRINGTABLE
@@ -855,25 +855,25 @@ BEGIN
     IDS_OBJTT_NAMEDPIPE     "The device that offers pipes in their own 'DOS' namespace"
     IDS_OBJTT_PHYSMEM       "Section representing 'physical' memory; only accessible from kernel mode (used to be accessible on older Windows versions)"
     IDS_OBJTT_REGISTRY      "The root of the registry as seen outside the Win32 subsystem"
-    IDS_OBJPROPERTY_HANDLE_COUNT "Handle count: %u\n"
-    IDS_OBJPROPERTY_REFERENCE_COUNT "Reference count: %u\n"
-    IDS_OBJPROPERTY_NONPAGEDPOOL "Use of NonPagedPool memory: %u\n"
+    IDS_OBJPROPERTY_HANDLE_COUNT "Handle count: %u\r\n"
+    IDS_OBJPROPERTY_REFERENCE_COUNT "Reference count: %u\r\n"
+    IDS_OBJPROPERTY_NONPAGEDPOOL "Use of NonPagedPool memory: %u\r\n"
 END
 
 STRINGTABLE
 BEGIN
-    IDS_OBJPROPERTY_NAME    "Object name: %s\n"
-    IDS_OBJPROPERTY_FULLPATH "Object path: %s\n"
-    IDS_OBJPROPERTY_SYMLINKTGT "Symbolic link target: %s\n"
-    IDS_OBJPROPERTY_TYPE    "Object type: %s\n"
-    IDS_OBJPROPERTY_OPEN_STATUS "Object open status: 0x%08X\n"
-    IDS_OBJPROPERTY_QUERY_STATUS "Object query status: 0x%08X\n"
+    IDS_OBJPROPERTY_NAME    "Object name: %s\r\n"
+    IDS_OBJPROPERTY_FULLPATH "Object path: %s\r\n"
+    IDS_OBJPROPERTY_SYMLINKTGT "Symbolic link target: %s\r\n"
+    IDS_OBJPROPERTY_TYPE    "Object type: %s\r\n"
+    IDS_OBJPROPERTY_OPEN_STATUS "Object open status: 0x%08X\r\n"
+    IDS_OBJPROPERTY_QUERY_STATUS "Object query status: 0x%08X\r\n"
 END
 
 STRINGTABLE
 BEGIN
-    IDS_OBJPROPERTY_PAGEDPOOL "Use od PagedPool memory: %u\n"
-    IDS_OBJPROPERTY_CREATION_TIME "Time of object creation: %s\n"
+    IDS_OBJPROPERTY_PAGEDPOOL "Use od PagedPool memory: %u\r\n"
+    IDS_OBJPROPERTY_CREATION_TIME "Time of object creation: %s\r\n"
 END
 
 #endif    // English (United States) resources
