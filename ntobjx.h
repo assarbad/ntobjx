@@ -89,7 +89,7 @@
 #pragma warning(pop)
 #endif
 
-#define FEATURE_FIND_OBJECT 1
+#define FEATURE_FIND_OBJECT 0
 #ifdef DDKBUILD
 #define FEATURE_OBJECT_SECURITY 0
 #else
@@ -142,6 +142,26 @@ namespace
     int const imgListElemWidth = 16;
     int const imgListElemHeight = 16;
 
+    CString getformatCreationTimeString(LARGE_INTEGER const& li)
+    {
+        CString str;
+        if(li.QuadPart > 0)
+        {
+            ATLASSERT(li.HighPart >= 0); // anything else will fail our conversion below
+            FILETIME ft = { li.LowPart, static_cast<DWORD>(li.HighPart) };
+            SYSTEMTIME st;
+            ATLVERIFY(FileTimeToSystemTime(&ft, &st));
+            // DO NOT LOCALIZE THIS!
+            str.Format(_T("%04d-%02d-%02d %02d:%02d:%02d.%03d"), st.wYear, st.wMonth, st.wDay, st.wHour, st.wMinute, st.wSecond, st.wMilliseconds);
+        }
+        else
+        {
+#           pragma warning(suppress: 6031)
+            ATLVERIFY(str.LoadString(IDS_NOT_AVAILABLE_SHORT));
+        }
+        return str;
+    }
+
     // Requires open clipboard and doesn't close it
     BOOL setClipboardString(LPCTSTR lpsz)
     {
@@ -170,21 +190,55 @@ namespace
         return FALSE;
     }
 
+    CSimpleBuf<TCHAR> getStatusString(LONG status);
+
     CString getObjectDetailsString(GenericObject* obj, ObjectHandle* objHdl)
     {
         ATLASSERT(obj != NULL);
         ATLASSERT(objHdl != NULL);
         CString sObjDetails, str;
-        ATLVERIFY(str.LoadString(ID_COLNAME_OBJNAME));
-        sObjDetails.AppendFormat(_T("%s: %s\n"), LPCTSTR(str), LPCTSTR(obj->name()));
-        ATLVERIFY(str.LoadString(ID_COLNAME_OBJNAME));
-        sObjDetails.AppendFormat(_T("%s: %s\n"), LPCTSTR(str), LPCTSTR(obj->fullname()));
-        ATLVERIFY(str.LoadString(ID_COLNAME_OBJTYPE));
-        sObjDetails.AppendFormat(_T("%s: %s\n"), LPCTSTR(str), LPCTSTR(obj->type()));
+        sObjDetails.AppendFormat(IDS_OBJPROPERTY_NAME, LPCTSTR(obj->name()));
+        sObjDetails.AppendFormat(IDS_OBJPROPERTY_FULLPATH, LPCTSTR(obj->fullname()));
+        sObjDetails.AppendFormat(IDS_OBJPROPERTY_TYPE, LPCTSTR(obj->type()));
         if(SymbolicLink* symlink = dynamic_cast<SymbolicLink*>(obj))
         {
-            ATLVERIFY(str.LoadString(ID_COLNAME_OBJLNKTGT));
-            sObjDetails.AppendFormat(_T("%s: %s\n"), LPCTSTR(str), LPCTSTR(symlink->target()));
+            sObjDetails.AppendFormat(IDS_OBJPROPERTY_SYMLINKTGT, LPCTSTR(symlink->target()));
+        }
+        if(objHdl)
+        {
+            sObjDetails.Append(_T("\n"));
+            if(!NT_SUCCESS(objHdl->getOpenStatus()))
+            {
+                CSimpleBuf<TCHAR> status(getStatusString(objHdl->getOpenStatus()));
+                sObjDetails.AppendFormat(IDS_OBJPROPERTY_OPEN_STATUS, objHdl->getOpenStatus());
+                sObjDetails.AppendFormat(_T("    %s\n"), status.Buffer());
+            }
+            else
+            {
+                if(!NT_SUCCESS(objHdl->getQueryStatus()))
+                {
+                    CSimpleBuf<TCHAR> status(getStatusString(objHdl->getQueryStatus()));
+                    sObjDetails.AppendFormat(IDS_OBJPROPERTY_QUERY_STATUS, objHdl->getQueryStatus());
+                    sObjDetails.AppendFormat(_T("    %s\n"), status.Buffer());
+                }
+            }
+            if(objHdl->hasObjectInfo())
+            {
+                sObjDetails.AppendFormat(IDS_OBJPROPERTY_HANDLE_COUNT, objHdl->getObjectInfo().HandleCount);
+                sObjDetails.AppendFormat(IDS_OBJPROPERTY_REFERENCE_COUNT, objHdl->getObjectInfo().ReferenceCount);
+                sObjDetails.AppendFormat(IDS_OBJPROPERTY_PAGEDPOOL, objHdl->getObjectInfo().PagedPoolUsage);
+                sObjDetails.AppendFormat(IDS_OBJPROPERTY_NONPAGEDPOOL, objHdl->getObjectInfo().NonPagedPoolUsage);
+                CString objCreation(getformatCreationTimeString(objHdl->getObjectInfo().CreationTime));
+                sObjDetails.AppendFormat(IDS_OBJPROPERTY_CREATION_TIME, objCreation.GetString());
+                // TODO:
+                // Other object-specific properties
+                // Security info as SDDL
+            }
+            else
+            {
+                NTSTATUS status = objHdl->getQueryStatus();
+                str.Format(IDS_OBJ_QUERY_STATUS, status);
+            }
         }
         return sObjDetails;
     }
@@ -684,7 +738,7 @@ template <typename T> class CObjectPropertySheetT :
                     m_stcQuotaPaged.SetWindowText(str);
                     str.Format(_T("%u"), m_objHdl.getObjectInfo().NonPagedPoolUsage);
                     m_stcQuotaNonPaged.SetWindowText(str);
-                    m_stcCreationTime.SetWindowText(getformatCreationTimeString_(m_objHdl.getObjectInfo().CreationTime));
+                    m_stcCreationTime.SetWindowText(getformatCreationTimeString(m_objHdl.getObjectInfo().CreationTime));
 
                     showObjectSpecificInfo_();
                 }
@@ -785,27 +839,6 @@ template <typename T> class CObjectPropertySheetT :
         }
 
     private:
-
-        static CString getformatCreationTimeString_(LARGE_INTEGER const& li)
-        {
-            CString str;
-            if(li.QuadPart > 0)
-            {
-                ATLASSERT(li.HighPart >= 0); // anything else will fail our conversion below
-                FILETIME ft = { li.LowPart, static_cast<DWORD>(li.HighPart) };
-                SYSTEMTIME st;
-                ATLVERIFY(FileTimeToSystemTime(&ft, &st));
-                // DO NOT LOCALIZE THIS!
-                str.Format(_T("%04d-%02d-%02d %02d:%02d:%02d.%03d"), st.wYear, st.wMonth, st.wDay, st.wHour, st.wMinute, st.wSecond, st.wMilliseconds);
-            }
-            else
-            {
-#               pragma warning(suppress: 6031)
-                ATLVERIFY(str.LoadString(IDS_NOT_AVAILABLE_SHORT));
-            }
-            return str;
-        }
-
         void setAttributesVisible_(int num)
         {
             m_stcGroupObjSpecific.ShowWindow(SW_SHOWNOACTIVATE);
@@ -1018,7 +1051,7 @@ template <typename T> class CObjectPropertySheetT :
 #                   pragma warning(suppress: 6031)
                     ATLVERIFY(str.LoadString(IDS_OBJSPEC_NAME2_KEY));
                     m_stcObjSpecName2.SetWindowText(str);
-                    str = getformatCreationTimeString_(info->LastWriteTime);
+                    str = getformatCreationTimeString(info->LastWriteTime);
                     m_stcObjSpecAttr1.SetWindowText(str);
                     str.Format(_T("%u"), info->TitleIndex);
                     m_stcObjSpecAttr2.SetWindowText(str);
@@ -1441,6 +1474,7 @@ public:
         m_loop.Run();
         ATLTRACE2(_T("Re-enabling parent window %p\n"), hWndParent);
         ::EnableWindow(hWndParent, TRUE);
+        ::SetForegroundWindow(hWndParent);
     }
 
     LRESULT OnInitDialog(UINT /*uMsg*/, WPARAM /*wParam*/, LPARAM /*lParam*/, BOOL& /*bHandled*/)
@@ -1537,7 +1571,7 @@ public:
         return FALSE;
     }
 
-    LRESULT OnCopyAboutInfo(WORD /*wNotifyCode*/, WORD wID, HWND /*hWndCtl*/, BOOL& /*bHandled*/)
+    LRESULT OnCopyAboutInfo(WORD /*wNotifyCode*/, WORD /*wID*/, HWND /*hWndCtl*/, BOOL& /*bHandled*/)
     {
         ATLASSERT(wID == ID_COPY_ABOUT_INFO);
         if(::OpenClipboard(m_hWnd))
@@ -1558,19 +1592,25 @@ public:
 
     LRESULT OnCloseCmd(WORD /*wNotifyCode*/, WORD wID, HWND /*hWndCtl*/, BOOL& /*bHandled*/)
     {
+#ifdef _DEBUG
         if(m_bModal)
         {
             EndDialog(wID);
         }
         else
         {
+#else
+        UNREFERENCED_PARAMETER(wID);
+#endif // _DEBUG
             ATLTRACE2(_T("Removing message filter\n"));
             m_loop.RemoveMessageFilter(this);
             ATLTRACE2(_T("Posting WM_QUIT\n"));
             PostMessage(WM_QUIT);
             ATLTRACE2(_T("Destroying about dialog\n"));
             DestroyWindow();
+#ifdef _DEBUG
         }
+#endif // _DEBUG
         return 0;
     }
 };
