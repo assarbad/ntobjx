@@ -6,7 +6,7 @@
 ///
 ///////////////////////////////////////////////////////////////////////////////
 ///
-/// Copyright (c) 2016, 2017 Oliver Schneider (assarbad.net)
+/// Copyright (c) 2016-2018 Oliver Schneider (assarbad.net)
 ///
 /// Permission is hereby granted, free of charge, to any person obtaining a
 /// copy of this software and associated documentation files (the "Software"),
@@ -41,6 +41,7 @@
 #include <atlctrlw.h>
 #include <atlsplit.h>
 #include <atlsecurity.h>
+#include <atluser.h>
 #pragma warning(pop) /* restore code analyzer warnings*/
 #include <stdarg.h>
 

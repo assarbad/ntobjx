@@ -66,6 +66,10 @@
 #   error ntobjx.h requires atlsecurity.h to be included first
 #endif
 
+#ifndef __ATLUSER_H__
+#   error ntobjx.h requires atluser.h to be included first
+#endif
+
 #ifndef __func__
 #   define __func__ __FUNCTION__
 #endif
@@ -171,6 +175,8 @@ namespace
         ATLASSERT(obj != NULL);
         ATLASSERT(objHdl != NULL);
         CString sObjDetails, str;
+        ATLVERIFY(str.LoadString(ID_COLNAME_OBJNAME));
+        sObjDetails.AppendFormat(_T("%s: %s\n"), LPCTSTR(str), LPCTSTR(obj->name()));
         ATLVERIFY(str.LoadString(ID_COLNAME_OBJNAME));
         sObjDetails.AppendFormat(_T("%s: %s\n"), LPCTSTR(str), LPCTSTR(obj->fullname()));
         ATLVERIFY(str.LoadString(ID_COLNAME_OBJTYPE));
@@ -596,7 +602,7 @@ template <typename T> class CObjectPropertySheetT :
         typedef CPropertyPageImpl<CObjectDetailsPage> baseClass;
         GenericObject*  m_obj;
         ObjectHandle&   m_objHdl;
-        HACCEL          m_hAccel;
+        CAccelerator    m_Accel;
         CEdit           m_edtName;
         CEdit           m_edtFullname;
         CEdit           m_edtType;
@@ -623,7 +629,6 @@ template <typename T> class CObjectPropertySheetT :
         BEGIN_MSG_MAP(CObjectDetailsPage)
             MESSAGE_HANDLER(WM_INITDIALOG, OnInitDialog)
             MESSAGE_HANDLER(WM_CTLCOLORSTATIC, OnCtlColorStatic)
-            MESSAGE_HANDLER(WM_DESTROY, OnDestroy)
             COMMAND_ID_HANDLER(ID_COPY_DETAILS, OnCopyObjectDetails)
             CHAIN_MSG_MAP(baseClass)
         END_MSG_MAP()
@@ -633,7 +638,6 @@ template <typename T> class CObjectPropertySheetT :
             : baseClass()
             , m_obj(obj)
             , m_objHdl(objHdl)
-            , m_hAccel(NULL)
         {
         }
 
@@ -726,11 +730,14 @@ template <typename T> class CObjectPropertySheetT :
             m_edtExplanation.SetSelNone(TRUE);
 
             // Load the accelerator table corresponding to the dialog's resource ID
-            HACCEL hNewAccel = ::LoadAccelerators(ModuleHelper::GetResourceInstance(), MAKEINTRESOURCE(IDD));
-            ATLASSERT(hNewAccel != NULL);
-            if(hNewAccel)
+            m_Accel.LoadAccelerators(IDD);
+            if(!m_Accel.IsNull())
             {
-                m_hAccel = hNewAccel;
+                ATLTRACE2(_T("Loaded accelerator table: %p\n"), HACCEL(m_Accel));
+            }
+            else
+            {
+                ATLTRACE2(_T("Failed to load accelerators for object details page (last error: %d)\n"), GetLastError());
             }
 
             return TRUE;
@@ -758,21 +765,11 @@ template <typename T> class CObjectPropertySheetT :
             return FALSE;
         }
 
-        LRESULT OnDestroy(UINT /*uMsg*/, WPARAM /*wParam*/, LPARAM /*lParam*/, BOOL& /*bHandled*/)
-        {
-            if(m_hAccel)
-            {
-                ATLVERIFY(::DestroyAcceleratorTable(m_hAccel));
-                m_hAccel = NULL;
-            }
-            return FALSE;
-        }
-
         LRESULT OnTranslateAccelerator(MSG* pMsg)
         {
-            if(m_hAccel)
+            if(!m_Accel.IsNull())
             {
-                if(TranslateAccelerator(m_hWnd, m_hAccel, pMsg))
+                if(m_Accel.TranslateAccelerator(m_hWnd, pMsg))
                 {
                     return PSNRET_MESSAGEHANDLED;
                 }
@@ -1390,18 +1387,23 @@ public:
 };
 
 class CAboutDlg :
-    public CDialogImpl<CAboutDlg>
+    public CDialogImpl<CAboutDlg>,
+    public CMessageFilter
 {
+    typedef CDialogImpl<CAboutDlg> baseClass;
     CHyperLinkCtxMenu m_website, m_projectpage, m_revisionurl;
     CVersionInfo& m_verinfo;
     CIcon m_appicon;
     CFont m_progNameFont;
+    CAccelerator m_Accel;
+    CMessageLoop m_loop;
 public:
     enum { IDD = IDD_ABOUT };
 
     BEGIN_MSG_MAP(CAboutDlg)
         MESSAGE_HANDLER(WM_INITDIALOG, OnInitDialog)
         MESSAGE_HANDLER(WM_CTLCOLORSTATIC, OnCtlColorStatic)
+        COMMAND_ID_HANDLER(ID_COPY_ABOUT_INFO, OnCopyAboutInfo)
         COMMAND_ID_HANDLER(IDOK, OnCloseCmd)
         COMMAND_ID_HANDLER(IDCANCEL, OnCloseCmd)
     END_MSG_MAP()
@@ -1409,6 +1411,36 @@ public:
     CAboutDlg(CVersionInfo& verinfo)
         : m_verinfo(verinfo)
     {
+    }
+
+    virtual BOOL PreTranslateMessage(MSG* pMsg)
+    {
+        if(!m_Accel.IsNull())
+        {
+            if(m_Accel.TranslateAccelerator(m_hWnd, pMsg))
+            {
+                return TRUE;
+            }
+        }
+        if(IsWindow())
+        {
+            return baseClass::IsDialogMessage(pMsg);
+        }
+        return FALSE;
+    }
+
+    void EmulateModal(_In_ HWND hWndParent = ::GetActiveWindow(), _In_ LPARAM dwInitParam = NULL)
+    {
+        ATLASSERT(!m_bModal);
+        ATLTRACE2(_T("Disabling parent window %p\n"), hWndParent);
+        ::EnableWindow(hWndParent, FALSE);
+        (void)Create(hWndParent, dwInitParam);
+        (void)ShowWindow(SW_SHOW);
+        m_loop.AddMessageFilter(this);
+        ATLTRACE2(_T("Running \"inner\" message loop.\n"));
+        m_loop.Run();
+        ATLTRACE2(_T("Re-enabling parent window %p\n"), hWndParent);
+        ::EnableWindow(hWndParent, TRUE);
     }
 
     LRESULT OnInitDialog(UINT /*uMsg*/, WPARAM /*wParam*/, LPARAM /*lParam*/, BOOL& /*bHandled*/)
@@ -1470,6 +1502,17 @@ public:
             }
         }
 
+        // Load the accelerator table corresponding to the dialog's resource ID
+        m_Accel.LoadAccelerators(IDD);
+        if(!m_Accel.IsNull())
+        {
+            ATLTRACE2(_T("Loaded accelerator table: %p\n"), HACCEL(m_Accel));
+        }
+        else
+        {
+            ATLTRACE2(_T("Failed to load accelerators for about box (last error: %d)\n"), GetLastError());
+        }
+
         return TRUE;
     }
 
@@ -1494,9 +1537,40 @@ public:
         return FALSE;
     }
 
+    LRESULT OnCopyAboutInfo(WORD /*wNotifyCode*/, WORD wID, HWND /*hWndCtl*/, BOOL& /*bHandled*/)
+    {
+        ATLASSERT(wID == ID_COPY_ABOUT_INFO);
+        if(::OpenClipboard(m_hWnd))
+        {
+            CString str;
+            str.AppendFormat(_T("%s %s\n\n%s\n\n"), m_verinfo[_T("ProductName")], m_verinfo[_T("FileVersion")], m_verinfo[_T("LegalCopyright")]);
+            str.AppendFormat(IDS_PROGRAM_DESCRIPTION);
+            str.Append(_T("\n\n"));
+            str.AppendFormat(IDS_MERCURIAL_REVISION, m_verinfo[_T("Mercurial revision")]);
+            str.AppendFormat(IDS_MERCURIAL_REVURL, m_verinfo[_T("Mercurial revision URL")]);
+            str.Append(_T("\n"));
+            str.Append(m_verinfo[_T("Portions Copyright")]);
+            ATLVERIFY(setClipboardString(str));
+            ATLVERIFY(::CloseClipboard());
+        }
+        return FALSE;
+    }
+
     LRESULT OnCloseCmd(WORD /*wNotifyCode*/, WORD wID, HWND /*hWndCtl*/, BOOL& /*bHandled*/)
     {
-        EndDialog(wID);
+        if(m_bModal)
+        {
+            EndDialog(wID);
+        }
+        else
+        {
+            ATLTRACE2(_T("Removing message filter\n"));
+            m_loop.RemoveMessageFilter(this);
+            ATLTRACE2(_T("Posting WM_QUIT\n"));
+            PostMessage(WM_QUIT);
+            ATLTRACE2(_T("Destroying about dialog\n"));
+            DestroyWindow();
+        }
         return 0;
     }
 };
@@ -2668,6 +2742,7 @@ public:
 
     virtual BOOL PreTranslateMessage(MSG* pMsg)
     {
+        ATLASSERT(::IsWindow(m_hWnd));
         if(CFrameWindowImpl<CNtObjectsMainFrame>::PreTranslateMessage(pMsg))
             return TRUE;
         if(IsDialogMessage(pMsg))
@@ -2833,7 +2908,7 @@ public:
     LRESULT OnShowAbout(WORD /*wNotifyCode*/, WORD /*wID*/, HWND /*hWndCtl*/, BOOL& /*bHandled*/)
     {
         CAboutDlg dlg(m_verinfo);
-        dlg.DoModal(m_hWnd);
+        dlg.EmulateModal(m_hWnd);
         return 0;
     }
 
@@ -3094,7 +3169,7 @@ public:
             const int cchBuff = 256;
             TCHAR szBuff[cchBuff] = { 0 };
 
-            int nRet = ::LoadString(ModuleHelper::GetResourceInstance(), wID, szBuff, cchBuff);
+            int nRet = AtlLoadString(wID, szBuff, cchBuff);
             for(int i = 0; i < nRet; i++)
             {
                 if(szBuff[i] == _T('\n'))
@@ -3280,7 +3355,7 @@ private:
     {
         HMENU hOldMenu = GetMenu();
         ATLASSERT(hOldMenu != NULL);
-        HMENU hNewMenu = ::LoadMenu(ModuleHelper::GetResourceInstance(), MAKEINTRESOURCE(GetWndClassInfo().m_uCommonResourceID));
+        HMENU hNewMenu = AtlLoadMenu(GetWndClassInfo().m_uCommonResourceID);
         ATLASSERT(hNewMenu != NULL);
         if(hNewMenu != NULL)
         {
@@ -3290,10 +3365,11 @@ private:
         if(m_hAccel)
         {
             HACCEL hOldAccel = m_hAccel;
-            HACCEL hNewAccel = ::LoadAccelerators(ModuleHelper::GetResourceInstance(), MAKEINTRESOURCE(GetWndClassInfo().m_uCommonResourceID));
+            HACCEL hNewAccel = AtlLoadAccelerators(GetWndClassInfo().m_uCommonResourceID);
             ATLASSERT(hNewAccel != NULL);
             if(hNewAccel)
             {
+                ATLTRACE2(_T("Loaded accelerator table: %p\n"), hNewAccel);
                 m_hAccel = hNewAccel;
                 if(hOldAccel)
                 {

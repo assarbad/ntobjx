@@ -31,6 +31,8 @@
 #define IDS_URL_ONLINEHELP              27
 #define ID_OBJSEARCH_CAPTION            28
 #define ID_OBJSEARCH_TEXT               29
+#define IDS_MERCURIAL_REVISION          30
+#define IDS_MERCURIAL_REVURL            31
 #define IDD_PROPERTIES                  107
 #define IDR_POPUP_MENU1                 202
 #define IDD_ABOUT                       205
@@ -120,13 +122,14 @@
 #define ID_SWITCHLANGUAGE_POPUP         32790
 #define ID_SHOW_ONLINEHELP              32791
 #define ID_COPY_DETAILS                 32792
+#define ID_COPY_ABOUT_INFO              32793
 
 // Next default values for new objects
 // 
 #ifdef APSTUDIO_INVOKED
 #ifndef APSTUDIO_READONLY_SYMBOLS
 #define _APS_NEXT_RESOURCE_VALUE        252
-#define _APS_NEXT_COMMAND_VALUE         32793
+#define _APS_NEXT_COMMAND_VALUE         32794
 #define _APS_NEXT_CONTROL_VALUE         1028
 #define _APS_NEXT_SYMED_VALUE           108
 #endif

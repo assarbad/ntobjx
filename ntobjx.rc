@@ -108,6 +108,11 @@ BEGIN
     "C",            ID_COPY_DETAILS,        VIRTKEY, CONTROL, NOINVERT
 END
 
+IDD_ABOUT ACCELERATORS
+BEGIN
+    "C",            ID_COPY_ABOUT_INFO,     VIRTKEY, CONTROL, NOINVERT
+END
+
 
 /////////////////////////////////////////////////////////////////////////////
 //
@@ -380,6 +385,8 @@ BEGIN
     IDS_URL_ONLINEHELP      "https://bitbucket.org/assarbad/ntobjx/wiki/help/Deutsch"
     ID_OBJSEARCH_CAPTION    "Objektsuche"
     ID_OBJSEARCH_TEXT       "Suchbegriff"
+    IDS_MERCURIAL_REVISION  "Mercurial-Revision: %s\n"
+    IDS_MERCURIAL_REVURL    "Mercurial Revisions-URL: %s\n"
 END
 
 STRINGTABLE
@@ -497,6 +504,11 @@ END
 IDD_PROPERTIES ACCELERATORS
 BEGIN
     "C",            ID_COPY_DETAILS,        VIRTKEY, CONTROL, NOINVERT
+END
+
+IDD_ABOUT ACCELERATORS
+BEGIN
+    "C",            ID_COPY_ABOUT_INFO,     VIRTKEY, CONTROL, NOINVERT
 END
 
 
@@ -804,6 +816,8 @@ BEGIN
     IDS_URL_ONLINEHELP      "https://bitbucket.org/assarbad/ntobjx/wiki/help/English"
     ID_OBJSEARCH_CAPTION    "Object search"
     ID_OBJSEARCH_TEXT       "Search term"
+    IDS_MERCURIAL_REVISION  "Mercurial revision: %s\n"
+    IDS_MERCURIAL_REVURL    "Mercurial URL: %s\n"
 END
 
 STRINGTABLE
