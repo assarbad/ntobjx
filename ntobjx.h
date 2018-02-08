@@ -490,7 +490,7 @@ private:
         ATLASSERT(obj != NULL);
         LPCTSTR typeName = obj->type();
         int retval = 0;
-        for (size_t i = 0; i < resIconTypeMappingSize; i++)
+        for(size_t i = 0; i < resIconTypeMappingSize; i++)
         {
             if(0 == _tcsicmp(typeName, resIconTypeMapping[i].typeName))
             {
@@ -504,7 +504,7 @@ private:
                         {
                             if(-1 == emptydir)
                             {
-                                for (size_t j = 0; j < resIconTypeMappingSize; j++)
+                                for(size_t j = 0; j < resIconTypeMappingSize; j++)
                                 {
                                     if(0 == _tcsicmp(_T(OBJTYPESTR_EMPTY_DIRECTORY), resIconTypeMapping[j].typeName))
                                     {
@@ -530,7 +530,7 @@ private:
         ATLTRACE2(_T("Preparing image list for %hs\n"), __func__);
         const int iResIconTypeMappingSize = static_cast<int>(resIconTypeMappingSize);
         ATLVERIFY(m_imagelist.Create(imgListElemWidth, imgListElemHeight, ILC_COLOR32 | ILC_MASK, iResIconTypeMappingSize, iResIconTypeMappingSize));
-        for (int i = 0; i < iResIconTypeMappingSize; i++)
+        for(int i = 0; i < iResIconTypeMappingSize; i++)
         {
             HICON hIcon = static_cast<HICON>(AtlLoadIconImage(MAKEINTRESOURCE(resIconTypeMapping[i].resId), LR_CREATEDIBSECTION, imgListElemWidth, imgListElemHeight));
             ATLTRACE2(_T("Icon handle: %p - %s\n"), hIcon, resIconTypeMapping[i].typeName);
@@ -1416,7 +1416,7 @@ public:
 class CHyperLinkCtxMenu : public CHyperLinkCtxMenuImpl<CHyperLinkCtxMenu>
 {
 public:
-    DECLARE_WND_CLASS(_T("CNtObjectsHyperLinkCtxMenu"))
+    DECLARE_WND_CLASS(_T("NtObjectsHyperLinkCtxMenu"))
 };
 
 class CAboutDlg :
@@ -1571,18 +1571,19 @@ public:
         return FALSE;
     }
 
-    LRESULT OnCopyAboutInfo(WORD /*wNotifyCode*/, WORD /*wID*/, HWND /*hWndCtl*/, BOOL& /*bHandled*/)
+    LRESULT OnCopyAboutInfo(WORD /*wNotifyCode*/, WORD wID, HWND /*hWndCtl*/, BOOL& /*bHandled*/)
     {
+        UNREFERENCED_PARAMETER(wID);
         ATLASSERT(wID == ID_COPY_ABOUT_INFO);
         if(::OpenClipboard(m_hWnd))
         {
             CString str;
-            str.AppendFormat(_T("%s %s\n\n%s\n\n"), m_verinfo[_T("ProductName")], m_verinfo[_T("FileVersion")], m_verinfo[_T("LegalCopyright")]);
+            str.AppendFormat(_T("%s %s\r\n\r\n%s\r\n\r\n"), m_verinfo[_T("ProductName")], m_verinfo[_T("FileVersion")], m_verinfo[_T("LegalCopyright")]);
             str.AppendFormat(IDS_PROGRAM_DESCRIPTION);
-            str.Append(_T("\n\n"));
+            str.Append(_T("\r\n\r\n"));
             str.AppendFormat(IDS_MERCURIAL_REVISION, m_verinfo[_T("Mercurial revision")]);
             str.AppendFormat(IDS_MERCURIAL_REVURL, m_verinfo[_T("Mercurial revision URL")]);
-            str.Append(_T("\n"));
+            str.Append(_T("\r\n"));
             str.Append(m_verinfo[_T("Portions Copyright")]);
             ATLVERIFY(setClipboardString(str));
             ATLVERIFY(::CloseClipboard());
@@ -2739,7 +2740,7 @@ public:
     CLanguageSetter& m_langSetter;
     CObjectImageList m_imagelist;
     CNtObjectsStatusBar m_status;
-    CNtObjectsSplitter m_vsplit;
+    CNtObjectsSplitter m_splitObjTree;
     CNtObjectsTreeView m_treeview;
     CNtObjectsListView m_listview;
 #if FEATURE_FIND_OBJECT
@@ -2829,49 +2830,49 @@ public:
         ATLVERIFY(NULL != (m_hWndStatusBar = createStatusBar_()));
 #if FEATURE_FIND_OBJECT
         ATLVERIFY(NULL != (m_hWndClient = createSplitter_(m_splitFind, m_hWnd)));
-        ATLVERIFY(NULL != createSplitter_(m_vsplit, m_splitFind));
+        ATLVERIFY(NULL != createSplitter_(m_splitObjTree, m_splitFind));
 #else
-        ATLVERIFY(NULL != (m_hWndClient = createSplitter_(m_vsplit, m_hWnd)));
+        ATLVERIFY(NULL != (m_hWndClient = createSplitter_(m_splitObjTree, m_hWnd)));
 #endif // FEATURE_FIND_OBJECT
 
-        ATLVERIFY(NULL != m_treeview.Create(m_vsplit));
-        ATLVERIFY(NULL != m_listview.Create(m_vsplit));
+        ATLVERIFY(NULL != m_treeview.Create(m_splitObjTree));
+        ATLVERIFY(NULL != m_listview.Create(m_splitObjTree));
 
         ATLASSERT(::IsWindow(m_hWndStatusBar));
 #if FEATURE_FIND_OBJECT
         m_splitFind.initialize(m_hWnd);
         ATLASSERT(::IsWindow(m_splitFind) && (m_hWndClient == m_splitFind));
-        ATLASSERT(::IsWindow(m_vsplit));
+        ATLASSERT(::IsWindow(m_splitObjTree));
 #else
-        ATLASSERT(::IsWindow(m_vsplit) && (m_hWndClient == m_vsplit));
+        ATLASSERT(::IsWindow(m_splitObjTree) && (m_hWndClient == m_splitObjTree));
 #endif // FEATURE_FIND_OBJECT
         ATLASSERT(::IsWindow(m_treeview));
         ATLASSERT(::IsWindow(m_listview));
 
-        ATLTRACE2(_T("Control ID for vertical splitter: %i\n"), ::GetDlgCtrlID(m_vsplit));
+        ATLTRACE2(_T("Control ID for vertical splitter: %i\n"), ::GetDlgCtrlID(m_splitObjTree));
         ATLTRACE2(_T("Control ID for treeview: %i\n"), ::GetDlgCtrlID(m_treeview));
         ATLTRACE2(_T("Control ID for listview: %i\n"), ::GetDlgCtrlID(m_listview));
-        ATLASSERT(m_treeview == ::GetDlgItem(m_vsplit, ::GetDlgCtrlID(m_treeview)));
-        ATLASSERT(m_listview == ::GetDlgItem(m_vsplit, ::GetDlgCtrlID(m_listview)));
+        ATLASSERT(m_treeview == ::GetDlgItem(m_splitObjTree, ::GetDlgCtrlID(m_treeview)));
+        ATLASSERT(m_listview == ::GetDlgItem(m_splitObjTree, ::GetDlgCtrlID(m_listview)));
 #if FEATURE_FIND_OBJECT
         ATLTRACE2(_T("Control ID for horizontal splitter: %i\n"), ::GetDlgCtrlID(m_splitFind));
         ATLASSERT(m_splitFind == ::GetDlgItem(m_hWnd, ::GetDlgCtrlID(m_splitFind)));
-        ATLASSERT(m_vsplit == ::GetDlgItem(m_splitFind, ::GetDlgCtrlID(m_vsplit)));
+        ATLASSERT(m_splitObjTree == ::GetDlgItem(m_splitFind, ::GetDlgCtrlID(m_splitObjTree)));
 #else
-        ATLASSERT(m_vsplit == ::GetDlgItem(m_hWnd, ::GetDlgCtrlID(m_vsplit)));
+        ATLASSERT(m_splitObjTree == ::GetDlgItem(m_hWnd, ::GetDlgCtrlID(m_splitObjTree)));
 #endif // FEATURE_FIND_OBJECT
 
         setFrameWindow_();
         enableShell60Features_();
         renewAboutInSystemMenu_(TRUE);
 
-        ATLVERIFY(m_vsplit.SetSplitterPane(SPLIT_PANE_LEFT, m_treeview));
-        ATLVERIFY(m_vsplit.SetSplitterPane(SPLIT_PANE_RIGHT, m_listview));
+        ATLVERIFY(m_splitObjTree.SetSplitterPane(SPLIT_PANE_LEFT, m_treeview));
+        ATLVERIFY(m_splitObjTree.SetSplitterPane(SPLIT_PANE_RIGHT, m_listview));
 
         UpdateLayout();
 
-        m_vsplit.SetSplitterPosPct(20);
-        m_vsplit.m_cxyMin = 180; //  minimum width of the treeview
+        m_splitObjTree.SetSplitterPosPct(20);
+        m_splitObjTree.m_cxyMin = 180; //  minimum width of the treeview
 
         (void)updateMainFormLanguage(m_currentLang);
 
@@ -2887,7 +2888,7 @@ public:
     void UpdateLayout(BOOL bResizeBars = TRUE)
     {
 #if FEATURE_FIND_OBJECT
-        m_splitFind.setTopPane(m_vsplit);
+        m_splitFind.setTopPane(m_splitObjTree);
 #endif // FEATURE_FIND_OBJECT
 
         baseClass::UpdateLayout(bResizeBars);
