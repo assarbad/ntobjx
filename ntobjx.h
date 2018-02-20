@@ -1475,6 +1475,8 @@ public:
         ATLTRACE2(_T("Re-enabling parent window %p\n"), hWndParent);
         ::EnableWindow(hWndParent, TRUE);
         ::SetForegroundWindow(hWndParent);
+        ATLTRACE2(_T("Destroying about dialog\n"));
+        DestroyWindow();
     }
 
     LRESULT OnInitDialog(UINT /*uMsg*/, WPARAM /*wParam*/, LPARAM /*lParam*/, BOOL& /*bHandled*/)
@@ -1607,8 +1609,6 @@ public:
             m_loop.RemoveMessageFilter(this);
             ATLTRACE2(_T("Posting WM_QUIT\n"));
             PostMessage(WM_QUIT);
-            ATLTRACE2(_T("Destroying about dialog\n"));
-            DestroyWindow();
 #ifdef _DEBUG
         }
 #endif // _DEBUG
