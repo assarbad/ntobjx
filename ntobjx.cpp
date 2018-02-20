@@ -201,26 +201,22 @@ extern "C" int __cdecl __purecall(void)
 #pragma warning(suppress: 28251)
 int WINAPI _tWinMain(HINSTANCE hInstance, HINSTANCE /*hPrevInstance*/, LPTSTR lpstrCmdLine, int nCmdShow)
 {
-#if 0 && defined(_DEBUG)
+#if defined(_DEBUG)
     _CrtSetDbgFlag(_CRTDBG_ALLOC_MEM_DF | _CRTDBG_LEAK_CHECK_DF);
     _CrtSetReportMode(_CRT_ERROR, _CRTDBG_MODE_DEBUG);
 #endif // _DEBUG
-
-    HRESULT hRes = ::CoInitializeEx(NULL, COINIT_MULTITHREADED);
-    ATLASSERT(SUCCEEDED(hRes));
 
     AtlInitCommonControls(ICC_LISTVIEW_CLASSES | ICC_TREEVIEW_CLASSES | ICC_TAB_CLASSES);
 
 #ifndef DDKBUILD
     force_resolve_all();
 #endif // !DDKBUILD
-    hRes = _Module.Init(NULL, hInstance);
+    HRESULT hRes = _Module.Init(NULL, hInstance);
     ATLASSERT(SUCCEEDED(hRes));
 
     int nRet = Run(lpstrCmdLine, nCmdShow);
 
     _Module.Term();
-    ::CoUninitialize();
 
     return nRet;
 }
