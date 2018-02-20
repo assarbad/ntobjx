@@ -212,7 +212,11 @@ int WINAPI _tWinMain(HINSTANCE hInstance, HINSTANCE /*hPrevInstance*/, LPTSTR lp
     force_resolve_all();
 #endif // !DDKBUILD
     HRESULT hRes = _Module.Init(NULL, hInstance);
+#ifdef _DEBUG
     ATLASSERT(SUCCEEDED(hRes));
+#else
+    UNREFERENCED_PARAMETER(hRes);
+#endif // _DEBUG
 
     int nRet = Run(lpstrCmdLine, nCmdShow);
 

@@ -92,10 +92,6 @@
 typedef CAppModule CNtObjectsAppModule;
 extern CNtObjectsAppModule _Module;
 
-#include <atlwin.h>
-#include <atlddx.h>
-#include <Shellapi.h>
-
 #pragma warning(pop) /* restore code analyzer warnings*/
 
 #if (_MSC_VER >= 1400)
