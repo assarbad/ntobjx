@@ -29,6 +29,7 @@
 ///////////////////////////////////////////////////////////////////////////////
 
 #include "stdafx.h"
+#include <ShellAPI.h>
 
 #pragma warning(push) /* disable code analyzer warnings */
 #pragma warning(disable:6387) /* warning C6387 : '...' could be '0' : this does not adhere to the specification for the function '...'. */

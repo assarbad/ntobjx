@@ -91,7 +91,9 @@
 
 #define FEATURE_FIND_OBJECT 0
 #ifdef DDKBUILD
-#define FEATURE_OBJECT_SECURITY 0
+#   ifndef FEATURE_OBJECT_SECURITY /* Let this be overridden from the SOURCES file, for example. */
+#       define FEATURE_OBJECT_SECURITY 0
+#   endif /* FEATURE_OBJECT_SECURITY */
 #else
 #define FEATURE_OBJECT_SECURITY 1
 #endif // DDKBUILD
@@ -2823,6 +2825,7 @@ public:
         COMMAND_ID_HANDLER(ID_SWITCHLANGUAGE_POPUP, OnSwitchLanguage)
         CHAIN_MSG_MAP(CUpdateUI<CNtObjectsMainFrame>)
         CHAIN_MSG_MAP(CFrameWindowImpl<CNtObjectsMainFrame>)
+        DEFAULT_REFLECTION_HANDLER()
     END_MSG_MAP()
 
     LRESULT OnCreate(UINT /*uMsg*/, WPARAM /*wParam*/, LPARAM /*lParam*/, BOOL& /*bHandled*/)
