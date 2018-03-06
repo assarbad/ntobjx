@@ -43,6 +43,7 @@
 			/>
 			<Tool
 				Name="VCCLCompilerTool"
+				AdditionalOptions="/GS"
 				Optimization="0"
 				AdditionalIncludeDirectories="wtl\Include;pugixml"
 				PreprocessorDefinitions="WIN32;_WINDOWS;STRICT;_DEBUG;WINVER=0x0500"
@@ -70,7 +71,7 @@
 			/>
 			<Tool
 				Name="VCLinkerTool"
-				AdditionalOptions="/delay:nobind /delayload:ntdll-delayed.dll /delayload:version.dll"
+				AdditionalOptions="/delay:nobind /delayload:ntdll-delayed.dll /delayload:version.dll /dynamicbase /nxcompat"
 				AdditionalDependencies="ntdll-delayed.lib version.lib"
 				OutputFile="$(OutDir)\ntobjx32D.exe"
 				LinkIncremental="2"
@@ -131,6 +132,7 @@
 			/>
 			<Tool
 				Name="VCCLCompilerTool"
+				AdditionalOptions="/GS"
 				Optimization="0"
 				AdditionalIncludeDirectories="wtl\Include;pugixml"
 				PreprocessorDefinitions="WIN32;_WINDOWS;STRICT;_DEBUG;WINVER=0x0501"
@@ -158,7 +160,7 @@
 			/>
 			<Tool
 				Name="VCLinkerTool"
-				AdditionalOptions="/delay:nobind /delayload:ntdll-delayed.dll /delayload:version.dll"
+				AdditionalOptions="/delay:nobind /delayload:ntdll-delayed.dll /delayload:version.dll /dynamicbase /nxcompat"
 				AdditionalDependencies="ntdll-delayed.lib version.lib"
 				OutputFile="$(OutDir)\ntobjx64D.exe"
 				LinkIncremental="2"
@@ -218,7 +220,7 @@
 			/>
 			<Tool
 				Name="VCCLCompilerTool"
-				AdditionalOptions="/Oi /Os /Gy /Oy"
+				AdditionalOptions="/GS /Oi /Os /Gy /Oy"
 				Optimization="3"
 				AdditionalIncludeDirectories="wtl\Include;pugixml"
 				PreprocessorDefinitions="WIN32;_WINDOWS;STRICT;NDEBUG;WINVER=0x0500"
@@ -245,7 +247,7 @@
 			/>
 			<Tool
 				Name="VCLinkerTool"
-				AdditionalOptions="/delay:nobind /delayload:ntdll-delayed.dll /delayload:version.dll /release /subsystem:windows,5.00 /opt:nowin98"
+				AdditionalOptions="/delay:nobind /delayload:ntdll-delayed.dll /delayload:version.dll /dynamicbase /nxcompat /safeseh /release /subsystem:windows,5.00 /opt:nowin98"
 				AdditionalDependencies="ntdll-delayed.lib version.lib"
 				OutputFile="$(OutDir)\ntobjx32.exe"
 				LinkIncremental="1"
@@ -308,7 +310,7 @@
 			/>
 			<Tool
 				Name="VCCLCompilerTool"
-				AdditionalOptions="/Oi /Os /Gy /Oy"
+				AdditionalOptions="/GS /Oi /Os /Gy /Oy"
 				Optimization="3"
 				AdditionalIncludeDirectories="wtl\Include;pugixml"
 				PreprocessorDefinitions="WIN32;_WINDOWS;STRICT;NDEBUG;WINVER=0x0501"
@@ -335,7 +337,7 @@
 			/>
 			<Tool
 				Name="VCLinkerTool"
-				AdditionalOptions="/delay:nobind /delayload:ntdll-delayed.dll /delayload:version.dll /release /subsystem:windows,5.02 /opt:nowin98"
+				AdditionalOptions="/delay:nobind /delayload:ntdll-delayed.dll /delayload:version.dll /dynamicbase /nxcompat /release /subsystem:windows,5.02 /opt:nowin98"
 				AdditionalDependencies="ntdll-delayed.lib version.lib"
 				OutputFile="$(OutDir)\ntobjx64.exe"
 				LinkIncremental="1"
@@ -393,7 +395,7 @@
 					>
 				</File>
 				<File
-					RelativePath="util\VersionInfo.h"
+					RelativePath="util\versioninfo.h"
 					>
 				</File>
 			</Filter>

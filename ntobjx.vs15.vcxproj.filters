@@ -130,7 +130,7 @@
     <ClInclude Include="util\SimpleBuffer.h">
       <Filter>Header Files\Utility classes</Filter>
     </ClInclude>
-    <ClInclude Include="util\VersionInfo.h">
+    <ClInclude Include="util\versioninfo.h">
       <Filter>Header Files\Utility classes</Filter>
     </ClInclude>
     <ClInclude Include="exeversion.h">

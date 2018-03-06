@@ -276,6 +276,8 @@ solution (tgtname .. iif(release, "_release", ""))
 
         configuration {"*"}
             prebuildcommands{"call \"$(ProjectDir)\\hgid.cmd\"",}
+            buildoptions    {"/GS"}
+            linkoptions     {"/dynamicbase","/nxcompat"}
 
         configuration {"x64"}
             prebuildcommands{"lib.exe /nologo /nodefaultlib \"/def:ntdll-stubs\\ntdll-delayed.txt\" \"/out:$(IntDir)\\ntdll-delayed.lib\" /machine:x64",}
@@ -291,6 +293,7 @@ solution (tgtname .. iif(release, "_release", ""))
 
         configuration {"Release", "x32"}
             targetsuffix    ("32")
+            linkoptions     {"/safeseh"}
             if _OPTIONS["msvcrt"] then
                 links       {"comdlg32", "$(WLHBASE)\\lib\\crt\\i386\\msvcrt.lib", "$(WLHBASE)\\lib\\w2k\\i386\\strsafe.lib", "$(WLHBASE)\\lib\\w2k\\i386\\msvcrt_win2000.obj"}
                 defines     {"USE_W2K_COMPAT"}
