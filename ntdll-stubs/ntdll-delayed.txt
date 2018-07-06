@@ -60,9 +60,19 @@ EXPORTS
     NtEnumerateValueKey
     NtQueryKey
     NtQueryValueKey
+    NtSetValueKey
     NtRenameKey
     RtlValidateUnicodeString
     RtlDowncaseUnicodeString
+    RtlUpcaseUnicodeString
+    RtlDowncaseUnicodeChar
+    RtlUpcaseUnicodeChar
+    RtlCompareUnicodeString
+    RtlEqualUnicodeString
+    RtlCopyUnicodeString
+    RtlAppendUnicodeStringToString
+    RtlAppendUnicodeToString
+    RtlPrefixUnicodeString
     RtlGenerate8dot3Name
     RtlVolumeDeviceToDosName
     NtCreateSection

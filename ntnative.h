@@ -29,7 +29,7 @@
 ///////////////////////////////////////////////////////////////////////////////
 
 #ifndef __NTNATIVE_H_VER__
-#define __NTNATIVE_H_VER__ 2018030119
+#define __NTNATIVE_H_VER__ 2018063019
 #if (defined(_MSC_VER) && (_MSC_VER >= 1020)) || defined(__MCPP)
 #pragma once
 #endif // Check for "#pragma once" support
@@ -68,6 +68,10 @@
 #   define _Out_opt_ __out_opt
 #   define _Out_writes_bytes_opt_(x) __out_bcount_opt(x)
 #   define _Reserved_ __reserved
+#endif
+
+#ifndef _Must_inspect_result_
+#   define _Must_inspect_result_
 #endif
 
 #ifndef _Ret_maybenull_
@@ -117,7 +121,8 @@
 
 #if defined(DDKBUILD)
 #   if defined(__cplusplus)
-    extern "C" {
+extern "C"
+{
 #   endif
     typedef struct _UNICODE_STRING {
         USHORT Length;
@@ -189,8 +194,8 @@
     VOID
     NTAPI
     RtlInitUnicodeString(
-        PUNICODE_STRING DestinationString,
-        PCWSTR SourceString
+        _Out_ PUNICODE_STRING DestinationString,
+        _In_opt_ PCWSTR SourceString
     );
 
 #   if defined(__cplusplus)
@@ -227,8 +232,8 @@ extern "C++"
     char _RTL_CONSTANT_STRING_type_check(const WCHAR *s);
     // __typeof would be desirable here instead of sizeof.
     template <size_t N> class _RTL_CONSTANT_STRING_remove_const_template_class;
-    template <> class _RTL_CONSTANT_STRING_remove_const_template_class<sizeof(char)>  {public: typedef  char T; };
-    template <> class _RTL_CONSTANT_STRING_remove_const_template_class<sizeof(WCHAR)> {public: typedef WCHAR T; };
+    template <> class _RTL_CONSTANT_STRING_remove_const_template_class<sizeof(char)>  { public: typedef  char T; };
+    template <> class _RTL_CONSTANT_STRING_remove_const_template_class<sizeof(WCHAR)> { public: typedef WCHAR T; };
 #   define _RTL_CONSTANT_STRING_remove_const_macro(s) \
         (const_cast<_RTL_CONSTANT_STRING_remove_const_template_class<sizeof((s)[0])>::T*>(s))
 }
@@ -245,7 +250,8 @@ extern "C++"
 #endif // RTL_CONSTANT_STRING
 
 #if defined(__cplusplus)
-extern "C" {
+extern "C"
+{
 #endif
 
 #ifndef OBJECT_TYPE_CREATE
@@ -973,7 +979,18 @@ NtQueryValueKey(
     _Out_ PULONG ResultLength
 );
 
-__kernel_entry
+NTSTATUS
+NTAPI
+NtSetValueKey(
+    _In_ HANDLE KeyHandle,
+    _In_ PUNICODE_STRING ValueName,
+    _In_opt_ ULONG TitleIndex,
+    _In_ ULONG Type,
+    _In_reads_bytes_(DataSize) PVOID Data,
+    _In_ ULONG DataSize
+);
+
+#pragma warning(suppress:28252)
 NTSTATUS
 NTAPI
 NtRenameKey(
@@ -994,6 +1011,74 @@ RtlDowncaseUnicodeString(
          PUNICODE_STRING DestinationString,
     _In_ PCUNICODE_STRING SourceString,
     _In_ BOOLEAN AllocateDestinationString
+);
+
+NTSTATUS
+NTAPI
+RtlUpcaseUnicodeString(
+    _Inout_ PUNICODE_STRING  DestinationString,
+    _In_ PCUNICODE_STRING SourceString,
+    _In_ BOOLEAN AllocateDestinationString
+);
+
+WCHAR
+NTAPI
+RtlDowncaseUnicodeChar(
+    _In_ WCHAR SourceCharacter
+);
+
+WCHAR
+NTAPI
+RtlUpcaseUnicodeChar(
+    _In_ WCHAR SourceCharacter
+);
+
+_Must_inspect_result_
+LONG
+NTAPI
+RtlCompareUnicodeString(
+    _In_ PCUNICODE_STRING String1,
+    _In_ PCUNICODE_STRING String2,
+    _In_ BOOLEAN CaseInSensitive
+);
+
+_Must_inspect_result_
+BOOLEAN
+NTAPI
+RtlEqualUnicodeString(
+    _In_ PCUNICODE_STRING String1,
+    _In_ PCUNICODE_STRING String2,
+    _In_ BOOLEAN CaseInSensitive
+);
+
+VOID
+NTAPI
+RtlCopyUnicodeString(
+    _In_ PUNICODE_STRING DestinationString,
+    _In_ PCUNICODE_STRING SourceString
+);
+
+NTSTATUS
+NTAPI
+RtlAppendUnicodeStringToString(
+    _In_ PUNICODE_STRING Destination,
+    _In_ PCUNICODE_STRING Source
+);
+
+NTSTATUS
+NTAPI
+RtlAppendUnicodeToString(
+    _In_ PUNICODE_STRING Destination,
+    _In_opt_ PCWSTR Source
+);
+
+_Must_inspect_result_
+BOOLEAN
+NTAPI
+RtlPrefixUnicodeString(
+    _In_ PCUNICODE_STRING String1,
+    _In_ PCUNICODE_STRING String2,
+    _In_ BOOLEAN CaseInSensitive
 );
 
 NTSTATUS /* VOID in pre-Vista */
@@ -1219,9 +1304,19 @@ typedef NTSTATUS (NTAPI *NtEnumerateKey_t)(_In_ HANDLE, _In_ ULONG, _In_ KEY_INF
 typedef NTSTATUS (NTAPI *NtEnumerateValueKey_t)(_In_ HANDLE, _In_ ULONG, _In_ KEY_VALUE_INFORMATION_CLASS, _Out_ PVOID, _In_ ULONG, _Out_ PULONG);
 typedef NTSTATUS (NTAPI *NtQueryKey_t)(_In_ HANDLE, _In_ KEY_INFORMATION_CLASS, _Out_ PVOID, _In_ ULONG, _Out_ PULONG);
 typedef NTSTATUS (NTAPI *NtQueryValueKey_t)(_In_ HANDLE, _In_ PUNICODE_STRING, _In_ KEY_VALUE_INFORMATION_CLASS, _Out_ PVOID, _In_ ULONG, _Out_ PULONG);
+typedef NTSTATUS (NTAPI *NtSetValueKey_t)(_In_ HANDLE, _In_ PUNICODE_STRING, _In_opt_ ULONG, _In_ ULONG, _In_ PVOID, _In_ ULONG);
 typedef NTSTATUS (NTAPI *NtRenameKey_t)(_In_ HANDLE, _In_ PUNICODE_STRING);
 typedef NTSTATUS (NTAPI *RtlValidateUnicodeString_t)(_In_ _Reserved_ ULONG, _In_ PCUNICODE_STRING);
 typedef NTSTATUS (NTAPI *RtlDowncaseUnicodeString_t)(PUNICODE_STRING, _In_ PCUNICODE_STRING, _In_ BOOLEAN);
+typedef NTSTATUS (NTAPI *RtlUpcaseUnicodeString_t)(_Inout_ PUNICODE_STRING, _In_ PCUNICODE_STRING, _In_ BOOLEAN);
+typedef WCHAR (NTAPI *RtlDowncaseUnicodeChar_t)(_In_ WCHAR);
+typedef WCHAR (NTAPI *RtlUpcaseUnicodeChar_t)(_In_ WCHAR);
+typedef LONG (NTAPI *RtlCompareUnicodeString_t)(_In_ PCUNICODE_STRING, _In_ PCUNICODE_STRING, _In_ BOOLEAN);
+typedef BOOLEAN (NTAPI *RtlEqualUnicodeString_t)(_In_ PCUNICODE_STRING, _In_ PCUNICODE_STRING, _In_ BOOLEAN);
+typedef VOID (NTAPI *RtlCopyUnicodeString_t)(_In_ PUNICODE_STRING, _In_ PCUNICODE_STRING);
+typedef NTSTATUS (NTAPI *RtlAppendUnicodeStringToString_t)(_In_ PUNICODE_STRING, _In_ PCUNICODE_STRING);
+typedef NTSTATUS (NTAPI *RtlAppendUnicodeToString_t)(_In_ PUNICODE_STRING, _In_opt_ PCWSTR);
+typedef BOOLEAN (NTAPI *RtlPrefixUnicodeString_t)(_In_ PCUNICODE_STRING, _In_ PCUNICODE_STRING, _In_ BOOLEAN);
 typedef NTSTATUS (NTAPI *RtlGenerate8dot3Name_t)(_In_ PCUNICODE_STRING, _In_ BOOLEAN, _Inout_ PGENERATE_NAME_CONTEXT, _Inout_ PUNICODE_STRING);
 typedef NTSTATUS (NTAPI *RtlVolumeDeviceToDosName_t)(_In_ PVOID, _Out_ PUNICODE_STRING);
 typedef NTSTATUS (NTAPI *NtCreateSection_t)(_Out_ PHANDLE, _In_ ACCESS_MASK, _In_opt_ POBJECT_ATTRIBUTES, _In_opt_ PLARGE_INTEGER, _In_ ULONG, _In_ ULONG, _In_opt_ HANDLE);
@@ -1289,13 +1384,19 @@ typedef ULONG (NTAPI *RtlUniform_t)(PULONG);
 */
 #define NTNATIVE_GETPROCADDR(mod, x) GetProcAddress(mod, #x)
 /*
+  Use to coerce the type returned from GetProcAddress()
+    Example     : NTNATIVE_GETFUNC(hNtDll, RtlGetVersion)
+    Expands to  : (RtlGetVersion_t)GetProcAddress(hNtDll, "RtlGetVersion")
+*/
+#define NTNATIVE_GETFUNC(mod, x) (x##_t)NTNATIVE_GETPROCADDR(mod, x)
+/*
   Use to declare a variable of the same name as the function and assign it the
   function's pointer by passing a module handle. Uses GetProcAddress() to do the
   job.
     Example     : NTNATIVE_DEFFUNC(hNtDll, RtlGetVersion);
     Expands to  : RtlGetVersion_t RtlGetVersion = (RtlGetVersion_t)GetProcAddress(hNtDll, "RtlGetVersion");
 */
-#define NTNATIVE_DEFFUNC(mod, x) NTNATIVE_FUNC(x) = (x##_t)NTNATIVE_GETPROCADDR(mod, x)
+#define NTNATIVE_DEFFUNC(mod, x) NTNATIVE_FUNC(x) = NTNATIVE_GETFUNC(mod, x)
 /*
   Use to declare a variable of the same name as the function and assign it the
   function's pointer. Uses GetProcAddress() to do the job.
@@ -1303,6 +1404,16 @@ typedef ULONG (NTAPI *RtlUniform_t)(PULONG);
     Expands to  : RtlGetVersion_t RtlGetVersion = (RtlGetVersion_t)GetProcAddress(hNtDll, "RtlGetVersion");
 */
 #define NTDLL_DEFFUNC(x) NTNATIVE_DEFFUNC(hNtDll, x)
+
+#define LOCAL_NTNATIVE_FUNC(x) \
+    static NTNATIVE_FUNC(x) = 0; \
+    do { \
+    static HMODULE hNtDll = NULL; \
+    if (!hNtDll) { hNtDll = GetModuleHandle(L"ntdll.dll"); } \
+    if (!hNtDll) { return STATUS_NOT_IMPLEMENTED; } \
+    if (!x) { x = NTNATIVE_GETFUNC(hNtDll, x); } \
+    if (!x) { return STATUS_NOT_IMPLEMENTED; } \
+    } while(0)
 
 #define ZwClose NtClose
 #define ZwCreateFile NtCreateFile
@@ -1336,6 +1447,7 @@ typedef ULONG (NTAPI *RtlUniform_t)(PULONG);
 #define ZwEnumerateKey NtEnumerateKey
 #define ZwEnumerateValueKey NtEnumerateValueKey
 #define ZwQueryValueKey NtQueryValueKey
+#define ZwSetValueKey NtSetValueKey
 #define ZwRenameKey NtRenameKey
 #define ZwCreateSection NtCreateSection
 #define ZwMapViewOfSection NtMapViewOfSection
@@ -1346,5 +1458,38 @@ typedef ULONG (NTAPI *RtlUniform_t)(PULONG);
 #if defined(__cplusplus)
 }
 #endif
+
+#if defined(__cplusplus)
+namespace NT {
+#endif
+
+#ifndef WIN32_FILE_NAMESPACE
+#define WIN32_FILE_NAMESPACE        L"\\\\?\\"
+#endif // WIN32_FILE_NAMESPACE
+#ifndef WIN32_DEVICE_NAMESPACE
+#define WIN32_DEVICE_NAMESPACE      L"\\\\.\\"
+#endif // WIN32_DEVICE_NAMESPACE
+#ifndef NT_OBJMGR_NAMESPACE
+#define NT_OBJMGR_NAMESPACE         L"\\??\\"
+#endif // NT_OBJMGR_NAMESPACE
+
+#ifndef WIN32_FILE_NAMESPACE_A
+#define WIN32_FILE_NAMESPACE_A      "\\\\?\\"
+#endif // WIN32_FILE_NAMESPACE_A
+#ifndef WIN32_DEVICE_NAMESPACE_A
+#define WIN32_DEVICE_NAMESPACE_A    "\\\\.\\"
+#endif // WIN32_DEVICE_NAMESPACE_A
+#ifndef NT_OBJMGR_NAMESPACE_A
+#define NT_OBJMGR_NAMESPACE_A       L"\\??\\"
+#endif // NT_OBJMGR_NAMESPACE_A
+
+static UNICODE_STRING const sWin32FileNsPfx = RTL_CONSTANT_STRING(WIN32_FILE_NAMESPACE);
+static UNICODE_STRING const sWin32DeviceNsPfx = RTL_CONSTANT_STRING(WIN32_DEVICE_NAMESPACE);
+static UNICODE_STRING const sNtObjMgrNsPfx = RTL_CONSTANT_STRING(NT_OBJMGR_NAMESPACE);
+
+#if defined(__cplusplus)
+}
+#endif
+
 
 #endif // __NTNATIVE_H_VER__

@@ -483,6 +483,17 @@ NtQueryValueKey(
 
 NTSTATUS
 NTAPI
+NtSetValueKey(
+    _In_ HANDLE KeyHandle,
+    _In_ PUNICODE_STRING ValueName,
+    _In_opt_ ULONG TitleIndex,
+    _In_ ULONG Type,
+    _In_reads_bytes_(DataSize) PVOID Data,
+    _In_ ULONG DataSize
+    ) { return 0; }
+
+NTSTATUS
+NTAPI
 NtRenameKey(
     _In_ HANDLE KeyHandle,
     _In_ PUNICODE_STRING NewName
@@ -501,6 +512,74 @@ RtlDowncaseUnicodeString(
          PUNICODE_STRING DestinationString,
     _In_ PCUNICODE_STRING SourceString,
     _In_ BOOLEAN AllocateDestinationString
+    ) { return 0; }
+
+NTSTATUS
+NTAPI
+RtlUpcaseUnicodeString(
+    _Inout_ PUNICODE_STRING  DestinationString,
+    _In_ PCUNICODE_STRING SourceString,
+    _In_ BOOLEAN AllocateDestinationString
+    ) { return 0; }
+
+WCHAR
+NTAPI
+RtlDowncaseUnicodeChar(
+    _In_ WCHAR SourceCharacter
+    ) { return 0; }
+
+WCHAR
+NTAPI
+RtlUpcaseUnicodeChar(
+    _In_ WCHAR SourceCharacter
+    ) { return 0; }
+
+_Must_inspect_result_
+LONG
+NTAPI
+RtlCompareUnicodeString(
+    _In_ PCUNICODE_STRING String1,
+    _In_ PCUNICODE_STRING String2,
+    _In_ BOOLEAN CaseInSensitive
+    ) { return 0; }
+
+_Must_inspect_result_
+BOOLEAN
+NTAPI
+RtlEqualUnicodeString(
+    _In_ PCUNICODE_STRING String1,
+    _In_ PCUNICODE_STRING String2,
+    _In_ BOOLEAN CaseInSensitive
+    ) { return 0; }
+
+VOID
+NTAPI
+RtlCopyUnicodeString(
+    _In_ PUNICODE_STRING DestinationString,
+    _In_ PCUNICODE_STRING SourceString
+    ) { }
+
+NTSTATUS
+NTAPI
+RtlAppendUnicodeStringToString(
+    _In_ PUNICODE_STRING Destination,
+    _In_ PCUNICODE_STRING Source
+    ) { return 0; }
+
+NTSTATUS
+NTAPI
+RtlAppendUnicodeToString(
+    _In_ PUNICODE_STRING Destination,
+    _In_opt_ PCWSTR Source
+    ) { return 0; }
+
+_Must_inspect_result_
+BOOLEAN
+NTAPI
+RtlPrefixUnicodeString(
+    _In_ PCUNICODE_STRING String1,
+    _In_ PCUNICODE_STRING String2,
+    _In_ BOOLEAN CaseInSensitive
     ) { return 0; }
 
 NTSTATUS /* VOID in pre-Vista */
