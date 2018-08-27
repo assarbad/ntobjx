@@ -29,7 +29,7 @@
 ///////////////////////////////////////////////////////////////////////////////
 
 #ifndef __NTNATIVE_H_VER__
-#define __NTNATIVE_H_VER__ 2018063019
+#define __NTNATIVE_H_VER__ 2018082720
 #if (defined(_MSC_VER) && (_MSC_VER >= 1020)) || defined(__MCPP)
 #pragma once
 #endif // Check for "#pragma once" support
@@ -990,6 +990,20 @@ NtSetValueKey(
     _In_ ULONG DataSize
 );
 
+NTSTATUS
+NTAPI
+NtDeleteValueKey(
+    _In_ HANDLE KeyHandle,
+    _In_ PUNICODE_STRING ValueName
+);
+
+NTSTATUS
+NTAPI
+NtQueryOpenSubKeys(
+    _In_ POBJECT_ATTRIBUTES TargetKey,
+    _Out_ PULONG HandleCount
+);
+
 #pragma warning(suppress:28252)
 NTSTATUS
 NTAPI
@@ -1305,6 +1319,7 @@ typedef NTSTATUS (NTAPI *NtEnumerateValueKey_t)(_In_ HANDLE, _In_ ULONG, _In_ KE
 typedef NTSTATUS (NTAPI *NtQueryKey_t)(_In_ HANDLE, _In_ KEY_INFORMATION_CLASS, _Out_ PVOID, _In_ ULONG, _Out_ PULONG);
 typedef NTSTATUS (NTAPI *NtQueryValueKey_t)(_In_ HANDLE, _In_ PUNICODE_STRING, _In_ KEY_VALUE_INFORMATION_CLASS, _Out_ PVOID, _In_ ULONG, _Out_ PULONG);
 typedef NTSTATUS (NTAPI *NtSetValueKey_t)(_In_ HANDLE, _In_ PUNICODE_STRING, _In_opt_ ULONG, _In_ ULONG, _In_ PVOID, _In_ ULONG);
+typedef NTSTATUS (NTAPI *NtQueryOpenSubKeys_t)(_In_ POBJECT_ATTRIBUTES, _Out_ PULONG);
 typedef NTSTATUS (NTAPI *NtRenameKey_t)(_In_ HANDLE, _In_ PUNICODE_STRING);
 typedef NTSTATUS (NTAPI *RtlValidateUnicodeString_t)(_In_ _Reserved_ ULONG, _In_ PCUNICODE_STRING);
 typedef NTSTATUS (NTAPI *RtlDowncaseUnicodeString_t)(PUNICODE_STRING, _In_ PCUNICODE_STRING, _In_ BOOLEAN);
@@ -1338,8 +1353,9 @@ typedef RTL_PATH_TYPE (NTAPI *RtlDetermineDosPathNameType_U_t)(_In_ PCWSTR);
 typedef ULONG (NTAPI *RtlGetFullPathName_U_t)(_In_ PWSTR, _In_ ULONG, _Out_ PWSTR, _Out_opt_ PWSTR*);
 /* Those from wintrnl.h */
 typedef NTSTATUS (NTAPI *NtClose_t)(_In_ HANDLE);
-typedef NTSTATUS (NTAPI *NtCreateFile_t)(_Out_ PHANDLE, _In_ ACCESS_MASK, _In_ POBJECT_ATTRIBUTES, _Out_ PIO_STATUS_BLOCK, _In_opt_ PLARGE_INTEGER AllocationSize, _In_ ULONG FileAttributes, _In_ ULONG ShareAccess, _In_ ULONG CreateDisposition, _In_ ULONG CreateOptions, _In_opt_ PVOID EaBuffer, _In_ ULONG EaLength);
-typedef NTSTATUS (NTAPI *NtOpenFile_t)(_Out_ PHANDLE, _In_ ACCESS_MASK, _In_ POBJECT_ATTRIBUTES, _Out_ PIO_STATUS_BLOCK IoStatusBlock, _In_ ULONG ShareAccess, _In_ ULONG);
+typedef NTSTATUS (NTAPI *NtCreateFile_t)(_Out_ PHANDLE, _In_ ACCESS_MASK, _In_ POBJECT_ATTRIBUTES, _Out_ PIO_STATUS_BLOCK, _In_opt_ PLARGE_INTEGER, _In_ ULONG, _In_ ULONG, _In_ ULONG, _In_ ULONG, _In_opt_ PVOID, _In_ ULONG);
+typedef NTSTATUS (NTAPI *NtOpenFile_t)(_Out_ PHANDLE, _In_ ACCESS_MASK, _In_ POBJECT_ATTRIBUTES, _Out_ PIO_STATUS_BLOCK, _In_ ULONG, _In_ ULONG);
+typedef NTSTATUS (NTAPI *NtDeleteValueKey_t)(_In_ HANDLE, _In_ PUNICODE_STRING);
 typedef NTSTATUS (NTAPI *NtRenameKey_t)(_In_ HANDLE, _In_ PUNICODE_STRING);
 typedef NTSTATUS (NTAPI *NtNotifyChangeMultipleKeys_t)(_In_ HANDLE, _In_opt_ ULONG, _In_opt_ OBJECT_ATTRIBUTES[], _In_opt_ HANDLE, _In_opt_ PIO_APC_ROUTINE, _In_opt_ PVOID, _Out_ PIO_STATUS_BLOCK, _In_ ULONG, _In_ BOOLEAN, _Out_writes_bytes_opt_(BufferSize) PVOID, _In_ ULONG, _In_ BOOLEAN);
 typedef NTSTATUS (NTAPI *NtQueryMultipleValueKey_t)(_In_ HANDLE, _Inout_ PKEY_VALUE_ENTRY, _In_ ULONG, _Out_ PVOID, _Inout_ PULONG, _Out_opt_ PULONG);
@@ -1448,6 +1464,8 @@ typedef ULONG (NTAPI *RtlUniform_t)(PULONG);
 #define ZwEnumerateValueKey NtEnumerateValueKey
 #define ZwQueryValueKey NtQueryValueKey
 #define ZwSetValueKey NtSetValueKey
+#define ZwDeleteValueKey NtDeleteValueKey
+#define ZwQueryOpenSubKeys NtQueryOpenSubKeys
 #define ZwRenameKey NtRenameKey
 #define ZwCreateSection NtCreateSection
 #define ZwMapViewOfSection NtMapViewOfSection
@@ -1490,6 +1508,5 @@ static UNICODE_STRING const sNtObjMgrNsPfx = RTL_CONSTANT_STRING(NT_OBJMGR_NAMES
 #if defined(__cplusplus)
 }
 #endif
-
 
 #endif // __NTNATIVE_H_VER__

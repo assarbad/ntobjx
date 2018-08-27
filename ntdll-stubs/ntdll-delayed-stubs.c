@@ -494,6 +494,20 @@ NtSetValueKey(
 
 NTSTATUS
 NTAPI
+NtDeleteValueKey(
+    _In_ HANDLE KeyHandle,
+    _In_ PUNICODE_STRING ValueName
+    ) { return  0; }
+
+NTSTATUS
+NTAPI
+NtQueryOpenSubKeys(
+    _In_ POBJECT_ATTRIBUTES TargetKey,
+    _Out_ PULONG HandleCount
+    ) { return 0; }
+
+NTSTATUS
+NTAPI
 NtRenameKey(
     _In_ HANDLE KeyHandle,
     _In_ PUNICODE_STRING NewName

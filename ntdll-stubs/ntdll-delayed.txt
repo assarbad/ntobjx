@@ -61,6 +61,8 @@ EXPORTS
     NtQueryKey
     NtQueryValueKey
     NtSetValueKey
+    NtDeleteValueKey
+    NtQueryOpenSubKeys
     NtRenameKey
     RtlValidateUnicodeString
     RtlDowncaseUnicodeString
