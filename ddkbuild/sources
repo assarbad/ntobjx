@@ -37,7 +37,7 @@ INCLUDES=$(DDK_INC_PATH);$(CRT_INC_PATH);$(SDK_INC_PATH);..;..\wtl\Include;..\pu
 # Set this to 0 in order to build without AclUI
 # NB: given the solution in this folder is for VS8 you should not need
 # to disable this, but if you do now you know how.
-WITHACLUI=0
+WITHACLUI=1
 
 TARGETLIBS=\
             $(SDK_LIB_PATH)\kernel32.lib \
