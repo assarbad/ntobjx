@@ -186,7 +186,7 @@ NTAPI
 RtlCreateUnicodeString(
     _Out_ PUNICODE_STRING DestinationString,
     _In_opt_ PCWSTR SourceString
-    ) {}
+    ) { return FALSE; }
 
 NTSTATUS
 NTAPI
