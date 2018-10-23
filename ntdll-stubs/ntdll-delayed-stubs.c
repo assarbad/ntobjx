@@ -15,13 +15,13 @@
 
 NTSTATUS
 NTAPI
-NtClose (
+NtClose(
     _In_ HANDLE Handle
     ) { return 0; }
 
 NTSTATUS
 NTAPI
-NtCreateFile (
+NtCreateFile(
     _Out_ PHANDLE FileHandle,
     _In_ ACCESS_MASK DesiredAccess,
     _In_ POBJECT_ATTRIBUTES ObjectAttributes,
@@ -37,7 +37,7 @@ NtCreateFile (
 
 NTSTATUS
 NTAPI
-NtOpenFile (
+NtOpenFile(
     _Out_ PHANDLE FileHandle,
     _In_ ACCESS_MASK DesiredAccess,
     _In_ POBJECT_ATTRIBUTES ObjectAttributes,
@@ -48,7 +48,7 @@ NtOpenFile (
 
 NTSTATUS
 NTAPI
-NtDeviceIoControlFile (
+NtDeviceIoControlFile(
     _In_ HANDLE FileHandle,
     _In_opt_ HANDLE Event,
     _In_opt_ PIO_APC_ROUTINE ApcRoutine,
@@ -63,7 +63,7 @@ NtDeviceIoControlFile (
 
 NTSTATUS
 NTAPI
-NtWaitForSingleObject (
+NtWaitForSingleObject(
     _In_ HANDLE Handle,
     _In_ BOOLEAN Alertable,
     _In_opt_ PLARGE_INTEGER Timeout
@@ -71,7 +71,7 @@ NtWaitForSingleObject (
 
 BOOLEAN
 NTAPI
-RtlIsNameLegalDOS8Dot3 (
+RtlIsNameLegalDOS8Dot3(
     _In_ PUNICODE_STRING Name,
     _Inout_opt_ POEM_STRING OemName,
     _Inout_opt_ PBOOLEAN NameContainsSpaces
@@ -79,13 +79,13 @@ RtlIsNameLegalDOS8Dot3 (
 
 ULONG
 NTAPI
-RtlNtStatusToDosError (
+RtlNtStatusToDosError(
    NTSTATUS Status
    ) { return 0; }
 
 NTSTATUS
 NTAPI
-NtQueryInformationProcess (
+NtQueryInformationProcess(
     _In_ HANDLE ProcessHandle,
     _In_ PROCESSINFOCLASS ProcessInformationClass,
     _Out_ PVOID ProcessInformation,
@@ -95,7 +95,7 @@ NtQueryInformationProcess (
 
 NTSTATUS
 NTAPI
-NtQueryInformationThread (
+NtQueryInformationThread(
     _In_ HANDLE ThreadHandle,
     _In_ THREADINFOCLASS ThreadInformationClass,
     _Out_ PVOID ThreadInformation,
@@ -105,7 +105,7 @@ NtQueryInformationThread (
 
 NTSTATUS
 NTAPI
-NtQueryObject (
+NtQueryObject(
     _In_opt_ HANDLE Handle,
     _In_ OBJECT_INFORMATION_CLASS ObjectInformationClass,
     _Out_writes_bytes_(ObjectInformationLength) PVOID ObjectInformation,
@@ -115,7 +115,7 @@ NtQueryObject (
 
 NTSTATUS
 NTAPI
-NtQuerySystemInformation (
+NtQuerySystemInformation(
     _In_ SYSTEM_INFORMATION_CLASS SystemInformationClass,
     _Out_ PVOID SystemInformation,
     _In_ ULONG SystemInformationLength,
@@ -124,33 +124,33 @@ NtQuerySystemInformation (
 
 NTSTATUS
 NTAPI
-NtQuerySystemTime (
+NtQuerySystemTime(
     _Out_ PLARGE_INTEGER SystemTime
     ) { return 0; }
 
 NTSTATUS
 NTAPI
-RtlLocalTimeToSystemTime (
+RtlLocalTimeToSystemTime(
     _In_ PLARGE_INTEGER LocalTime,
     _Out_ PLARGE_INTEGER SystemTime
     ) { return 0; }
 
 BOOLEAN
 NTAPI
-RtlTimeToSecondsSince1970 (
+RtlTimeToSecondsSince1970(
     PLARGE_INTEGER Time,
     PULONG ElapsedSeconds
     ) { return 0; }
 
 VOID
 NTAPI
-RtlFreeAnsiString (
+RtlFreeAnsiString(
     PANSI_STRING AnsiString
     ) { }
 
 VOID
 NTAPI
-RtlFreeUnicodeString (
+RtlFreeUnicodeString(
     PUNICODE_STRING UnicodeString
     ) { }
 
@@ -162,28 +162,35 @@ RtlFreeOemString(
 
 VOID
 NTAPI
-RtlInitString (
+RtlInitString(
     PSTRING DestinationString,
     PCSZ SourceString
     ) { }
 
 VOID
 NTAPI
-RtlInitAnsiString (
+RtlInitAnsiString(
     PANSI_STRING DestinationString,
     PCSZ SourceString
     ) { }
 
 VOID
 NTAPI
-RtlInitUnicodeString (
+RtlInitUnicodeString(
     PUNICODE_STRING DestinationString,
     PCWSTR SourceString
     ) { }
 
+BOOLEAN
+NTAPI
+RtlCreateUnicodeString(
+    _Out_ PUNICODE_STRING DestinationString,
+    _In_opt_ PCWSTR SourceString
+    ) {}
+
 NTSTATUS
 NTAPI
-RtlAnsiStringToUnicodeString (
+RtlAnsiStringToUnicodeString(
     PUNICODE_STRING DestinationString,
     PCANSI_STRING SourceString,
     BOOLEAN AllocateDestinationString
@@ -191,7 +198,7 @@ RtlAnsiStringToUnicodeString (
 
 NTSTATUS
 NTAPI
-RtlUnicodeStringToAnsiString (
+RtlUnicodeStringToAnsiString(
     PANSI_STRING DestinationString,
     PCUNICODE_STRING SourceString,
     BOOLEAN AllocateDestinationString
@@ -215,7 +222,7 @@ RtlUnicodeToMultiByteSize(
 
 NTSTATUS
 NTAPI
-RtlCharToInteger (
+RtlCharToInteger(
     PCSZ String,
     ULONG Base,
     PULONG Value
@@ -223,7 +230,7 @@ RtlCharToInteger (
 
 NTSTATUS
 NTAPI
-RtlConvertSidToUnicodeString (
+RtlConvertSidToUnicodeString(
     PUNICODE_STRING UnicodeString,
     PSID Sid,
     BOOLEAN AllocateDestinationString
@@ -238,7 +245,7 @@ RtlUniform(
 /*********************************  ntnative.h ***********************************/
 NTSTATUS
 NTAPI
-RtlGetVersion (
+RtlGetVersion(
     LPOSVERSIONINFOEXW lpVersionInformation
     ) { return 0; }
 
@@ -268,7 +275,7 @@ RtlImageRvaToVa(
 
 NTSTATUS
 NTAPI
-NtQueryEvent (
+NtQueryEvent(
     _In_ HANDLE EventHandle,
     _In_ EVENT_INFORMATION_CLASS EventInformationClass,
     _Out_writes_bytes_(EventInformationLength) PVOID EventInformation,
@@ -298,7 +305,7 @@ NtQueryMutant(
 
 NTSTATUS
 NTAPI
-NtQuerySemaphore (
+NtQuerySemaphore(
     _In_ HANDLE SemaphoreHandle,
     _In_ SEMAPHORE_INFORMATION_CLASS SemaphoreInformationClass,
     _Out_writes_bytes_(SemaphoreInformationLength) PVOID SemaphoreInformation,
@@ -336,7 +343,7 @@ NtOpenDirectoryObject(
 
 NTSTATUS
 NTAPI
-NtQueryDirectoryObject (
+NtQueryDirectoryObject(
     _In_ HANDLE DirectoryHandle,
     _Out_writes_bytes_(Length) PVOID Buffer,
     _In_ ULONG Length,
@@ -364,7 +371,7 @@ NtQuerySymbolicLinkObject(
 
 NTSTATUS
 NTAPI
-NtOpenEvent (
+NtOpenEvent(
     _Out_ PHANDLE EventHandle,
     _In_ ACCESS_MASK DesiredAccess,
     _In_ POBJECT_ATTRIBUTES ObjectAttributes
@@ -372,7 +379,7 @@ NtOpenEvent (
 
 NTSTATUS
 NTAPI
-NtOpenMutant (
+NtOpenMutant(
     _Out_ PHANDLE MutantHandle,
     _In_ ACCESS_MASK DesiredAccess,
     _In_ POBJECT_ATTRIBUTES ObjectAttributes
@@ -396,7 +403,7 @@ NtOpenTimer(
 
 NTSTATUS
 NTAPI
-NtOpenSemaphore (
+NtOpenSemaphore(
     _Out_ PHANDLE SemaphoreHandle,
     _In_ ACCESS_MASK DesiredAccess,
     _In_ POBJECT_ATTRIBUTES ObjectAttributes
@@ -412,7 +419,7 @@ NtOpenEventPair(
 
 NTSTATUS
 NTAPI
-NtOpenIoCompletion (
+NtOpenIoCompletion(
     _Out_ PHANDLE IoCompletionHandle,
     _In_ ACCESS_MASK DesiredAccess,
     _In_ POBJECT_ATTRIBUTES ObjectAttributes
@@ -598,7 +605,7 @@ RtlPrefixUnicodeString(
 
 NTSTATUS /* VOID in pre-Vista */
 NTAPI
-RtlGenerate8dot3Name (
+RtlGenerate8dot3Name(
     _In_    PCUNICODE_STRING Name,
     _In_    BOOLEAN AllowExtendedCharacters,
     _Inout_ PGENERATE_NAME_CONTEXT Context,
@@ -614,7 +621,7 @@ RtlVolumeDeviceToDosName(
 
 NTSTATUS
 NTAPI
-NtCreateSection (
+NtCreateSection(
     _Out_ PHANDLE SectionHandle,
     _In_ ACCESS_MASK DesiredAccess,
     _In_opt_ POBJECT_ATTRIBUTES ObjectAttributes,

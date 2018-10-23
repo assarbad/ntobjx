@@ -25,6 +25,7 @@ EXPORTS
     RtlInitString
     RtlInitAnsiString
     RtlInitUnicodeString
+    RtlCreateUnicodeString
     RtlAnsiStringToUnicodeString
     RtlUnicodeStringToAnsiString
     RtlUnicodeStringToOemString

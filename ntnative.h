@@ -29,7 +29,7 @@
 ///////////////////////////////////////////////////////////////////////////////
 
 #ifndef __NTNATIVE_H_VER__
-#define __NTNATIVE_H_VER__ 2018082720
+#define __NTNATIVE_H_VER__ 2018102321
 #if (defined(_MSC_VER) && (_MSC_VER >= 1020)) || defined(__MCPP)
 #pragma once
 #endif // Check for "#pragma once" support
@@ -100,6 +100,18 @@
 
 #ifndef _Frees_ptr_opt_
 #   define _Frees_ptr_opt_
+#endif
+
+#ifndef _Frees_ptr_
+#   define _Frees_ptr_
+#endif
+
+#ifndef _Inout_updates_opt_
+#   define _Inout_updates_opt_(x)
+#endif
+
+#ifndef _Inout_updates_
+#   define _Inout_updates_(x)
 #endif
 
 #if defined(DDKBUILD)
@@ -194,6 +206,13 @@ extern "C"
     VOID
     NTAPI
     RtlInitUnicodeString(
+        _Out_ PUNICODE_STRING DestinationString,
+        _In_opt_ PCWSTR SourceString
+    );
+
+    BOOLEAN
+    NTAPI
+    RtlCreateUnicodeString(
         _Out_ PUNICODE_STRING DestinationString,
         _In_opt_ PCWSTR SourceString
     );
@@ -1377,6 +1396,7 @@ typedef VOID (NTAPI *RtlFreeOemString_t)(POEM_STRING);
 typedef VOID (NTAPI *RtlInitString_t)(PSTRING, PCSZ);
 typedef VOID (NTAPI *RtlInitAnsiString_t)(PANSI_STRING, PCSZ);
 typedef VOID (NTAPI *RtlInitUnicodeString_t)(PUNICODE_STRING, PCWSTR);
+typedef BOOLEAN(NTAPI *RtlCreateUnicodeString_t)(PUNICODE_STRING, PCWSTR);
 typedef NTSTATUS (NTAPI *RtlAnsiStringToUnicodeString_t)(PUNICODE_STRING, PCANSI_STRING, BOOLEAN);
 typedef NTSTATUS (NTAPI *RtlUnicodeStringToAnsiString_t)(PANSI_STRING, PCUNICODE_STRING, BOOLEAN);
 typedef NTSTATUS (NTAPI *RtlUnicodeStringToOemString_t)(POEM_STRING, PCUNICODE_STRING, BOOLEAN);
