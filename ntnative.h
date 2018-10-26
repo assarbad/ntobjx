@@ -29,7 +29,7 @@
 ///////////////////////////////////////////////////////////////////////////////
 
 #ifndef __NTNATIVE_H_VER__
-#define __NTNATIVE_H_VER__ 2018102321
+#define __NTNATIVE_H_VER__ 2018102619
 #if (defined(_MSC_VER) && (_MSC_VER >= 1020)) || defined(__MCPP)
 #pragma once
 #endif // Check for "#pragma once" support
@@ -209,14 +209,6 @@ extern "C"
         _Out_ PUNICODE_STRING DestinationString,
         _In_opt_ PCWSTR SourceString
     );
-
-    BOOLEAN
-    NTAPI
-    RtlCreateUnicodeString(
-        _Out_ PUNICODE_STRING DestinationString,
-        _In_opt_ PCWSTR SourceString
-    );
-
 #   if defined(__cplusplus)
     }
 #   endif
@@ -323,7 +315,6 @@ typedef enum _SECTION_INHERIT {
 //
 // Section Access Rights.
 //
-
 
 #define SECTION_QUERY                0x0001
 #define SECTION_MAP_WRITE            0x0002
@@ -438,7 +429,7 @@ typedef struct _EVENT_BASIC_INFORMATION {
 } EVENT_BASIC_INFORMATION, *PEVENT_BASIC_INFORMATION;
 
 typedef struct _IO_COMPLETION_BASIC_INFORMATION {
-    ULONG Depth;
+    LONG Depth;
 } IO_COMPLETION_BASIC_INFORMATION, *PIO_COMPLETION_BASIC_INFORMATION;
 
 typedef struct _KEY_BASIC_INFORMATION {
@@ -746,7 +737,22 @@ typedef enum
     RtlPathTypeRootLocalDevice,
 } RTL_PATH_TYPE;
 
+//
+// I/O completion port access rights
+//
+
+#define IO_COMPLETION_QUERY_STATE   0x0001
+#define IO_COMPLETION_MODIFY_STATE  0x0002
+#define IO_COMPLETION_ALL_ACCESS (STANDARD_RIGHTS_REQUIRED|SYNCHRONIZE|0x3)
+
 #if !defined(DYNAMIC_NTNATIVE) || (!DYNAMIC_NTNATIVE)
+BOOLEAN
+NTAPI
+RtlCreateUnicodeString(
+    _Out_ PUNICODE_STRING DestinationString,
+    _In_opt_ PCWSTR SourceString
+);
+
 NTSTATUS
 NTAPI
 RtlGetVersion(
@@ -759,6 +765,35 @@ PIMAGE_NT_HEADERS
 NTAPI
 RtlImageNtHeader(
     _In_ PVOID Base
+);
+
+NTSTATUS
+NTAPI
+NtCreateIoCompletion(
+    _Out_ PHANDLE IoCompletionHandle,
+    _In_ ACCESS_MASK DesiredAccess,
+    _Inout_opt_ POBJECT_ATTRIBUTES ObjectAttributes,
+    _In_opt_ ULONG Count
+);
+
+NTSTATUS
+NTAPI
+NtSetIoCompletion(
+    _In_ HANDLE IoCompletionHandle,
+    _In_ PVOID KeyContext,
+    _In_opt_ PVOID ApcContext,
+    _In_ NTSTATUS IoStatus,
+    _In_ ULONG_PTR IoStatusInformation
+);
+
+NTSTATUS
+NTAPI
+NtRemoveIoCompletion(
+    _In_ HANDLE IoCompletionHandle,
+    _Out_ PVOID *KeyContext,
+    _Out_ PVOID *ApcContext,
+    _Out_ PIO_STATUS_BLOCK IoStatus,
+    _In_opt_ PLARGE_INTEGER Timeout
 );
 
 _Ret_maybenull_
@@ -798,7 +833,7 @@ NTAPI
 NtQueryIoCompletion(
     _In_ HANDLE IoCompletionHandle,
     _In_ IO_COMPLETION_INFORMATION_CLASS InformationClass,
-    _Out_ PVOID IoCompletionInformation,
+    _Out_writes_bytes_(InformationBufferLength) PVOID IoCompletionInformation,
     _In_ ULONG InformationBufferLength,
     _Out_opt_ PULONG RequiredLength
 );
@@ -1314,6 +1349,9 @@ typedef NTSTATUS (NTAPI *RtlGetVersion_t)(LPOSVERSIONINFOEXW);
 typedef PIMAGE_NT_HEADERS (NTAPI *RtlImageNtHeader_t)(_In_ PVOID);
 typedef PVOID (NTAPI *RtlImageDirectoryEntryToData_t)(_In_ PVOID, _In_ BOOLEAN, _In_ USHORT, _Out_ PULONG);
 typedef PVOID (NTAPI *RtlImageRvaToVa_t)(_In_ PIMAGE_NT_HEADERS, _In_ PVOID, _In_ ULONG, _Inout_opt_ PIMAGE_SECTION_HEADER *);
+typedef NTSTATUS (NTAPI *NtCreateIoCompletion_t)(_Out_ PHANDLE, _In_ ACCESS_MASK, _Inout_ POBJECT_ATTRIBUTES, _In_opt_ ULONG);
+typedef NTSTATUS (NTAPI *NtSetIoCompletion_t)(_In_ HANDLE, _In_ PVOID, _In_opt_ PVOID, _In_ NTSTATUS, _In_ ULONG_PTR);
+typedef NTSTATUS (NTAPI *NtRemoveIoCompletion_t)(_In_ HANDLE, _Out_ PVOID*, _Out_ PVOID*, _Out_ PIO_STATUS_BLOCK, _In_opt_ PLARGE_INTEGER);
 typedef NTSTATUS (NTAPI *NtQueryEvent_t)(_In_ HANDLE, _In_ EVENT_INFORMATION_CLASS, _Out_ PVOID, _In_ ULONG, _Out_opt_ PULONG);
 typedef NTSTATUS (NTAPI *NtQueryIoCompletion_t)(_In_ HANDLE, _In_ IO_COMPLETION_INFORMATION_CLASS, _Out_ PVOID, _In_ ULONG, _Out_opt_ PULONG);
 typedef NTSTATUS (NTAPI *NtQueryMutant_t)(_In_ HANDLE, _In_ MUTANT_INFORMATION_CLASS, _Out_ PVOID, _In_ ULONG, _Out_opt_ PULONG);
@@ -1462,6 +1500,9 @@ typedef ULONG (NTAPI *RtlUniform_t)(PULONG);
 #define ZwQuerySystemInformation NtQuerySystemInformation
 #define ZwQuerySystemTime NtQuerySystemTime
 #define ZwQueryEvent NtQueryEvent
+#define ZwCreateIoCompletion NtCreateIoCompletion
+#define ZwSetIoCompletion NtSetIoCompletion
+#define ZwRemoveIoCompletion NtRemoveIoCompletion
 #define ZwQueryIoCompletion NtQueryIoCompletion
 #define ZwQueryMutant NtQueryMutant
 #define ZwQuerySemaphore NtQuerySemaphore

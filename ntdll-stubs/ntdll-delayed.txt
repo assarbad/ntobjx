@@ -38,6 +38,9 @@ EXPORTS
     RtlImageNtHeader
     RtlImageDirectoryEntryToData
     RtlImageRvaToVa
+    NtCreateIoCompletion
+    NtSetIoCompletion
+    NtRemoveIoCompletion
     NtQueryEvent
     NtQueryIoCompletion
     NtQueryMutant

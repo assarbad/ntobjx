@@ -275,6 +275,35 @@ RtlImageRvaToVa(
 
 NTSTATUS
 NTAPI
+NtCreateIoCompletion(
+    _Out_ PHANDLE IoCompletionHandle,
+    _In_ ACCESS_MASK DesiredAccess,
+    _Inout_opt_ POBJECT_ATTRIBUTES ObjectAttributes,
+    _In_opt_ ULONG Count
+    ) { return 0; }
+
+NTSTATUS
+NTAPI
+NtSetIoCompletion(
+    _In_ HANDLE IoCompletionHandle,
+    _In_ PVOID KeyContext,
+    _In_opt_ PVOID ApcContext,
+    _In_ NTSTATUS IoStatus,
+    _In_ ULONG_PTR IoStatusInformation
+    ) { return 0; }
+
+NTSTATUS
+NTAPI
+NtRemoveIoCompletion(
+    _In_ HANDLE IoCompletionHandle,
+    _Out_ PVOID *KeyContext,
+    _Out_ PVOID *ApcContext,
+    _Out_ PIO_STATUS_BLOCK IoStatus,
+    _In_opt_ PLARGE_INTEGER Timeout
+    ) { return 0; }
+
+NTSTATUS
+NTAPI
 NtQueryEvent(
     _In_ HANDLE EventHandle,
     _In_ EVENT_INFORMATION_CLASS EventInformationClass,
