@@ -1,5 +1,4 @@
-﻿====================
- ntobjx: NT objects
+﻿ ntobjx: NT objects
 ====================
 
 About
@@ -116,7 +115,7 @@ Zeller in his book `Why Programs Fail`_ (2nd ed.). Therefore I call them defects
 Now, if you find one of those, please report them here. Feel free to use German,
 English or - if absolutely necessary - Russian to describe the erratic behavior.
 Please make sure to provide some way to contact you for more feedback. One easy
-way is to log into Bitbucket and `file a ticket`_ as logged on user.
+way is to log into SourceForge and `file a ticket`_ as logged on user.
 
 License
 -------
@@ -138,15 +137,15 @@ at the same time complying with the requirements of the MS-PL.
 The texts for both licenses can be found in ``LICENSE.txt`` and ``wtl/MS-PL.txt``
 respectively.
 
-.. _file a ticket: https://bitbucket.org/assarbad/ntobjx/issues?status=new&status=open
-.. _Dokumentation findet sich hier: https://bitbucket.org/assarbad/ntobjx/wiki/help/Deutsch
-.. _auf Deutsch melden: https://bitbucket.org/assarbad/ntobjx/issues?status=new&status=open
-.. _documentation: https://bitbucket.org/assarbad/ntobjx/wiki/help/English
-.. _download section: https://bitbucket.org/assarbad/ntobjx/downloads
+.. _file a ticket: https://sourceforge.net/p/ntobjx/tickets/new/
+.. _Dokumentation findet sich hier: https://sourceforge.net/p/ntobjx/wiki/ci/default/tree/help/Deutsch.md
+.. _auf Deutsch melden: https://sourceforge.net/p/ntobjx/tickets/new/
+.. _documentation: https://sourceforge.net/p/ntobjx/wiki/ci/default/tree/help/English.md
+.. _download section: https://sourceforge.net/projects/ntobjx/files/
 .. _live.sysinternals.com: https://live.sysinternals.com/sigcheck.exe
-.. _premake4 flavor: https://bitbucket.org/windirstat/premake-stable
-.. _WinObj: https://technet.microsoft.com/en-us/sysinternals/winobj.aspx
+.. _premake4 flavor: https://sourceforge.net/projects/premake4-wds/files/
+.. _WinObj: https://docs.microsoft.com/en-us/sysinternals/downloads/winobj
 .. _Why Programs Fail: http://www.whyprogramsfail.com/
 .. _MS-PL: https://opensource.org/licenses/MS-PL
 .. _WTL: https://sourceforge.net/projects/wtl/
-.. _how to build: https://bitbucket.org/assarbad/ntobjx/wiki/build/Home
+.. _how to build: https://sourceforge.net/p/ntobjx/wiki/ci/default/tree/build/Home.md
