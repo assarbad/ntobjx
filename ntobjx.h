@@ -168,7 +168,7 @@ namespace
     BOOL setClipboardString(LPCTSTR lpsz)
     {
         CString s(lpsz);
-        SIZE_T allocLength = (s.GetLength() + 2) * sizeof(TCHAR);
+        SIZE_T allocLength = ((SIZE_T)s.GetLength() + 2U) * sizeof(TCHAR);
         ATLTRACE2(_T("Buffer size: %u\n"), allocLength);
         HGLOBAL hMem = ::GlobalAlloc(GMEM_MOVEABLE | GMEM_ZEROINIT, allocLength);
         if(hMem)

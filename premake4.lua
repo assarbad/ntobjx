@@ -87,9 +87,9 @@ do
     -- Name the project files after their VS version
     local orig_getbasename = premake.project.getbasename
     premake.project.getbasename = function(prjname, pattern)
-        -- The below is used to insert the .vs(8|9|10|11|12|14|15) into the file names for projects and solutions
+        -- The below is used to insert the .vs(8|9|10|11|12|14|15|16) into the file names for projects and solutions
         if _ACTION then
-            name_map = {vs2002 = "vs7", vs2003 = "vs7_1", vs2005 = "vs8", vs2008 = "vs9", vs2010 = "vs10", vs2012 = "vs11", vs2013 = "vs12", vs2015 = "vs14", vs2017 = "vs15"}
+            name_map = {vs2002 = "vs7", vs2003 = "vs7_1", vs2005 = "vs8", vs2008 = "vs9", vs2010 = "vs10", vs2012 = "vs11", vs2013 = "vs12", vs2015 = "vs14", vs2017 = "vs15", vs2019 = "vs16"}
             if name_map[_ACTION] then
                 pattern = pattern:gsub("%%%%", "%%%%." .. name_map[_ACTION])
             else
@@ -106,7 +106,7 @@ do
         orig_vc2010_configurationPropertyGroup(cfg, cfginfo)
         local captured = io.endcapture()
         assert(captured ~= nil)
-        local toolsets = { vs2012 = "v110", vs2013 = "v120", vs2015 = "v140", vs2017 = "v141" }
+        local toolsets = { vs2012 = "v110", vs2013 = "v120", vs2015 = "v140", vs2017 = "v141", vs2019 = "v142" }
         local toolset = toolsets[_ACTION]
         if toolset then
             if _OPTIONS["xp"] then
@@ -322,13 +322,13 @@ solution (tgtname .. iif(release, "_release", ""))
         configuration {"vs2002 or vs2003 or vs2005 or vs2008 or vs2010", "Release", "x32"}
             linkoptions     {"/subsystem:windows,5.00"}
 
-        configuration {"vs2012 or vs2013 or vs2015 or vs2017", "Release", "x32"}
+        configuration {"vs2012 or vs2013 or vs2015 or vs2017 or vs2019", "Release", "x32"}
             linkoptions     {"/subsystem:windows,5.01"}
 
         configuration {"Release", "x64"}
             linkoptions     {"/subsystem:windows,5.02"}
 
-        configuration {"vs2013 or vs2015 or vs2017"}
+        configuration {"vs2013 or vs2015 or vs2017 or vs2019"}
             defines         {"WINVER=0x0501", "_ALLOW_RTCc_IN_STL"}
 
         configuration {"vs2002 or vs2003 or vs2005 or vs2008 or vs2010 or vs2012", "x32"}
@@ -416,13 +416,13 @@ solution (tgtname .. iif(release, "_release", ""))
             configuration {"vs2002 or vs2003 or vs2005 or vs2008 or vs2010", "Release", "x32"}
                 linkoptions     {"/subsystem:windows,5.00"}
 
-            configuration {"vs2012 or vs2013 or vs2015 or vs2017", "Release", "x32"}
+            configuration {"vs2012 or vs2013 or vs2015 or vs2017 or vs2019", "Release", "x32"}
                 linkoptions     {"/subsystem:windows,5.01"}
 
             configuration {"Release", "x64"}
                 linkoptions     {"/subsystem:console,5.02"}
 
-            configuration {"vs2013 or vs2015 or vs2017"}
+            configuration {"vs2013 or vs2015 or vs2017 or vs2019"}
                 defines         {"WINVER=0x0501"}
 
             configuration {"vs2002 or vs2003 or vs2005 or vs2008 or vs2010 or vs2012", "x32"}
