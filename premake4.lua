@@ -233,7 +233,7 @@ solution (tgtname .. iif(release, "_release", ""))
         links           {"ntdll-delayed", "version"}
         resoptions      {"/nologo", "/l409"}
         resincludedirs  {".", "$(IntDir)"}
-        linkoptions     {"/delay:nobind","/delayload:ntdll-delayed.dll","/delayload:version.dll"}
+        linkoptions     {"/pdbaltpath:%_PDB%", "/delay:nobind","/delayload:ntdll-delayed.dll","/delayload:version.dll"}
         defines         {"WIN32", "_WINDOWS", "STRICT"}
         if not _OPTIONS["msvcrt"] then
             flags       {"StaticRuntime"}
@@ -354,7 +354,7 @@ solution (tgtname .. iif(release, "_release", ""))
             links           {"ntdll-delayed"}
             resoptions      {"/nologo", "/l409"}
             resincludedirs  {".", "$(IntDir)"}
-            linkoptions     {"\"/libpath:$(IntDir)\"", "/delay:nobind","/delayload:ntdll-delayed.dll"}
+            linkoptions     {"/pdbaltpath:%_PDB%", "\"/libpath:$(IntDir)\"", "/delay:nobind","/delayload:ntdll-delayed.dll"}
             defines         {"WIN32", "_WINDOWS", "STRICT", "_CONSOLE", "_ALLOW_RTCc_IN_STL"}
 
             files
