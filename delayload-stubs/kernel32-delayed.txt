@@ -1,0 +1,7 @@
+LIBRARY kernel32-delayed.dll
+
+EXPORTS
+    EncodePointer
+    DecodePointer
+    ActivateActCtx
+    DeactivateActCtx

@@ -47,8 +47,71 @@
 
 namespace
 {
-    LPCSTR lpszNtDllName = "ntdll.dll";
-    LPCSTR lpszNtDelayedDllName = "ntdll-delayed.dll";
+    constexpr LPCSTR lpszNtDllName = "ntdll.dll";
+    constexpr LPCSTR lpszKernel32Name = "kernel32.dll";
+
+    typedef struct
+    {
+        LPCSTR lpszDestName;
+        LPCSTR lpszSourceName;
+    } redir_entry_t;
+
+    redir_entry_t mod_redir[] =
+    {
+        {lpszNtDllName, "ntdll-delayed.dll"},
+        {lpszKernel32Name, "kernel32-delayed.dll"},
+    };
+
+    EXTERN_C PVOID WINAPI EncodePointer_mock_(__in_opt PVOID Ptr)
+    {
+        return Ptr;
+    }
+
+    EXTERN_C PVOID WINAPI DecodePointer_mock_(__in_opt PVOID Ptr)
+    {
+        return Ptr;
+    }
+
+    EXTERN_C BOOL WINAPI ActivateActCtx_mock_(__inout_opt HANDLE hActCtx, __out   ULONG_PTR* lpCookie)
+    {
+        UNREFERENCED_PARAMETER(hActCtx);
+        UNREFERENCED_PARAMETER(lpCookie);
+        return TRUE;
+    }
+
+    EXTERN_C BOOL WINAPI DeactivateActCtx_mock_(__in DWORD dwFlags, __in ULONG_PTR ulCookie)
+    {
+        UNREFERENCED_PARAMETER(dwFlags);
+        UNREFERENCED_PARAMETER(ulCookie);
+        return TRUE;
+    }
+
+    typedef struct
+    {
+        LPCSTR lpszModuleName;
+        LPCSTR lpszFunctionName;
+        FARPROC pfnFunctionPointer;
+    } fctredir_entry_t;
+
+    fctredir_entry_t fct_redir[] =
+    {
+        {lpszKernel32Name, "EncodePointer", (FARPROC)EncodePointer_mock_},
+        {lpszKernel32Name, "DecodePointer", (FARPROC)DecodePointer_mock_},
+        {lpszKernel32Name, "ActivateActCtx", (FARPROC)ActivateActCtx_mock_},
+        {lpszKernel32Name, "DeactivateActCtx", (FARPROC)DeactivateActCtx_mock_},
+    };
+}
+
+static LPCSTR GetRedirectedName_(LPCSTR lpszDllName)
+{
+    for (size_t idx = 0; idx < _countof(mod_redir); idx++)
+    {
+        if (0 == lstrcmpiA(lpszDllName, mod_redir[idx].lpszSourceName))
+        {
+            return mod_redir[idx].lpszDestName;
+        }
+    }
+    return lpszDllName;
 }
 
 static LONG WINAPI DelayLoadFilter(PEXCEPTION_POINTERS pExcPointers)
@@ -63,11 +126,7 @@ static LONG WINAPI DelayLoadFilter(PEXCEPTION_POINTERS pExcPointers)
         break;
     case VcppException(ERROR_SEVERITY_ERROR, ERROR_PROC_NOT_FOUND):
         {
-            LPCSTR lpszDllName = pdli->szDll;
-            if(0 == lstrcmpiA(pdli->szDll, lpszNtDelayedDllName))
-            {
-                lpszDllName = lpszNtDllName;
-            }
+            LPCSTR lpszDllName = GetRedirectedName_(pdli->szDll);
             if (pdli->dlp.fImportByName)
             {
                 (void)DelayLoadError(_T("Function %hs::%hs not found."), lpszDllName, pdli->dlp.szProcName);
@@ -90,26 +149,30 @@ EXTERN_C void force_resolve_all(void)
     __try
     {
         /* Force all delay-loaded symbols to be resolved at once */
-        (void)__HrLoadAllImportsForDll(lpszNtDelayedDllName);
+        for (size_t idx = 0; idx < _countof(mod_redir); idx++)
+        {
+            (void)__HrLoadAllImportsForDll(mod_redir[idx].lpszSourceName);
+        }
     }
     __except(DelayLoadFilter(GetExceptionInformation()))
     {
-        ExitProcess(1);
+        ::ExitProcess(1);
     }
 
 }
 
-static FARPROC WINAPI NtdllDliHook(unsigned dliNotify, PDelayLoadInfo pdli)
+static FARPROC WINAPI GetModuleHandleDliHook(unsigned dliNotify, PDelayLoadInfo pdli)
 {
+    LPCSTR lpszDllName = NULL;
     switch(dliNotify)
     {
     case dliNotePreLoadLibrary:
-        if(0 == lstrcmpiA(pdli->szDll, lpszNtDelayedDllName))
+        if(NULL != (lpszDllName = GetRedirectedName_(pdli->szDll)))
         {
-            if(HMODULE hNtDll = ::GetModuleHandleA(lpszNtDllName))
+            if(HMODULE hModule = ::GetModuleHandleA(lpszDllName))
             {
                 /*lint -save -e611 */
-                return reinterpret_cast<FARPROC>(hNtDll);
+                return reinterpret_cast<FARPROC>(hModule);
                 /*lint -restore */
             }
         }
@@ -120,4 +183,4 @@ static FARPROC WINAPI NtdllDliHook(unsigned dliNotify, PDelayLoadInfo pdli)
     return NULL;
 }
 
-PfnDliHook __pfnDliNotifyHook2 = NtdllDliHook;
+PfnDliHook __pfnDliNotifyHook2 = GetModuleHandleDliHook;

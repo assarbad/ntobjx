@@ -230,10 +230,10 @@ solution (tgtname .. iif(release, "_release", ""))
         includedirs     {"wtl/Include", "pugixml"}
         objdir          (int_dir)
         libdirs         {"$(IntDir)"}
-        links           {"ntdll-delayed", "version"}
+        links           {"ntdll-delayed", "kernel32-delayed", "version"}
         resoptions      {"/nologo", "/l409"}
         resincludedirs  {".", "$(IntDir)"}
-        linkoptions     {"/pdbaltpath:%_PDB%", "/delay:nobind","/delayload:ntdll-delayed.dll","/delayload:version.dll"}
+        linkoptions     {"/pdbaltpath:%_PDB%", "/delay:nobind", "/delayload:ntdll-delayed.dll", "/delayload:kernel32-delayed.dll", "/delayload:version.dll"}
         defines         {"WIN32", "_WINDOWS", "STRICT"}
         if not _OPTIONS["msvcrt"] then
             flags       {"StaticRuntime"}
@@ -280,10 +280,18 @@ solution (tgtname .. iif(release, "_release", ""))
             linkoptions     {"/dynamicbase","/nxcompat"}
 
         configuration {"x64"}
-            prebuildcommands{"lib.exe /nologo /nodefaultlib \"/def:delayload-stubs\\ntdll-delayed.txt\" \"/out:$(IntDir)\\ntdll-delayed.lib\" /machine:x64",}
+            prebuildcommands{
+                "lib.exe /nologo /nodefaultlib \"/def:delayload-stubs\\ntdll-delayed.txt\" \"/out:$(IntDir)\\ntdll-delayed.lib\" /machine:x64",
+                "lib.exe /nologo /nodefaultlib \"/def:delayload-stubs\\kernel32-delayed.txt\" \"/out:$(IntDir)\\kernel32-delayed.lib\" /machine:x64",
+            }
 
         configuration {"x32"}
-            prebuildcommands{"cl.exe /nologo /c /TC /Ob0 /Gz delayload-stubs\\ntdll-delayed-stubs.c \"/Fo$(IntDir)\\ntdll-delayed-stubs.obj\"", "lib.exe /nologo \"/def:delayload-stubs\\ntdll-delayed.txt\" \"/out:$(IntDir)\\ntdll-delayed.lib\" /machine:x86 \"$(IntDir)\\ntdll-delayed-stubs.obj\"",}
+            prebuildcommands{
+                "cl.exe /nologo /c /TC /Ob0 /Gz delayload-stubs\\ntdll-delayed-stubs.c \"/Fo$(IntDir)\\ntdll-delayed-stubs.obj\"",
+                "lib.exe /nologo \"/def:delayload-stubs\\ntdll-delayed.txt\" \"/out:$(IntDir)\\ntdll-delayed.lib\" /machine:x86 \"$(IntDir)\\ntdll-delayed-stubs.obj\"",
+                "cl.exe /nologo /c /TC /Ob0 /Gz delayload-stubs\\kernel32-delayed-stubs.c \"/Fo$(IntDir)\\kernel32-delayed-stubs.obj\"",
+                "lib.exe /nologo \"/def:delayload-stubs\\kernel32-delayed.txt\" \"/out:$(IntDir)\\kernel32-delayed.lib\" /machine:x86 \"$(IntDir)\\kernel32-delayed-stubs.obj\"",
+            }
 
         configuration {"Debug", "x32"}
             targetsuffix    ("32D")

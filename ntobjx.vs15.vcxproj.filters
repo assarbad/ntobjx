@@ -27,6 +27,9 @@
     </Filter>
   </ItemGroup>
   <ItemGroup>
+    <None Include="delayload-stubs\kernel32-delayed.txt">
+      <Filter>Special Files\Module Definition Files</Filter>
+    </None>
     <None Include="delayload-stubs\ntdll-delayed.txt">
       <Filter>Special Files\Module Definition Files</Filter>
     </None>
