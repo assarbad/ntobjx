@@ -27,7 +27,7 @@
 			>
 			<Tool
 				Name="VCPreBuildEventTool"
-				CommandLine="call &quot;$(ProjectDir)\hgid.cmd&quot;&#x0D;&#x0A;cl.exe /nologo /c /TC /Ob0 /Gz ntdll-stubs\ntdll-delayed-stubs.c &quot;/Fo$(IntDir)\ntdll-delayed-stubs.obj&quot;&#x0D;&#x0A;lib.exe /nologo &quot;/def:ntdll-stubs\ntdll-delayed.txt&quot; &quot;/out:$(IntDir)\ntdll-delayed.lib&quot; /machine:x86 &quot;$(IntDir)\ntdll-delayed-stubs.obj&quot;"
+				CommandLine="call &quot;$(ProjectDir)\hgid.cmd&quot;&#x0D;&#x0A;cl.exe /nologo /c /TC /Ob0 /Gz delayload-stubs\ntdll-delayed-stubs.c &quot;/Fo$(IntDir)\ntdll-delayed-stubs.obj&quot;&#x0D;&#x0A;lib.exe /nologo &quot;/def:delayload-stubs\ntdll-delayed.txt&quot; &quot;/out:$(IntDir)\ntdll-delayed.lib&quot; /machine:x86 &quot;$(IntDir)\ntdll-delayed-stubs.obj&quot;"
 			/>
 			<Tool
 				Name="VCCustomBuildTool"
@@ -115,7 +115,7 @@
 			>
 			<Tool
 				Name="VCPreBuildEventTool"
-				CommandLine="call &quot;$(ProjectDir)\hgid.cmd&quot;&#x0D;&#x0A;lib.exe /nologo /nodefaultlib &quot;/def:ntdll-stubs\ntdll-delayed.txt&quot; &quot;/out:$(IntDir)\ntdll-delayed.lib&quot; /machine:x64"
+				CommandLine="call &quot;$(ProjectDir)\hgid.cmd&quot;&#x0D;&#x0A;lib.exe /nologo /nodefaultlib &quot;/def:delayload-stubs\ntdll-delayed.txt&quot; &quot;/out:$(IntDir)\ntdll-delayed.lib&quot; /machine:x64"
 			/>
 			<Tool
 				Name="VCCustomBuildTool"
@@ -204,7 +204,7 @@
 			>
 			<Tool
 				Name="VCPreBuildEventTool"
-				CommandLine="call &quot;$(ProjectDir)\hgid.cmd&quot;&#x0D;&#x0A;cl.exe /nologo /c /TC /Ob0 /Gz ntdll-stubs\ntdll-delayed-stubs.c &quot;/Fo$(IntDir)\ntdll-delayed-stubs.obj&quot;&#x0D;&#x0A;lib.exe /nologo &quot;/def:ntdll-stubs\ntdll-delayed.txt&quot; &quot;/out:$(IntDir)\ntdll-delayed.lib&quot; /machine:x86 &quot;$(IntDir)\ntdll-delayed-stubs.obj&quot;"
+				CommandLine="call &quot;$(ProjectDir)\hgid.cmd&quot;&#x0D;&#x0A;cl.exe /nologo /c /TC /Ob0 /Gz delayload-stubs\ntdll-delayed-stubs.c &quot;/Fo$(IntDir)\ntdll-delayed-stubs.obj&quot;&#x0D;&#x0A;lib.exe /nologo &quot;/def:delayload-stubs\ntdll-delayed.txt&quot; &quot;/out:$(IntDir)\ntdll-delayed.lib&quot; /machine:x86 &quot;$(IntDir)\ntdll-delayed-stubs.obj&quot;"
 			/>
 			<Tool
 				Name="VCCustomBuildTool"
@@ -293,7 +293,7 @@
 			>
 			<Tool
 				Name="VCPreBuildEventTool"
-				CommandLine="call &quot;$(ProjectDir)\hgid.cmd&quot;&#x0D;&#x0A;lib.exe /nologo /nodefaultlib &quot;/def:ntdll-stubs\ntdll-delayed.txt&quot; &quot;/out:$(IntDir)\ntdll-delayed.lib&quot; /machine:x64"
+				CommandLine="call &quot;$(ProjectDir)\hgid.cmd&quot;&#x0D;&#x0A;lib.exe /nologo /nodefaultlib &quot;/def:delayload-stubs\ntdll-delayed.txt&quot; &quot;/out:$(IntDir)\ntdll-delayed.lib&quot; /machine:x64"
 			/>
 			<Tool
 				Name="VCCustomBuildTool"
@@ -601,7 +601,7 @@
 				Filter=""
 				>
 				<File
-					RelativePath="ntdll-stubs\ntdll-delayed.txt"
+					RelativePath="delayload-stubs\ntdll-delayed.txt"
 					>
 				</File>
 			</Filter>

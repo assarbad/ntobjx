@@ -249,7 +249,7 @@ solution (tgtname .. iif(release, "_release", ""))
 
         files
         {
-            "ntdll-stubs/*.txt",
+            "delayload-stubs/*.txt",
             "wtl/Include/*.h",
             "pugixml/*.hpp",
             "util/*.h", "util/*.hpp",
@@ -271,7 +271,7 @@ solution (tgtname .. iif(release, "_release", ""))
             ["Resource Files/*"] = { "**.rc", "res/*.ico" },
             ["Source Files/*"] = { "*.cpp" },
             ["Special Files/*"] = { "**.cmd", "premake4.lua", "**.manifest", },
-            ["Special Files/Module Definition Files/*"] = { "ntdll-stubs/*.txt", },
+            ["Special Files/Module Definition Files/*"] = { "delayload-stubs/*.txt", },
         }
 
         configuration {"*"}
@@ -280,10 +280,10 @@ solution (tgtname .. iif(release, "_release", ""))
             linkoptions     {"/dynamicbase","/nxcompat"}
 
         configuration {"x64"}
-            prebuildcommands{"lib.exe /nologo /nodefaultlib \"/def:ntdll-stubs\\ntdll-delayed.txt\" \"/out:$(IntDir)\\ntdll-delayed.lib\" /machine:x64",}
+            prebuildcommands{"lib.exe /nologo /nodefaultlib \"/def:delayload-stubs\\ntdll-delayed.txt\" \"/out:$(IntDir)\\ntdll-delayed.lib\" /machine:x64",}
 
         configuration {"x32"}
-            prebuildcommands{"cl.exe /nologo /c /TC /Ob0 /Gz ntdll-stubs\\ntdll-delayed-stubs.c \"/Fo$(IntDir)\\ntdll-delayed-stubs.obj\"", "lib.exe /nologo \"/def:ntdll-stubs\\ntdll-delayed.txt\" \"/out:$(IntDir)\\ntdll-delayed.lib\" /machine:x86 \"$(IntDir)\\ntdll-delayed-stubs.obj\"",}
+            prebuildcommands{"cl.exe /nologo /c /TC /Ob0 /Gz delayload-stubs\\ntdll-delayed-stubs.c \"/Fo$(IntDir)\\ntdll-delayed-stubs.obj\"", "lib.exe /nologo \"/def:delayload-stubs\\ntdll-delayed.txt\" \"/out:$(IntDir)\\ntdll-delayed.lib\" /machine:x86 \"$(IntDir)\\ntdll-delayed-stubs.obj\"",}
 
         configuration {"Debug", "x32"}
             targetsuffix    ("32D")
@@ -359,7 +359,7 @@ solution (tgtname .. iif(release, "_release", ""))
 
             files
             {
-                "ntdll-stubs/*.txt",
+                "delayload-stubs/*.txt",
                 "ntnative.h",
                 "*.cpp",
                 "*.hpp",
@@ -380,7 +380,7 @@ solution (tgtname .. iif(release, "_release", ""))
                 ["Header Files/*"] = { "*.h" },
                 ["Source Files/*"] = { "*.cpp" },
                 ["Special Files/*"] = { "**.cmd", "premake4.lua", "**.manifest", },
-                ["Special Files/Module Definition Files/*"] = { "ntdll-stubs/*.txt", },
+                ["Special Files/Module Definition Files/*"] = { "delayload-stubs/*.txt", },
             }
 
             configuration {"Debug", "x32"}
@@ -399,10 +399,10 @@ solution (tgtname .. iif(release, "_release", ""))
                 flags           {"Symbols"}
 
             configuration {"x64"}
-                prebuildcommands{"lib.exe /nologo /nodefaultlib \"/def:ntdll-stubs\\ntdll-delayed.txt\" \"/out:$(IntDir)\\ntdll-delayed.lib\" /machine:x64", "\"$(ProjectDir)\\hgid.cmd\""}
+                prebuildcommands{"lib.exe /nologo /nodefaultlib \"/def:delayload-stubs\\ntdll-delayed.txt\" \"/out:$(IntDir)\\ntdll-delayed.lib\" /machine:x64", "\"$(ProjectDir)\\hgid.cmd\""}
 
             configuration {"x32"}
-                prebuildcommands{"cl.exe /nologo /c /TC /Ob0 /Gz ntdll-stubs\\ntdll-delayed-stubs.c \"/Fo$(IntDir)\\ntdll-delayed-stubs.obj\"", "lib.exe /nologo \"/def:ntdll-stubs\\ntdll-delayed.txt\" \"/out:$(IntDir)\\ntdll-delayed.lib\" /machine:x86 \"$(IntDir)\\ntdll-delayed-stubs.obj\"", "\"$(ProjectDir)\\hgid.cmd\""}
+                prebuildcommands{"cl.exe /nologo /c /TC /Ob0 /Gz delayload-stubs\\ntdll-delayed-stubs.c \"/Fo$(IntDir)\\ntdll-delayed-stubs.obj\"", "lib.exe /nologo \"/def:delayload-stubs\\ntdll-delayed.txt\" \"/out:$(IntDir)\\ntdll-delayed.lib\" /machine:x86 \"$(IntDir)\\ntdll-delayed-stubs.obj\"", "\"$(ProjectDir)\\hgid.cmd\""}
 
             configuration {"Release"}
                 defines         ("NDEBUG")

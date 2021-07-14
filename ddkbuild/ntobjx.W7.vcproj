@@ -625,7 +625,7 @@
 				Name="Module Definition Files"
 				>
 				<File
-					RelativePath="..\ntdll-stubs\ntdll-delayed.txt"
+					RelativePath="..\delayload-stubs\ntdll-delayed.txt"
 					>
 				</File>
 			</Filter>
