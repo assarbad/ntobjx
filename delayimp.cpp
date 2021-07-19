@@ -48,7 +48,6 @@
 namespace
 {
     constexpr LPCSTR lpszNtDllName = "ntdll.dll";
-    constexpr LPCSTR lpszKernel32Name = "kernel32.dll";
 
     typedef struct
     {
@@ -59,46 +58,6 @@ namespace
     redir_entry_t mod_redir[] =
     {
         {lpszNtDllName, "ntdll-delayed.dll"},
-        {lpszKernel32Name, "kernel32-delayed.dll"},
-    };
-
-    EXTERN_C PVOID WINAPI EncodePointer_mock_(__in_opt PVOID Ptr)
-    {
-        return Ptr;
-    }
-
-    EXTERN_C PVOID WINAPI DecodePointer_mock_(__in_opt PVOID Ptr)
-    {
-        return Ptr;
-    }
-
-    EXTERN_C BOOL WINAPI ActivateActCtx_mock_(__inout_opt HANDLE hActCtx, __out   ULONG_PTR* lpCookie)
-    {
-        UNREFERENCED_PARAMETER(hActCtx);
-        UNREFERENCED_PARAMETER(lpCookie);
-        return TRUE;
-    }
-
-    EXTERN_C BOOL WINAPI DeactivateActCtx_mock_(__in DWORD dwFlags, __in ULONG_PTR ulCookie)
-    {
-        UNREFERENCED_PARAMETER(dwFlags);
-        UNREFERENCED_PARAMETER(ulCookie);
-        return TRUE;
-    }
-
-    typedef struct
-    {
-        LPCSTR lpszModuleName;
-        LPCSTR lpszFunctionName;
-        FARPROC pfnFunctionPointer;
-    } fctredir_entry_t;
-
-    fctredir_entry_t fct_redir[] =
-    {
-        {lpszKernel32Name, "EncodePointer", (FARPROC)EncodePointer_mock_},
-        {lpszKernel32Name, "DecodePointer", (FARPROC)DecodePointer_mock_},
-        {lpszKernel32Name, "ActivateActCtx", (FARPROC)ActivateActCtx_mock_},
-        {lpszKernel32Name, "DeactivateActCtx", (FARPROC)DeactivateActCtx_mock_},
     };
 }
 
@@ -166,7 +125,7 @@ static FARPROC WINAPI GetModuleHandleDliHook(unsigned dliNotify, PDelayLoadInfo 
     LPCSTR lpszDllName = NULL;
     switch(dliNotify)
     {
-    case dliNotePreLoadLibrary:
+    case dliNotePreLoadLibrary:  // called just before LoadLibrary, can override w/ new HMODULE return val
         if(NULL != (lpszDllName = GetRedirectedName_(pdli->szDll)))
         {
             if(HMODULE hModule = ::GetModuleHandleA(lpszDllName))
@@ -177,6 +136,8 @@ static FARPROC WINAPI GetModuleHandleDliHook(unsigned dliNotify, PDelayLoadInfo 
             }
         }
         break; /* proceed with default processing  */
+    case dliNotePreGetProcAddress: // called just before GetProcAddress, can override w/ new FARPROC return value
+        break;
     default:
         break;
     }

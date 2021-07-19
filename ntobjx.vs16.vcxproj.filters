@@ -168,6 +168,9 @@
     <ClCompile Include="delayimp.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="legacy-windows-glue.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
     <ClCompile Include="ntobjx.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
