@@ -1,4 +1,4 @@
-LIBRARY ntdll-delayed.dll
+LIBRARY ntdll.dld
 
 EXPORTS
     ; from winternl.h in the order they appear there

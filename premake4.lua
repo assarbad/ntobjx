@@ -233,7 +233,7 @@ solution (tgtname .. iif(release, "_release", ""))
         links           {"ntdll-delayed", "version"}
         resoptions      {"/nologo", "/l409"}
         resincludedirs  {".", "$(IntDir)"}
-        linkoptions     {"/pdbaltpath:%_PDB%", "/delay:nobind", "/delayload:ntdll-delayed.dll", "/delayload:version.dll"}
+        linkoptions     {"/map", "/pdbaltpath:%_PDB%", "/delay:nobind", "/delayload:ntdll.dld", "/delayload:version.dll"}
         defines         {"WIN32", "_WINDOWS", "STRICT"}
         if not _OPTIONS["msvcrt"] then
             flags       {"StaticRuntime"}
@@ -324,10 +324,7 @@ solution (tgtname .. iif(release, "_release", ""))
         configuration {"vs2002 or vs2003 or vs2005 or vs2008", "Release"}
             buildoptions    {"/Oy"}
 
-        configuration {"vs2002 or vs2003 or vs2005 or vs2008 or vs2010", "Release", "x32"}
-            linkoptions     {"/subsystem:windows,5.00"}
-
-        configuration {"vs2012 or vs2013 or vs2015 or vs2017 or vs2019", "Release", "x32"}
+        configuration {"Release", "x32"}
             linkoptions     {"/subsystem:windows,5.01"}
 
         configuration {"Release", "x64"}
@@ -359,7 +356,7 @@ solution (tgtname .. iif(release, "_release", ""))
             links           {"ntdll-delayed"}
             resoptions      {"/nologo", "/l409"}
             resincludedirs  {".", "$(IntDir)"}
-            linkoptions     {"/pdbaltpath:%_PDB%", "\"/libpath:$(IntDir)\"", "/delay:nobind","/delayload:ntdll-delayed.dll"}
+            linkoptions     {"/pdbaltpath:%_PDB%", "\"/libpath:$(IntDir)\"", "/delay:nobind","/delayload:ntdll.dld"}
             defines         {"WIN32", "_WINDOWS", "STRICT", "_CONSOLE", "_ALLOW_RTCc_IN_STL"}
 
             files
@@ -418,10 +415,7 @@ solution (tgtname .. iif(release, "_release", ""))
             configuration {"vs2002 or vs2003 or vs2005 or vs2008", "Release"}
                 buildoptions    {"/Oy"}
 
-            configuration {"vs2002 or vs2003 or vs2005 or vs2008 or vs2010", "Release", "x32"}
-                linkoptions     {"/subsystem:windows,5.00"}
-
-            configuration {"vs2012 or vs2013 or vs2015 or vs2017 or vs2019", "Release", "x32"}
+            configuration {"Release", "x32"}
                 linkoptions     {"/subsystem:windows,5.01"}
 
             configuration {"Release", "x64"}

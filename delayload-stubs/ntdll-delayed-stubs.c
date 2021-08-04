@@ -1,17 +1,42 @@
-#pragma warning(disable: 4005)
 #ifndef _WIN32_WINNT
 #   define _WIN32_WINNT 0x0500
 #endif
 #ifndef WINVER
 #   define WINVER 0x0500
 #endif
-#if (_MSCVER >= 1400)
-#   define _NTDLLBUILD_
-#   define _NTSYSTEM_
-#endif
 #include <Windows.h>
-#include "../ntnative.h"
-#pragma warning(default: 4005)
+
+typedef struct OBJECT_ATTRIBUTES* POBJECT_ATTRIBUTES;
+typedef struct IO_STATUS_BLOCK* PIO_STATUS_BLOCK;
+typedef struct ANSI_STRING *PANSI_STRING;
+typedef struct ANSI_STRING const* PCANSI_STRING;
+typedef struct UNICODE_STRING* PUNICODE_STRING;
+typedef struct UNICODE_STRING const* PCUNICODE_STRING;
+typedef struct OEM_STRING *POEM_STRING;
+typedef struct OEM_STRING const* PCOEM_STRING;
+typedef struct STRING* PSTRING;
+typedef LPCSTR PCSZ;
+typedef FARPROC PIO_APC_ROUTINE;
+typedef struct RTL_RELATIVE_NAME* PRTL_RELATIVE_NAME;
+typedef struct GENERATE_NAME_CONTEXT* PGENERATE_NAME_CONTEXT;
+typedef int NT_FILE_INFORMATION_CLASS; // enum
+typedef int RTL_PATH_TYPE; // enum
+typedef int FILE_INFORMATION_CLASS; // enum
+typedef int THREADINFOCLASS; // enum
+typedef int PROCESSINFOCLASS; // enum
+typedef int OBJECT_INFORMATION_CLASS; // enum
+typedef int SYSTEM_INFORMATION_CLASS; // enum
+typedef int EVENT_INFORMATION_CLASS; // enum
+typedef int IO_COMPLETION_INFORMATION_CLASS; // enum
+typedef int MUTANT_INFORMATION_CLASS; // enum
+typedef int SEMAPHORE_INFORMATION_CLASS; // enum
+typedef int SECTION_INFORMATION_CLASS; // enum
+typedef int TIMER_INFORMATION_CLASS; // enum
+typedef int KEY_INFORMATION_CLASS; // enum
+typedef int KEY_VALUE_INFORMATION_CLASS; // enum
+typedef int KEY_INFORMATION_CLASS; // enum
+typedef int KEY_VALUE_INFORMATION_CLASS; // enum
+typedef ULONG SECTION_INHERIT;
 
 NTSTATUS
 NTAPI

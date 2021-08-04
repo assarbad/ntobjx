@@ -1,7 +1,11 @@
-LIBRARY kernel32-delayed.dll
+LIBRARY kernel32.dld
 
 EXPORTS
     EncodePointer
     DecodePointer
     ActivateActCtx
     DeactivateActCtx
+;    GetModuleHandleExW
+;    InitializeSListHead
+;    InterlockedPopEntrySList
+;    InterlockedPushEntrySList

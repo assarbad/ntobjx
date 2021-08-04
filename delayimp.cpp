@@ -57,7 +57,7 @@ namespace
 
     redir_entry_t mod_redir[] =
     {
-        {lpszNtDllName, "ntdll-delayed.dll"},
+        {lpszNtDllName, "ntdll.dld"},
     };
 }
 

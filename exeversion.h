@@ -22,7 +22,7 @@
 ///
 ///////////////////////////////////////////////////////////////////////////////
 #ifndef __EXEVERSION_H_VER__
-#define __EXEVERSION_H_VER__ 2018020819
+#define __EXEVERSION_H_VER__ 2021072221
 
 #if defined(_MSC_VER) && (_MSC_VER >= 1020)
 #pragma once
@@ -35,8 +35,8 @@
 // ---------------------------------------------------------------------------
 #define TEXT_AUTHOR            Oliver Schneider // author (optional value)
 #define PRD_MAJVER             1 // major product version
-#define PRD_MINVER             3 // minor product version
-#define PRD_PATCH              3 // patch number
+#define PRD_MINVER             4 // minor product version
+#define PRD_PATCH              0 // patch number
 #define PRD_BUILD              HG_REV_NO // build number for product
 #define PRD_BUILD_NUMERIC      HG_REV_NO_NUMERIC // build number for product
 #define FILE_MAJVER            PRD_MAJVER // major file version
@@ -44,7 +44,7 @@
 #define FILE_PATCH             PRD_PATCH // patch number
 #define FILE_BUILD             PRD_BUILD // build number
 #define FILE_BUILD_NUMERIC     PRD_BUILD_NUMERIC // build number for product
-#define EXE_YEAR               2016-2018 // current year or timespan (e.g. 2003-2007)
+#define EXE_YEAR               2016-2018, 2021 // current year or timespan (e.g. 2003-2007)
 #define TEXT_WEBSITE           https:/##/assarbad.net // website
 #define TEXT_PRODUCTNAME       NT Objects // product's name
 #define TEXT_FILEDESC          Inspects the NT object manager namespace // component description

@@ -119,7 +119,7 @@
       <OutputFile>$(OutDir)ntobjx32D.exe</OutputFile>
       <AdditionalLibraryDirectories>$(IntDir);%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
       <TargetMachine>MachineX86</TargetMachine>
-      <AdditionalOptions>/pdbaltpath:%_PDB% /delay:nobind /delayload:ntdll-delayed.dll /delayload:version.dll /dynamicbase /nxcompat %(AdditionalOptions)</AdditionalOptions>
+      <AdditionalOptions>/map /pdbaltpath:%_PDB% /delay:nobind /delayload:ntdll.dld /delayload:version.dll /dynamicbase /nxcompat %(AdditionalOptions)</AdditionalOptions>
     </Link>
     <PreBuildEvent>
       <Command>call &quot;$(ProjectDir)\hgid.cmd&quot;&#x0D;&#x0A;cl.exe /nologo /c /TC /Ob0 /Gz delayload-stubs\ntdll-delayed-stubs.c &quot;/Fo$(IntDir)\ntdll-delayed-stubs.obj&quot;&#x0D;&#x0A;lib.exe /nologo &quot;/def:delayload-stubs\ntdll-delayed.txt&quot; &quot;/out:$(IntDir)\ntdll-delayed.lib&quot; /machine:x86 &quot;$(IntDir)\ntdll-delayed-stubs.obj&quot;</Command>
@@ -152,7 +152,7 @@
       <OutputFile>$(OutDir)ntobjx64D.exe</OutputFile>
       <AdditionalLibraryDirectories>$(IntDir);%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
       <TargetMachine>MachineX64</TargetMachine>
-      <AdditionalOptions>/pdbaltpath:%_PDB% /delay:nobind /delayload:ntdll-delayed.dll /delayload:version.dll /dynamicbase /nxcompat %(AdditionalOptions)</AdditionalOptions>
+      <AdditionalOptions>/map /pdbaltpath:%_PDB% /delay:nobind /delayload:ntdll.dld /delayload:version.dll /dynamicbase /nxcompat %(AdditionalOptions)</AdditionalOptions>
     </Link>
     <PreBuildEvent>
       <Command>call &quot;$(ProjectDir)\hgid.cmd&quot;&#x0D;&#x0A;lib.exe /nologo /nodefaultlib &quot;/def:delayload-stubs\ntdll-delayed.txt&quot; &quot;/out:$(IntDir)\ntdll-delayed.lib&quot; /machine:x64</Command>
@@ -186,7 +186,7 @@
       <OutputFile>$(OutDir)ntobjx32.exe</OutputFile>
       <AdditionalLibraryDirectories>$(IntDir);%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
       <TargetMachine>MachineX86</TargetMachine>
-      <AdditionalOptions>/pdbaltpath:%_PDB% /delay:nobind /delayload:ntdll-delayed.dll /delayload:version.dll /dynamicbase /nxcompat /safeseh /release /subsystem:windows,5.01 %(AdditionalOptions)</AdditionalOptions>
+      <AdditionalOptions>/map /pdbaltpath:%_PDB% /delay:nobind /delayload:ntdll.dld /delayload:version.dll /dynamicbase /nxcompat /safeseh /release /subsystem:windows,5.01 %(AdditionalOptions)</AdditionalOptions>
     </Link>
     <PreBuildEvent>
       <Command>call &quot;$(ProjectDir)\hgid.cmd&quot;&#x0D;&#x0A;cl.exe /nologo /c /TC /Ob0 /Gz delayload-stubs\ntdll-delayed-stubs.c &quot;/Fo$(IntDir)\ntdll-delayed-stubs.obj&quot;&#x0D;&#x0A;lib.exe /nologo &quot;/def:delayload-stubs\ntdll-delayed.txt&quot; &quot;/out:$(IntDir)\ntdll-delayed.lib&quot; /machine:x86 &quot;$(IntDir)\ntdll-delayed-stubs.obj&quot;</Command>
@@ -220,7 +220,7 @@
       <OutputFile>$(OutDir)ntobjx64.exe</OutputFile>
       <AdditionalLibraryDirectories>$(IntDir);%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
       <TargetMachine>MachineX64</TargetMachine>
-      <AdditionalOptions>/pdbaltpath:%_PDB% /delay:nobind /delayload:ntdll-delayed.dll /delayload:version.dll /dynamicbase /nxcompat /release /subsystem:windows,5.02 %(AdditionalOptions)</AdditionalOptions>
+      <AdditionalOptions>/map /pdbaltpath:%_PDB% /delay:nobind /delayload:ntdll.dld /delayload:version.dll /dynamicbase /nxcompat /release /subsystem:windows,5.02 %(AdditionalOptions)</AdditionalOptions>
     </Link>
     <PreBuildEvent>
       <Command>call &quot;$(ProjectDir)\hgid.cmd&quot;&#x0D;&#x0A;lib.exe /nologo /nodefaultlib &quot;/def:delayload-stubs\ntdll-delayed.txt&quot; &quot;/out:$(IntDir)\ntdll-delayed.lib&quot; /machine:x64</Command>
@@ -266,8 +266,6 @@
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="delayimp.cpp">
-    </ClCompile>
-    <ClCompile Include="legacy-windows-glue.cpp">
     </ClCompile>
     <ClCompile Include="ntobjx.cpp">
     </ClCompile>

@@ -1,20 +1,14 @@
-#define EncodePointer EncodePointer_mock
-#define DecodePointer DecodePointer_mock
-#define ActivateActCtx ActivateActCtx_mock
-#define DeactivateActCtx DeactivateActCtx_mock
-#pragma warning(disable: 4005)
+#define EncodePointer EncodePointer_hidden
+#define DecodePointer DecodePointer_hidden
+#define ActivateActCtx ActivateActCtx_hidden
+#define DeactivateActCtx DeactivateActCtx_hidden
 #ifndef _WIN32_WINNT
 #   define _WIN32_WINNT 0x0500
 #endif
 #ifndef WINVER
 #   define WINVER 0x0500
 #endif
-#if (_MSCVER >= 1400)
-#   define _NTDLLBUILD_
-#   define _NTSYSTEM_
-#endif
 #include <Windows.h>
-#pragma warning(default: 4005)
 #undef EncodePointer
 #undef DecodePointer
 #undef ActivateActCtx
@@ -45,3 +39,5 @@ DeactivateActCtx(
     __in DWORD dwFlags,
     __in ULONG_PTR ulCookie
     ) { return FALSE; }
+
+// GetModuleHandleExW InitializeSListHead InterlockedPopEntrySList InterlockedPushEntrySList
