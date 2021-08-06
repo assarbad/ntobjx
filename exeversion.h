@@ -33,44 +33,47 @@
 // ---------------------------------------------------------------------------
 // Several defines have to be given before including this file. These are:
 // ---------------------------------------------------------------------------
-#define TEXT_AUTHOR            Oliver Schneider // author (optional value)
-#define PRD_MAJVER             1 // major product version
-#define PRD_MINVER             4 // minor product version
-#define PRD_PATCH              0 // patch number
-#define PRD_BUILD              HG_REV_NO // build number for product
-#define PRD_BUILD_NUMERIC      HG_REV_NO_NUMERIC // build number for product
-#define FILE_MAJVER            PRD_MAJVER // major file version
-#define FILE_MINVER            PRD_MINVER // minor file version
-#define FILE_PATCH             PRD_PATCH // patch number
-#define FILE_BUILD             PRD_BUILD // build number
-#define FILE_BUILD_NUMERIC     PRD_BUILD_NUMERIC // build number for product
-#define EXE_YEAR               2016-2018, 2021 // current year or timespan (e.g. 2003-2007)
-#define TEXT_WEBSITE           https:/##/assarbad.net // website
-#define TEXT_PRODUCTNAME       NT Objects // product's name
-#define TEXT_FILEDESC          Inspects the NT object manager namespace // component description
-#define TEXT_COMPANY           Oliver Schneider (assarbad.net) // company
-#define TEXT_MODULE            ntobjx // module name
-#define TEXT_COPYRIGHT         Copyright \xA9 EXE_YEAR TEXT_AUTHOR // copyright information
-#define TEXT_INTERNALNAME      ntobjx.exe
-#define HG_REPOSITORY          "https://hg.code.sf.net/p/ntobjx/code"
-#define TEXT_PORTIONSCOPYRIGHT "Portions (WTL, pugixml, FRISK utility classes), see source code for details:\r\nCopyright (c) Microsoft Corporation, WTL Team. All rights reserved.\r\nCopyright (c) Arseny Kapoulkine.\r\nCopyright (c) FRISK Software International (FRISK). All rights reserved."
+#define TEXT_AUTHOR        Oliver Schneider  // author (optional value)
+#define PRD_MAJVER         1                 // major product version
+#define PRD_MINVER         4                 // minor product version
+#define PRD_PATCH          0                 // patch number
+#define PRD_BUILD          HG_REV_NO         // build number for product
+#define PRD_BUILD_NUMERIC  HG_REV_NO_NUMERIC // build number for product
+#define FILE_MAJVER        PRD_MAJVER        // major file version
+#define FILE_MINVER        PRD_MINVER        // minor file version
+#define FILE_PATCH         PRD_PATCH         // patch number
+#define FILE_BUILD         PRD_BUILD         // build number
+#define FILE_BUILD_NUMERIC PRD_BUILD_NUMERIC // build number for product
+
+// clang-format off
+#define EXE_YEAR           2016-2018, 2021   // current year or timespan (e.g. 2003-2007)
+#define TEXT_WEBSITE       https:/##/assarbad.net // website
+// clang-format on
+
+#define TEXT_PRODUCTNAME   NT Objects                               // product's name
+#define TEXT_FILEDESC      Inspects the NT object manager namespace // component description
+#define TEXT_COMPANY       Oliver Schneider(assarbad.net)           // company
+#define TEXT_MODULE        ntobjx                                   // module name
+#define TEXT_COPYRIGHT     Copyright \xA9 EXE_YEAR TEXT_AUTHOR      // copyright information
+#define TEXT_INTERNALNAME  ntobjx.exe
+#define HG_REPOSITORY      "https://hg.code.sf.net/p/ntobjx/code"
+#define TEXT_PORTIONSCOPYRIGHT                                                                                         \
+    "Portions (WTL, pugixml, FRISK utility classes), see source code for details:\r\nCopyright (c) Microsoft "         \
+    "Corporation, WTL Team. All rights reserved.\r\nCopyright (c) Arseny Kapoulkine.\r\nCopyright (c) FRISK Software " \
+    "International (FRISK). All rights reserved."
 
 #define _ANSISTRING(text) #text
-#define ANSISTRING(text) _ANSISTRING(text)
+#define ANSISTRING(text)  _ANSISTRING(text)
 
 #define _WIDESTRING(text) L##text
-#define WIDESTRING(text) _WIDESTRING(text)
+#define WIDESTRING(text)  _WIDESTRING(text)
 
 #define PRESET_UNICODE_STRING(symbol, buffer) \
-        UNICODE_STRING symbol = \
-            { \
-            sizeof(WIDESTRING(buffer)) - sizeof(WCHAR), \
-            sizeof(WIDESTRING(buffer)), \
-            WIDESTRING(buffer) \
-            };
+    UNICODE_STRING symbol = {                 \
+        sizeof(WIDESTRING(buffer)) - sizeof(WCHAR), sizeof(WIDESTRING(buffer)), WIDESTRING(buffer)};
 
-#define CREATE_XVER(maj,min,patch,build) maj ## , ## min ## , ## patch ## , ## build
-#define CREATE_FVER(maj,min,patch,build) maj ## . ## min ## . ## patch ## . ## build
-#define CREATE_PVER(maj,min,patch,build) maj ## . ## min ## . ## patch
+#define CREATE_XVER(maj, min, patch, build) maj##, ##min##, ##patch##, ##build
+#define CREATE_FVER(maj, min, patch, build) maj##.##min##.##patch##.##build
+#define CREATE_PVER(maj, min, patch, build) maj##.##min##.##patch
 
 #endif // __EXEVERSION_H_VER__

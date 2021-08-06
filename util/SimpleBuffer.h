@@ -38,19 +38,22 @@
 
 #include <Windows.h>
 #ifdef _MSC_VER // These are only usable with MSVC for now
-# include <stdarg.h>
-# ifndef _CRT_SECURE_NO_WARNINGS
-#   include <strsafe.h>
-# endif
+#include <stdarg.h>
+#ifndef _CRT_SECURE_NO_WARNINGS
+#include <strsafe.h>
+#endif
 #endif // _MSC_VER
 
 #ifndef DBGPRINTF
-#define DBGPRINTF(...) do {} while(false)
+#define DBGPRINTF(...) \
+    do                 \
+    {                  \
+    } while (false)
 #endif
 // Very simple wrapper for zero terminated strings of a given "character" type
 template <typename T> class CSimpleBuf
 {
-public:
+  public:
     typedef T value_type;
     // Default ctor
     CSimpleBuf(size_t count = 0)
@@ -58,7 +61,7 @@ public:
         , m_count(0)
     {
         DBGPRINTF("[%p::%s] (default ctor)\n", this, __FUNCTION__);
-        if(count)
+        if (count)
         {
             (void)ReAlloc(count);
         }
@@ -77,7 +80,7 @@ public:
         , m_count(0)
     {
         DBGPRINTF("[%p::%s] (copy ctor - elem*)\n", this, __FUNCTION__);
-        if(ExistingZeroTerminatedBuffer)
+        if (ExistingZeroTerminatedBuffer)
         {
             operator=(ExistingZeroTerminatedBuffer);
         }
@@ -85,11 +88,11 @@ public:
     // Assignment operator for same class
     CSimpleBuf& operator=(const CSimpleBuf& RValue)
     {
-        if(&RValue != this)
+        if (&RValue != this)
         {
             DBGPRINTF("[%p::%s] (assignment op)\n", this, __FUNCTION__);
             (void)ReAlloc(0); // free the buffer first
-            if(RValue.Buffer() && ReAlloc(RValue.Length<size_t>()))
+            if (RValue.Buffer() && ReAlloc(RValue.Length<size_t>()))
             {
                 memcpy(Buffer(), RValue.Buffer(), min_(LengthBytes<size_t>(), RValue.LengthBytes<size_t>()));
             }
@@ -101,14 +104,14 @@ public:
     {
         DBGPRINTF("[%p::%s] (assignment op - elem*)\n", this, __FUNCTION__);
         (void)ReAlloc(0); // free the buffer first
-        if(RValue)
+        if (RValue)
         {
             const size_t len = buflen_(RValue);
-            if(!len)
+            if (!len)
             {
                 (void)ReAlloc(1); // Make it an empty string, since the pointer was non-NULL, but length was zero!
             }
-            else if(ReAlloc(len))
+            else if (ReAlloc(len))
             {
                 // Note that normally the m_buf can be larger than RValue, but not
                 // the other way around, if we are at this point
@@ -140,12 +143,12 @@ public:
     {
         DBGPRINTF("[%p::%s] (!= op)\n", this, __FUNCTION__);
         // If the buffer address is the same or both are null pointers
-        if((Buffer() == RValue) || ((Buffer() == 0) && (RValue == 0)))
+        if ((Buffer() == RValue) || ((Buffer() == 0) && (RValue == 0)))
         {
             return true;
         }
         // If either one is a null pointer, but the other one is not, return false
-        else if((Buffer() == 0) || (RValue == 0))
+        else if ((Buffer() == 0) || (RValue == 0))
         {
             return false;
         }
@@ -155,7 +158,7 @@ public:
     CSimpleBuf& operator+=(const CSimpleBuf& RValue)
     {
         DBGPRINTF("[%p::%s] %d\n", this, __FUNCTION__, (LengthSZ<size_t>() + RValue.LengthSZ<size_t>()));
-        if(RValue.LengthSZ<size_t>() && ReAlloc(LengthSZ<size_t>() + RValue.LengthSZ<size_t>()))
+        if (RValue.LengthSZ<size_t>() && ReAlloc(LengthSZ<size_t>() + RValue.LengthSZ<size_t>()))
         {
             // Append to the previous content
             memcpy(Buffer() + LengthSZ<size_t>(), RValue.Buffer(), sizeof(value_type) * RValue.LengthSZ<size_t>());
@@ -168,7 +171,7 @@ public:
         DBGPRINTF("[%p::%s] %d\n", this, __FUNCTION__, (LengthSZ<size_t>() + buflen_(RValue)));
         const size_t len = buflen_(RValue);
         // No need to copy the buffer if we append a zero-length string ;)
-        if(len && ReAlloc(LengthSZ<size_t>() + len))
+        if (len && ReAlloc(LengthSZ<size_t>() + len))
         {
             // Append to the previous content
             memcpy(Buffer() + LengthSZ<size_t>(), RValue, sizeof(value_type) * len);
@@ -179,7 +182,7 @@ public:
     CSimpleBuf& operator+=(const value_type RValue)
     {
         DBGPRINTF("[%p::%s] %d\n", this, __FUNCTION__, (LengthSZ<size_t>() + 1));
-        if(RValue && ReAlloc(LengthSZ<size_t>() + 1))
+        if (RValue && ReAlloc(LengthSZ<size_t>() + 1))
         {
             // Append to the previous content
             *(Buffer() + LengthSZ<size_t>()) = RValue;
@@ -220,12 +223,12 @@ public:
     {
         value_type* tempBuf = 0;
         register size_t count_ = 0;
-        if(count)
+        if (count)
         {
-            count_ = roundtopara_(count+1);
+            count_ = roundtopara_(count + 1);
             DBGPRINTF("[%p::%s]: requested %d, got: %d\n", this, __FUNCTION__, count, count_);
             // We don't free it, if the user hasn't requested it explicitly by using ReAlloc(0)
-            if(count_ <= m_count)
+            if (count_ <= m_count)
             {
                 DBGPRINTF("[%p::%s]: (0 != count) && (count_ <= m_count)\n", this, __FUNCTION__);
                 // Fill the "excess" part of the buffer with zeros
@@ -233,14 +236,14 @@ public:
                 return true; // We don't allocate anything new, but the buffer will be fine
             }
             // If the requested size if above zero, attempt to allocate
-            if(0 != (tempBuf = new value_type[count_]/* one as reserve */))
+            if (0 != (tempBuf = new value_type[count_] /* one as reserve */))
             {
                 DBGPRINTF("[%p::%s]: new successful -> %d\n", this, __FUNCTION__, count_);
                 // Clear the newly allocated buffer
                 memset(tempBuf, 0, sizeof(value_type) * count_);
             }
             // Check whether allocation was successful and whether the old buffer is assigned
-            if(tempBuf && m_Buf)
+            if (tempBuf && m_Buf)
             {
                 DBGPRINTF("[%p::%s]: copying old to new buffer\n", this, __FUNCTION__);
                 // ... and copy old contents over, choosing the minimum of old and new count
@@ -286,12 +289,12 @@ public:
     template <typename X> inline X Length() const
     {
         DBGPRINTF("[%p::%s]\n", this, __FUNCTION__);
-        if(!m_Buf)
+        if (!m_Buf)
         {
             return static_cast<X>(0);
         }
         // Attention we are casting (a spell)
-        return static_cast<X>(m_count-1);
+        return static_cast<X>(m_count - 1);
     }
     // Returns the length in elements until the terminating zero
     inline size_t LengthSZ() const
@@ -312,11 +315,11 @@ public:
     template <typename X> inline X LengthBytes() const
     {
         DBGPRINTF("[%p::%s]\n", this, __FUNCTION__);
-        if(!m_Buf)
+        if (!m_Buf)
         {
             return static_cast<X>(0);
         }
-        return static_cast<X>((m_count-1) * sizeof(value_type));
+        return static_cast<X>((m_count - 1) * sizeof(value_type));
     }
 #ifdef _MSC_VER // These are only usable with MSVC for now
     CSimpleBuf<char> UnicodeToAnsi(UINT codePage = CP_ACP) const
@@ -327,7 +330,8 @@ public:
     {
         return AnsiToUnicode_(m_Buf, codePage);
     }
-protected:
+
+  protected:
     // Fake support, but in fact it only works for (T == wchar_t) and (T == char)
     template <typename T> CSimpleBuf<char> UnicodeToAnsi_(const T* Value, UINT codePage) const
     {
@@ -335,7 +339,7 @@ protected:
     }
     template <typename T> CSimpleBuf<char> UnicodeToAnsi_(const char* Value, UINT codePage) const
     {
-        if(!Value)
+        if (!Value)
         {
             return size_t(0);
         }
@@ -343,15 +347,23 @@ protected:
     }
     template <typename T> CSimpleBuf<char> UnicodeToAnsi_(const wchar_t* Value, UINT codePage) const
     {
-        if(!Value)
+        if (!Value)
         {
             return size_t(0);
         }
         CSimpleBuf<wchar_t> source(Value);
-        if(int iNeeded = ::WideCharToMultiByte(codePage, 0, source.Buffer(), source.LengthSZ<int>(), NULL, 0, NULL, NULL))
+        if (int iNeeded =
+                ::WideCharToMultiByte(codePage, 0, source.Buffer(), source.LengthSZ<int>(), NULL, 0, NULL, NULL))
         {
             CSimpleBuf<char> target(iNeeded);
-            if(::WideCharToMultiByte(codePage, 0, source.Buffer(), source.LengthSZ<int>(), target.Buffer(), target.Length<int>(), NULL, NULL))
+            if (::WideCharToMultiByte(codePage,
+                                      0,
+                                      source.Buffer(),
+                                      source.LengthSZ<int>(),
+                                      target.Buffer(),
+                                      target.Length<int>(),
+                                      NULL,
+                                      NULL))
             {
                 return target.Buffer();
             }
@@ -365,15 +377,16 @@ protected:
     }
     template <typename T> CSimpleBuf<wchar_t> AnsiToUnicode_(const char* Value, UINT codePage) const
     {
-        if(!Value)
+        if (!Value)
         {
             return size_t(0);
         }
         CSimpleBuf<char> source(Value);
-        if(int iNeeded = ::MultiByteToWideChar(codePage, 0, source.Buffer(), source.LengthSZ<int>(), NULL, 0))
+        if (int iNeeded = ::MultiByteToWideChar(codePage, 0, source.Buffer(), source.LengthSZ<int>(), NULL, 0))
         {
             CSimpleBuf<wchar_t> target(iNeeded);
-            if(::MultiByteToWideChar(codePage, 0, source.Buffer(), source.LengthSZ<int>(), target.Buffer(), target.Length<int>()))
+            if (::MultiByteToWideChar(
+                    codePage, 0, source.Buffer(), source.LengthSZ<int>(), target.Buffer(), target.Length<int>()))
             {
                 return target.Buffer();
             }
@@ -382,48 +395,52 @@ protected:
     }
     template <typename T> CSimpleBuf<wchar_t> AnsiToUnicode_(const wchar_t* Value, UINT codePage) const
     {
-        if(!Value)
+        if (!Value)
         {
             return size_t(0);
         }
         return Value;
     }
-private:
+
+  private:
     // Little helper class that wraps calls depending on the used character type
     class PrintfHelper
     {
-    public:
-        template<typename CharType> static size_t vsnprintf(char* buffer, size_t len, const char* formatstr, va_list args)
+      public:
+        template <typename CharType>
+        static size_t vsnprintf(char* buffer, size_t len, const char* formatstr, va_list args)
         {
-# ifdef _CRT_SECURE_NO_WARNINGS
+#ifdef _CRT_SECURE_NO_WARNINGS
             return _vsnprintf(buffer, len, formatstr, args);
-# else
+#else
             HRESULT hr = StringCbVPrintfA(buffer, len * sizeof(CharType), formatstr, args);
-            if(SUCCEEDED(hr) || (STRSAFE_E_INSUFFICIENT_BUFFER == hr))
+            if (SUCCEEDED(hr) || (STRSAFE_E_INSUFFICIENT_BUFFER == hr))
             {
                 return len;
             }
             return 0;
-# endif
+#endif
         }
-        template<typename CharType> static size_t vsnprintf(wchar_t* buffer, size_t len, const wchar_t* formatstr, va_list args)
+        template <typename CharType>
+        static size_t vsnprintf(wchar_t* buffer, size_t len, const wchar_t* formatstr, va_list args)
         {
-# ifdef _CRT_SECURE_NO_WARNINGS
+#ifdef _CRT_SECURE_NO_WARNINGS
             return _vsnwprintf(buffer, len, formatstr, args);
-# else
+#else
             HRESULT hr = StringCbVPrintfW(buffer, len * sizeof(CharType), formatstr, args);
-            if(SUCCEEDED(hr) || (STRSAFE_E_INSUFFICIENT_BUFFER == hr))
+            if (SUCCEEDED(hr) || (STRSAFE_E_INSUFFICIENT_BUFFER == hr))
             {
                 return len;
             }
             return 0;
-# endif
+#endif
         }
     };
-public:
+
+  public:
     template <typename T> static CSimpleBuf<T> formatV(const T* FormatString, va_list args)
     {
-        if(!FormatString)
+        if (!FormatString)
         {
             return size_t(0);
         }
@@ -432,17 +449,17 @@ public:
         size_t retfromprintf = 0;
         // Loop and increase buffer size if the return value is -1
         // (meaning that the buffer was too small!)
-        while(-1 == (retfromprintf = PrintfHelper::vsnprintf<T>(temp, temp.Length<size_t>(), FormatString, args)))
+        while (-1 == (retfromprintf = PrintfHelper::vsnprintf<T>(temp, temp.Length<size_t>(), FormatString, args)))
         {
             // Double the buffer size
-            if(!temp.ReAlloc(2 * temp.Length<size_t>()))
+            if (!temp.ReAlloc(2 * temp.Length<size_t>()))
             {
                 // We just ran out of memory, as it seems ... return an empty string
                 return size_t(0);
             }
         }
         // If we're here but the return value is negative, something went wrong!
-        if(retfromprintf < 0)
+        if (retfromprintf < 0)
         {
             return size_t(0); // Some error, return an empty string as well
         }
@@ -460,7 +477,7 @@ public:
     // Non-static member function
     value_type* operator()(const value_type* FormatString, ...)
     {
-        if(FormatString)
+        if (FormatString)
         {
             va_list args;
             va_start(args, FormatString);
@@ -474,7 +491,7 @@ public:
         return Buffer();
     }
 #endif // _MSC_VER
-protected:
+  protected:
     // Quick version for char & Co.
     template <typename T> static size_t buflen_(const unsigned char* Value)
     {
@@ -505,17 +522,17 @@ protected:
     // If no better match is being found, use the slow version
     template <typename T> static size_t buflen_(const T* Value)
     {
-        if(0 == Value)
+        if (0 == Value)
         {
             return 0;
         }
         size_t retval = 0;
-        if(const value_type* temp = Value)
+        if (const value_type* temp = Value)
         {
             value_type zero;
             memset(&zero, 0, sizeof(value_type));
             // Find the terminating zero "element"
-            while(0 != memcmp(temp++, &zero, sizeof(value_type)))
+            while (0 != memcmp(temp++, &zero, sizeof(value_type)))
             {
                 ++retval;
             }
@@ -528,11 +545,13 @@ protected:
         DBGPRINTF("[%p::%s]\n", this, __FUNCTION__);
         return ((a < b) ? a : b);
     }
-    template<typename X> size_t elemlen_(const X* Value)
+    template <typename X> size_t elemlen_(const X* Value)
     {
-        if(!Value) return 0;
+        if (!Value)
+            return 0;
         size_t retval = 0;
-        while(*(Value++) != 0) ++retval;
+        while (*(Value++) != 0)
+            ++retval;
         return retval;
     }
     inline size_t roundtopara_(size_t elemcount)

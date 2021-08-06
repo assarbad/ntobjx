@@ -98,7 +98,7 @@
       <Optimization>Disabled</Optimization>
       <AdditionalIncludeDirectories>wtl\Include;pugixml;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <PreprocessorDefinitions>WIN32;_WINDOWS;STRICT;_DEBUG;WINVER=0x0501;_ALLOW_RTCc_IN_STL;%(PreprocessorDefinitions)</PreprocessorDefinitions>
-      <MinimalRebuild>true</MinimalRebuild>
+      <MinimalRebuild>false</MinimalRebuild>
       <BasicRuntimeChecks>EnableFastChecks</BasicRuntimeChecks>
       <SmallerTypeCheck>true</SmallerTypeCheck>
       <RuntimeLibrary>MultiThreadedDebug</RuntimeLibrary>
@@ -115,14 +115,14 @@
     <Link>
       <SubSystem>Windows</SubSystem>
       <GenerateDebugInformation>true</GenerateDebugInformation>
-      <AdditionalDependencies>ntdll-delayed.lib;kernel32-delayed.lib;version.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalDependencies>ntdll-delayed.lib;version.lib;%(AdditionalDependencies)</AdditionalDependencies>
       <OutputFile>$(OutDir)ntobjx32D.exe</OutputFile>
       <AdditionalLibraryDirectories>$(IntDir);%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
       <TargetMachine>MachineX86</TargetMachine>
-      <AdditionalOptions>/pdbaltpath:%_PDB% /delay:nobind /delayload:ntdll-delayed.dll /delayload:kernel32-delayed.dll /delayload:version.dll /dynamicbase /nxcompat %(AdditionalOptions)</AdditionalOptions>
+      <AdditionalOptions>/map /pdbaltpath:%_PDB% /delay:nobind /delayload:ntdll.dld /delayload:version.dll /dynamicbase /nxcompat %(AdditionalOptions)</AdditionalOptions>
     </Link>
     <PreBuildEvent>
-      <Command>call &quot;$(ProjectDir)\hgid.cmd&quot;&#x0D;&#x0A;cl.exe /nologo /c /TC /Ob0 /Gz delayload-stubs\ntdll-delayed-stubs.c &quot;/Fo$(IntDir)\ntdll-delayed-stubs.obj&quot;&#x0D;&#x0A;lib.exe /nologo &quot;/def:delayload-stubs\ntdll-delayed.txt&quot; &quot;/out:$(IntDir)\ntdll-delayed.lib&quot; /machine:x86 &quot;$(IntDir)\ntdll-delayed-stubs.obj&quot;&#x0D;&#x0A;cl.exe /nologo /c /TC /Ob0 /Gz delayload-stubs\kernel32-delayed-stubs.c &quot;/Fo$(IntDir)\kernel32-delayed-stubs.obj&quot;&#x0D;&#x0A;lib.exe /nologo &quot;/def:delayload-stubs\kernel32-delayed.txt&quot; &quot;/out:$(IntDir)\kernel32-delayed.lib&quot; /machine:x86 &quot;$(IntDir)\kernel32-delayed-stubs.obj&quot;</Command>
+      <Command>call &quot;$(ProjectDir)\hgid.cmd&quot;&#x0D;&#x0A;cl.exe /nologo /c /TC /Ob0 /Gz delayload-stubs\ntdll-delayed-stubs.c &quot;/Fo$(IntDir)\ntdll-delayed-stubs.obj&quot;&#x0D;&#x0A;lib.exe /nologo &quot;/def:delayload-stubs\ntdll-delayed.txt&quot; &quot;/out:$(IntDir)\ntdll-delayed.lib&quot; /machine:x86 &quot;$(IntDir)\ntdll-delayed-stubs.obj&quot;</Command>
     </PreBuildEvent>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
@@ -131,7 +131,7 @@
       <Optimization>Disabled</Optimization>
       <AdditionalIncludeDirectories>wtl\Include;pugixml;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <PreprocessorDefinitions>WIN32;_WINDOWS;STRICT;_DEBUG;WINVER=0x0501;_ALLOW_RTCc_IN_STL;%(PreprocessorDefinitions)</PreprocessorDefinitions>
-      <MinimalRebuild>true</MinimalRebuild>
+      <MinimalRebuild>false</MinimalRebuild>
       <BasicRuntimeChecks>EnableFastChecks</BasicRuntimeChecks>
       <SmallerTypeCheck>true</SmallerTypeCheck>
       <RuntimeLibrary>MultiThreadedDebug</RuntimeLibrary>
@@ -148,14 +148,14 @@
     <Link>
       <SubSystem>Windows</SubSystem>
       <GenerateDebugInformation>true</GenerateDebugInformation>
-      <AdditionalDependencies>ntdll-delayed.lib;kernel32-delayed.lib;version.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalDependencies>ntdll-delayed.lib;version.lib;%(AdditionalDependencies)</AdditionalDependencies>
       <OutputFile>$(OutDir)ntobjx64D.exe</OutputFile>
       <AdditionalLibraryDirectories>$(IntDir);%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
       <TargetMachine>MachineX64</TargetMachine>
-      <AdditionalOptions>/pdbaltpath:%_PDB% /delay:nobind /delayload:ntdll-delayed.dll /delayload:kernel32-delayed.dll /delayload:version.dll /dynamicbase /nxcompat %(AdditionalOptions)</AdditionalOptions>
+      <AdditionalOptions>/map /pdbaltpath:%_PDB% /delay:nobind /delayload:ntdll.dld /delayload:version.dll /dynamicbase /nxcompat %(AdditionalOptions)</AdditionalOptions>
     </Link>
     <PreBuildEvent>
-      <Command>call &quot;$(ProjectDir)\hgid.cmd&quot;&#x0D;&#x0A;lib.exe /nologo /nodefaultlib &quot;/def:delayload-stubs\ntdll-delayed.txt&quot; &quot;/out:$(IntDir)\ntdll-delayed.lib&quot; /machine:x64&#x0D;&#x0A;lib.exe /nologo /nodefaultlib &quot;/def:delayload-stubs\kernel32-delayed.txt&quot; &quot;/out:$(IntDir)\kernel32-delayed.lib&quot; /machine:x64</Command>
+      <Command>call &quot;$(ProjectDir)\hgid.cmd&quot;&#x0D;&#x0A;lib.exe /nologo /nodefaultlib &quot;/def:delayload-stubs\ntdll-delayed.txt&quot; &quot;/out:$(IntDir)\ntdll-delayed.lib&quot; /machine:x64</Command>
     </PreBuildEvent>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
@@ -182,14 +182,14 @@
       <GenerateDebugInformation>true</GenerateDebugInformation>
       <EnableCOMDATFolding>true</EnableCOMDATFolding>
       <OptimizeReferences>true</OptimizeReferences>
-      <AdditionalDependencies>ntdll-delayed.lib;kernel32-delayed.lib;version.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalDependencies>ntdll-delayed.lib;version.lib;%(AdditionalDependencies)</AdditionalDependencies>
       <OutputFile>$(OutDir)ntobjx32.exe</OutputFile>
       <AdditionalLibraryDirectories>$(IntDir);%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
       <TargetMachine>MachineX86</TargetMachine>
-      <AdditionalOptions>/pdbaltpath:%_PDB% /delay:nobind /delayload:ntdll-delayed.dll /delayload:kernel32-delayed.dll /delayload:version.dll /dynamicbase /nxcompat /safeseh /release /subsystem:windows,5.01 %(AdditionalOptions)</AdditionalOptions>
+      <AdditionalOptions>/map /pdbaltpath:%_PDB% /delay:nobind /delayload:ntdll.dld /delayload:version.dll /dynamicbase /nxcompat /safeseh /release /subsystem:windows,5.01 %(AdditionalOptions)</AdditionalOptions>
     </Link>
     <PreBuildEvent>
-      <Command>call &quot;$(ProjectDir)\hgid.cmd&quot;&#x0D;&#x0A;cl.exe /nologo /c /TC /Ob0 /Gz delayload-stubs\ntdll-delayed-stubs.c &quot;/Fo$(IntDir)\ntdll-delayed-stubs.obj&quot;&#x0D;&#x0A;lib.exe /nologo &quot;/def:delayload-stubs\ntdll-delayed.txt&quot; &quot;/out:$(IntDir)\ntdll-delayed.lib&quot; /machine:x86 &quot;$(IntDir)\ntdll-delayed-stubs.obj&quot;&#x0D;&#x0A;cl.exe /nologo /c /TC /Ob0 /Gz delayload-stubs\kernel32-delayed-stubs.c &quot;/Fo$(IntDir)\kernel32-delayed-stubs.obj&quot;&#x0D;&#x0A;lib.exe /nologo &quot;/def:delayload-stubs\kernel32-delayed.txt&quot; &quot;/out:$(IntDir)\kernel32-delayed.lib&quot; /machine:x86 &quot;$(IntDir)\kernel32-delayed-stubs.obj&quot;</Command>
+      <Command>call &quot;$(ProjectDir)\hgid.cmd&quot;&#x0D;&#x0A;cl.exe /nologo /c /TC /Ob0 /Gz delayload-stubs\ntdll-delayed-stubs.c &quot;/Fo$(IntDir)\ntdll-delayed-stubs.obj&quot;&#x0D;&#x0A;lib.exe /nologo &quot;/def:delayload-stubs\ntdll-delayed.txt&quot; &quot;/out:$(IntDir)\ntdll-delayed.lib&quot; /machine:x86 &quot;$(IntDir)\ntdll-delayed-stubs.obj&quot;</Command>
     </PreBuildEvent>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
@@ -216,14 +216,14 @@
       <GenerateDebugInformation>true</GenerateDebugInformation>
       <EnableCOMDATFolding>true</EnableCOMDATFolding>
       <OptimizeReferences>true</OptimizeReferences>
-      <AdditionalDependencies>ntdll-delayed.lib;kernel32-delayed.lib;version.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalDependencies>ntdll-delayed.lib;version.lib;%(AdditionalDependencies)</AdditionalDependencies>
       <OutputFile>$(OutDir)ntobjx64.exe</OutputFile>
       <AdditionalLibraryDirectories>$(IntDir);%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
       <TargetMachine>MachineX64</TargetMachine>
-      <AdditionalOptions>/pdbaltpath:%_PDB% /delay:nobind /delayload:ntdll-delayed.dll /delayload:kernel32-delayed.dll /delayload:version.dll /dynamicbase /nxcompat /release /subsystem:windows,5.02 %(AdditionalOptions)</AdditionalOptions>
+      <AdditionalOptions>/map /pdbaltpath:%_PDB% /delay:nobind /delayload:ntdll.dld /delayload:version.dll /dynamicbase /nxcompat /release /subsystem:windows,5.02 %(AdditionalOptions)</AdditionalOptions>
     </Link>
     <PreBuildEvent>
-      <Command>call &quot;$(ProjectDir)\hgid.cmd&quot;&#x0D;&#x0A;lib.exe /nologo /nodefaultlib &quot;/def:delayload-stubs\ntdll-delayed.txt&quot; &quot;/out:$(IntDir)\ntdll-delayed.lib&quot; /machine:x64&#x0D;&#x0A;lib.exe /nologo /nodefaultlib &quot;/def:delayload-stubs\kernel32-delayed.txt&quot; &quot;/out:$(IntDir)\kernel32-delayed.lib&quot; /machine:x64</Command>
+      <Command>call &quot;$(ProjectDir)\hgid.cmd&quot;&#x0D;&#x0A;lib.exe /nologo /nodefaultlib &quot;/def:delayload-stubs\ntdll-delayed.txt&quot; &quot;/out:$(IntDir)\ntdll-delayed.lib&quot; /machine:x64</Command>
     </PreBuildEvent>
   </ItemDefinitionGroup>
   <ItemGroup>
@@ -265,6 +265,10 @@
     <ClInclude Include="objmgr.hpp" />
   </ItemGroup>
   <ItemGroup>
+    <ClCompile Include="delayload-stubs\ntdll-delayed-stubs.c">
+      <ExcludedFromBuild>true</ExcludedFromBuild>
+      <CompileAs>CompileAsC</CompileAs>
+    </ClCompile>
     <ClCompile Include="delayimp.cpp">
     </ClCompile>
     <ClCompile Include="ntobjx.cpp">
@@ -275,7 +279,6 @@
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
-    <None Include="delayload-stubs\kernel32-delayed.txt" />
     <None Include="delayload-stubs\ntdll-delayed.txt" />
     <None Include="res\ntobjx.ico" />
     <None Include="ntobjx.manifest" />
@@ -285,6 +288,10 @@
     <None Include="LICENSE.txt" />
     <None Include="README.rst" />
     <None Include="premake4.lua" />
+    <None Include="Directory.props" />
+    <None Include="ntobjx.ruleset" />
+    <None Include=".editorconfig" />
+    <None Include=".clang-format" />
   </ItemGroup>
   <ItemGroup>
     <ResourceCompile Include="exeversion.rc" />

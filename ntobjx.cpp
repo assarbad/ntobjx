@@ -31,24 +31,25 @@
 #include "stdafx.h"
 #include <ShellAPI.h>
 
-#pragma warning(push) /* disable code analyzer warnings */
-#pragma warning(disable:6387) /* warning C6387 : '...' could be '0' : this does not adhere to the specification for the function '...'. */
-#pragma warning(disable:6001) /* warning C6001: Using uninitialized memory '...'. */
-#pragma warning(disable:6011) /* warning C6011: Dereferencing NULL pointer '...'.  */
-#include <atlframe.h>
+#pragma warning(push)           /* disable code analyzer warnings */
+#pragma warning(disable : 6387) /* warning C6387 : '...' could be '0' : this does not adhere to the specification for \
+                                   the function '...'. */
+#pragma warning(disable : 6001) /* warning C6001: Using uninitialized memory '...'. */
+#pragma warning(disable : 6011) /* warning C6011: Dereferencing NULL pointer '...'.  */
 #include <atlctrls.h>
-#include <atldlgs.h>
-#include <atlctrlx.h>
 #include <atlctrlw.h>
-#include <atlsplit.h>
+#include <atlctrlx.h>
+#include <atldlgs.h>
+#include <atlframe.h>
 #include <atlsecurity.h>
+#include <atlsplit.h>
 #include <atluser.h>
 #pragma warning(pop) /* restore code analyzer warnings*/
 #include <stdarg.h>
 
-#include "resource.h"
-#include "reslang.h"
 #include "ntnative.h"
+#include "reslang.h"
+#include "resource.h"
 
 #include "objmgr.hpp"
 #include "objtypes.h"
@@ -61,12 +62,15 @@ using NtObjMgr::SymbolicLink;
 CNtObjectsAppModule _Module;
 
 #ifdef DDKBUILD
-#   if (_ATL_VER < 0x0700)
-#       include <atlimpl.cpp>
-#   endif //(_ATL_VER < 0x0700)
+#if (_ATL_VER < 0x0700)
+#include <atlimpl.cpp>
+#endif //(_ATL_VER < 0x0700)
 #endif // DDKBUILD
 
-#define EXACTI_ENTRY(match, comment)   { _T(match), comment, 0x1 }
+#define EXACTI_ENTRY(match, comment) \
+    {                                \
+        _T(match), comment, 0x1      \
+    }
 
 /*lint -save -e651 */
 const objtype_comment_t comments[] = {
@@ -104,18 +108,18 @@ const objtype_comment_t comments[] = {
 
 WORD findComment(LPCTSTR matchString)
 {
-    for(size_t i = 0; i < sizeof(comments)/sizeof(comments[0]); i++)
+    for (size_t i = 0; i < sizeof(comments) / sizeof(comments[0]); i++)
     {
-        if(!comments[i].pattern_match)
+        if (!comments[i].pattern_match)
         {
             bool found;
 
-            if(comments[i].case_insensitive)
+            if (comments[i].case_insensitive)
                 found = (0 == _tcsicmp(comments[i].match.exact, matchString));
             else
                 found = (0 == _tcscmp(comments[i].match.exact, matchString));
 
-            if(found)
+            if (found)
                 return comments[i].resId;
         }
         else
@@ -128,7 +132,8 @@ WORD findComment(LPCTSTR matchString)
 
 OSVERSIONINFOEXW const& GetOSVersionInfo()
 {
-    static OSVERSIONINFOEXW osvix = { sizeof(OSVERSIONINFOEXW), 0, 0, 0, 0,{ 0 } }; // not an error, this has to be the W variety!
+    static OSVERSIONINFOEXW osvix = {
+        sizeof(OSVERSIONINFOEXW), 0, 0, 0, 0, {0}}; // not an error, this has to be the W variety!
     if (osvix.dwMajorVersion == 0)
     {
         ATLVERIFY(NT_SUCCESS(RtlGetVersion(&osvix)));
@@ -142,12 +147,14 @@ int Run(LPTSTR /*lpstrCmdLine*/ = NULL, int nCmdShow = SW_SHOWDEFAULT)
     // Set the default language
     (void)gLangSetter.set();
 
-    if (osvix.dwMajorVersion < 6) /* language handling for resources works starting with Vista (SetThreadUILanguage), but not before that */
+    if (osvix.dwMajorVersion <
+        6) /* language handling for resources works starting with Vista (SetThreadUILanguage), but not before that */
     {
-        if(!HookLdrFindResource_U(_Module.GetModuleInstance()))
+        if (!HookLdrFindResource_U(_Module.GetModuleInstance()))
         {
             ::Beep(500, 500);
-            ATLTRACE2(_T("Failed to hook LdrFindResource_U, so switching languages is unlikely to work as expected.\n"));
+            ATLTRACE2(
+                _T("Failed to hook LdrFindResource_U, so switching languages is unlikely to work as expected.\n"));
         }
     }
 
@@ -156,7 +163,7 @@ int Run(LPTSTR /*lpstrCmdLine*/ = NULL, int nCmdShow = SW_SHOWDEFAULT)
 
     CNtObjectsMainFrame wndMain(osvix);
 
-    if(wndMain.CreateEx() == NULL)
+    if (wndMain.CreateEx() == NULL)
     {
         ATLTRACE2(_T("Main window creation failed!\n"));
         return 0;
@@ -182,12 +189,12 @@ EXTERN_C int __cdecl DelayLoadError(LPCTSTR lpszFormat, ...)
 };
 
 #if (_MSC_VER < 1910)
-void * __cdecl operator new(size_t bytes)
+void* __cdecl operator new(size_t bytes)
 {
     return malloc(bytes);
 }
 
-void __cdecl operator delete(void *ptr)
+void __cdecl operator delete(void* ptr)
 {
     free(ptr);
 }
@@ -199,7 +206,7 @@ extern "C" int __cdecl __purecall(void)
 }
 #endif // !DDKBUILD
 
-#pragma warning(suppress: 28251)
+#pragma warning(suppress : 28251)
 int WINAPI _tWinMain(HINSTANCE hInstance, HINSTANCE /*hPrevInstance*/, LPTSTR lpstrCmdLine, int nCmdShow)
 {
 #if defined(_DEBUG)

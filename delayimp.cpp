@@ -32,14 +32,14 @@
 
 #define DELAYIMP_INSECURE_WRITABLE_HOOKS
 #if defined(_CONSOLE) || defined(_CONSOLE_APP)
-#   include <Windows.h>
-#   include <tchar.h>
-#   define DelayLoadError _tprintf
+#include <Windows.h>
+#include <tchar.h>
+#define DelayLoadError _tprintf
 #else
-#   include "stdafx.h" /* Must alias DelayLoadError to a function that behaves like _tprintf */
+#include "stdafx.h" /* Must alias DelayLoadError to a function that behaves like _tprintf */
 #endif
 #ifndef FACILITY_VISUALCPP
-#   define FACILITY_VISUALCPP  ((LONG)0x6d)
+#define FACILITY_VISUALCPP ((LONG)0x6d)
 #endif // !FACILITY_VISUALCPP
 #include <delayimp.h>
 
@@ -55,11 +55,10 @@ namespace
         LPCSTR lpszSourceName;
     } redir_entry_t;
 
-    redir_entry_t mod_redir[] =
-    {
+    redir_entry_t mod_redir[] = {
         {lpszNtDllName, "ntdll.dld"},
     };
-}
+} // namespace
 
 static LPCSTR GetRedirectedName_(LPCSTR lpszDllName)
 {
@@ -78,7 +77,7 @@ static LONG WINAPI DelayLoadFilter(PEXCEPTION_POINTERS pExcPointers)
     LONG lDisposition = EXCEPTION_EXECUTE_HANDLER;
     PDelayLoadInfo pdli = (PDelayLoadInfo)(pExcPointers->ExceptionRecord->ExceptionInformation[0]);
 
-    switch(pExcPointers->ExceptionRecord->ExceptionCode)
+    switch (pExcPointers->ExceptionRecord->ExceptionCode)
     {
     case VcppException(ERROR_SEVERITY_ERROR, ERROR_MOD_NOT_FOUND):
         (void)DelayLoadError(_T("The DLL %hs could not be loaded."), pdli->szDll);
@@ -113,29 +112,28 @@ EXTERN_C void force_resolve_all(void)
             (void)__HrLoadAllImportsForDll(mod_redir[idx].lpszSourceName);
         }
     }
-    __except(DelayLoadFilter(GetExceptionInformation()))
+    __except (DelayLoadFilter(GetExceptionInformation()))
     {
         ::ExitProcess(1);
     }
-
 }
 
 static FARPROC WINAPI GetModuleHandleDliHook(unsigned dliNotify, PDelayLoadInfo pdli)
 {
     LPCSTR lpszDllName = NULL;
-    switch(dliNotify)
+    switch (dliNotify)
     {
-    case dliNotePreLoadLibrary:  // called just before LoadLibrary, can override w/ new HMODULE return val
-        if(NULL != (lpszDllName = GetRedirectedName_(pdli->szDll)))
+    case dliNotePreLoadLibrary: // called just before LoadLibrary, can override w/ new HMODULE return val
+        if (NULL != (lpszDllName = GetRedirectedName_(pdli->szDll)))
         {
-            if(HMODULE hModule = ::GetModuleHandleA(lpszDllName))
+            if (HMODULE hModule = ::GetModuleHandleA(lpszDllName))
             {
                 /*lint -save -e611 */
                 return reinterpret_cast<FARPROC>(hModule);
                 /*lint -restore */
             }
         }
-        break; /* proceed with default processing  */
+        break;                     /* proceed with default processing  */
     case dliNotePreGetProcAddress: // called just before GetProcAddress, can override w/ new FARPROC return value
         break;
     default:

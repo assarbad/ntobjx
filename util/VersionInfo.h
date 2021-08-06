@@ -36,13 +36,13 @@
 
 #include <Windows.h>
 #include <tchar.h>
-#pragma warning(disable:4995)
+#pragma warning(disable : 4995)
 #if defined(DDKBUILD)
 #include <stdio.h>
 #else
 #include <cstdio>
 #endif
-#pragma warning(default:4995)
+#pragma warning(default : 4995)
 #pragma comment(lib, "delayimp")
 
 class CVersionInfo
@@ -50,7 +50,8 @@ class CVersionInfo
     LPVOID m_lpVerInfo;
     VS_FIXEDFILEINFO* m_pFixedFileInfo;
     DWORD m_useTranslation;
-public:
+
+  public:
     CVersionInfo(HINSTANCE hInstance)
         : m_lpVerInfo(NULL)
         , m_pFixedFileInfo(NULL)
@@ -72,10 +73,13 @@ public:
                             if (::VerQueryValue(m_lpVerInfo, _T("\\"), (LPVOID*)&m_pFixedFileInfo, &uLen))
                             {
 #ifdef ATLTRACE2
-                                ATLTRACE2(_T("%u.%u\n"), HIWORD(m_pFixedFileInfo->dwFileVersionMS), LOWORD(m_pFixedFileInfo->dwFileVersionMS));
+                                ATLTRACE2(_T("%u.%u\n"),
+                                          HIWORD(m_pFixedFileInfo->dwFileVersionMS),
+                                          LOWORD(m_pFixedFileInfo->dwFileVersionMS));
 #endif // ATLTRACE2
                                 DWORD* translations;
-                                if (::VerQueryValue(m_lpVerInfo, _T("\\VarFileInfo\\Translation"), (LPVOID*)&translations, &uLen))
+                                if (::VerQueryValue(
+                                        m_lpVerInfo, _T("\\VarFileInfo\\Translation"), (LPVOID*)&translations, &uLen))
                                 {
                                     size_t const numTranslations = uLen / sizeof(DWORD);
 #ifdef ATLTRACE2
@@ -124,15 +128,15 @@ public:
             return NULL;
         }
         size_t const addend = MAX_PATH;
-        if(_tcslen(lpszKey) >= addend)
+        if (_tcslen(lpszKey) >= addend)
         {
             return NULL;
         }
         TCHAR const fmtstr[] = _T("\\StringFileInfo\\%04X%04X\\%s");
-        size_t const fmtbuflen = sizeof(fmtstr)/sizeof(fmtstr[0]) + addend;
+        size_t const fmtbuflen = sizeof(fmtstr) / sizeof(fmtstr[0]) + addend;
         TCHAR fullName[fmtbuflen] = {0};
         _stprintf_s(fullName, fmtbuflen, fmtstr, LOWORD(m_useTranslation), HIWORD(m_useTranslation), lpszKey);
-        fullName[fmtbuflen-1] = 0;
+        fullName[fmtbuflen - 1] = 0;
 
 #ifdef ATLTRACE2
         ATLTRACE2(_T("Full name: %s\n"), fullName);

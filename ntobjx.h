@@ -31,69 +31,74 @@
 #pragma once
 
 #ifndef __ATLAPP_H__
-#   error ntobjx.h requires atlapp.h to be included first
+#error ntobjx.h requires atlapp.h to be included first
 #endif
 
 #ifndef __ATLWIN_H__
-#   error ntobjx.h requires atlwin.h to be included first
+#error ntobjx.h requires atlwin.h to be included first
 #endif
 
 #ifndef __ATLCTRLX_H__
-#   error ntobjx.h requires atlctrlx.h to be included first
+#error ntobjx.h requires atlctrlx.h to be included first
 #endif
 
 #ifndef __ATLCTRLW_H__
-#   error ntobjx.h requires atlctrlw.h to be included first
+#error ntobjx.h requires atlctrlw.h to be included first
 #endif
 
 #ifndef __ATLSPLIT_H__
-#   error ntobjx.h requires atlsplit.h to be included first
+#error ntobjx.h requires atlsplit.h to be included first
 #endif
 
 #ifndef __ATLFRAME_H__
-#   error ntobjx.h requires atlframe.h to be included first
+#error ntobjx.h requires atlframe.h to be included first
 #endif
 
 #ifndef __ATLDLGS_H__
-#   error ntobjx.h requires atldlgs.h to be included first
+#error ntobjx.h requires atldlgs.h to be included first
 #endif
 
 #ifndef __ATLCTRLS_H__
-#   error ntobjx.h requires atlctrls.h to be included first
+#error ntobjx.h requires atlctrls.h to be included first
 #endif
 
 #ifndef __ATLSECURITY_H__
-#   error ntobjx.h requires atlsecurity.h to be included first
+#error ntobjx.h requires atlsecurity.h to be included first
 #endif
 
 #ifndef __ATLUSER_H__
-#   error ntobjx.h requires atluser.h to be included first
+#error ntobjx.h requires atluser.h to be included first
 #endif
 
 #ifndef __func__
-#   define __func__ __FUNCTION__
+#define __func__ __FUNCTION__
 #endif
 
 #include "util/SimpleBuffer.h"
 #ifndef VTRACE
-#   define VTRACE(...) while (false) {}
+#define VTRACE(...) \
+    while (false)   \
+    {               \
+    }
 #endif
 #define CLL_NO_ENSURE_VERSION_CLASS
 #include "util/LoadLibrary.h"
 #include "util/VersionInfo.h"
 #ifndef NTOBJX_NO_XML_EXPORT
 #pragma warning(push) /* disable code analyzer warnings pugixml library */
-#pragma warning(disable:4995)
-#pragma warning(disable:6384) /* warning C6384: Dividing sizeof a pointer by another value. */
+#pragma warning(disable : 4995)
+#pragma warning(disable : 6054)
+#pragma warning(disable : 6384)   /* warning C6384: Dividing sizeof a pointer by another value. */
+#pragma warning(suppress : 26495) /* static analyzer suppressions, this is 3rd party code to me */
 #include "pugixml.hpp"
 #pragma warning(pop)
 #endif
 
 #define FEATURE_FIND_OBJECT 0
 #ifdef DDKBUILD
-#   ifndef FEATURE_OBJECT_SECURITY /* Let this be overridden from the SOURCES file, for example. */
-#       define FEATURE_OBJECT_SECURITY 0
-#   endif /* FEATURE_OBJECT_SECURITY */
+#ifndef FEATURE_OBJECT_SECURITY /* Let this be overridden from the SOURCES file, for example. */
+#define FEATURE_OBJECT_SECURITY 0
+#endif /* FEATURE_OBJECT_SECURITY */
 #else
 #define FEATURE_OBJECT_SECURITY 1
 #endif // DDKBUILD
@@ -103,24 +108,24 @@ using ATL::CAtlMap;
 using ATL::CString;
 using NtObjMgr::Directory;
 using NtObjMgr::GenericObject;
-using NtObjMgr::SymbolicLink;
+using NtObjMgr::ObjectHandle;
 using NtObjMgr::objtype_t;
+using NtObjMgr::otDirectory;
 using NtObjMgr::otGeneric;
 using NtObjMgr::otSymlink;
-using NtObjMgr::otDirectory;
-using NtObjMgr::ObjectHandle;
+using NtObjMgr::SymbolicLink;
 using WTL::CFileDialog;
 
-#define WM_VISIT_DIRECTORY           (WM_USER+100)
-#define WM_SET_ACTIVE_OBJECT         (WM_USER+101)
-#define WM_SELECT_TREEVIEW_DIRECTORY (WM_USER+102)
-#define WM_DIRECTORY_UP              (WM_USER+103)
+#define WM_VISIT_DIRECTORY           (WM_USER + 100)
+#define WM_SET_ACTIVE_OBJECT         (WM_USER + 101)
+#define WM_SELECT_TREEVIEW_DIRECTORY (WM_USER + 102)
+#define WM_DIRECTORY_UP              (WM_USER + 103)
 
 #ifndef LVS_EX_DOUBLEBUFFER
-#   define LVS_EX_DOUBLEBUFFER     0x00010000
+#define LVS_EX_DOUBLEBUFFER 0x00010000
 #endif
 #ifndef TVS_EX_DOUBLEBUFFER
-#   define TVS_EX_DOUBLEBUFFER     0x0004
+#define TVS_EX_DOUBLEBUFFER 0x0004
 #endif
 
 // Handler prototypes (uncomment arguments if needed):
@@ -130,10 +135,13 @@ using WTL::CFileDialog;
 
 namespace
 {
-    static const struct { UINT resId; } lvColumnDefaults[] = {
-        { ID_COLNAME_OBJNAME },
-        { ID_COLNAME_OBJTYPE },
-        { ID_COLNAME_OBJLNKTGT },
+    static const struct
+    {
+        UINT resId;
+    } lvColumnDefaults[] = {
+        {ID_COLNAME_OBJNAME},
+        {ID_COLNAME_OBJTYPE},
+        {ID_COLNAME_OBJLNKTGT},
     };
 
 #ifdef _DEBUG
@@ -147,18 +155,25 @@ namespace
     CString getformatCreationTimeString(LARGE_INTEGER const& li)
     {
         CString str;
-        if(li.QuadPart > 0)
+        if (li.QuadPart > 0)
         {
             ATLASSERT(li.HighPart >= 0); // anything else will fail our conversion below
-            FILETIME ft = { li.LowPart, static_cast<DWORD>(li.HighPart) };
+            FILETIME ft = {li.LowPart, static_cast<DWORD>(li.HighPart)};
             SYSTEMTIME st;
             ATLVERIFY(FileTimeToSystemTime(&ft, &st));
             // DO NOT LOCALIZE THIS!
-            str.Format(_T("%04d-%02d-%02d %02d:%02d:%02d.%03d"), st.wYear, st.wMonth, st.wDay, st.wHour, st.wMinute, st.wSecond, st.wMilliseconds);
+            str.Format(_T("%04d-%02d-%02d %02d:%02d:%02d.%03d"),
+                       st.wYear,
+                       st.wMonth,
+                       st.wDay,
+                       st.wHour,
+                       st.wMinute,
+                       st.wSecond,
+                       st.wMilliseconds);
         }
         else
         {
-#           pragma warning(suppress: 6031)
+#pragma warning(suppress : 6031)
             ATLVERIFY(str.LoadString(IDS_NOT_AVAILABLE_SHORT));
         }
         return str;
@@ -171,19 +186,19 @@ namespace
         SIZE_T allocLength = ((SIZE_T)s.GetLength() + 2U) * sizeof(TCHAR);
         ATLTRACE2(_T("Buffer size: %u\n"), allocLength);
         HGLOBAL hMem = ::GlobalAlloc(GMEM_MOVEABLE | GMEM_ZEROINIT, allocLength);
-        if(hMem)
+        if (hMem)
         {
-            if(LPVOID lpMem = ::GlobalLock(hMem))
+            if (LPVOID lpMem = ::GlobalLock(hMem))
             {
                 LPTSTR lpStr = static_cast<LPTSTR>(lpMem);
                 _tcscpy_s(lpStr, s.GetLength() + 1, s.GetString());
                 ::GlobalUnlock(hMem);
             }
-#   if defined(_UNICODE) || defined(UNICODE)
+#if defined(_UNICODE) || defined(UNICODE)
             return (NULL != ::SetClipboardData(CF_UNICODETEXT, hMem));
-#   else
-#       error "Not implemented for ANSI/CF_TEXT"
-#   endif
+#else
+#error "Not implemented for ANSI/CF_TEXT"
+#endif
         }
         else
         {
@@ -202,14 +217,14 @@ namespace
         sObjDetails.AppendFormat(IDS_OBJPROPERTY_NAME, LPCTSTR(obj->name()));
         sObjDetails.AppendFormat(IDS_OBJPROPERTY_FULLPATH, LPCTSTR(obj->fullname()));
         sObjDetails.AppendFormat(IDS_OBJPROPERTY_TYPE, LPCTSTR(obj->type()));
-        if(SymbolicLink* symlink = dynamic_cast<SymbolicLink*>(obj))
+        if (SymbolicLink* symlink = dynamic_cast<SymbolicLink*>(obj))
         {
             sObjDetails.AppendFormat(IDS_OBJPROPERTY_SYMLINKTGT, LPCTSTR(symlink->target()));
         }
-        if(objHdl)
+        if (objHdl)
         {
             sObjDetails.Append(_T("\r\n"));
-            if(!NT_SUCCESS(objHdl->getOpenStatus()))
+            if (!NT_SUCCESS(objHdl->getOpenStatus()))
             {
                 CSimpleBuf<TCHAR> status(getStatusString(objHdl->getOpenStatus()));
                 sObjDetails.AppendFormat(IDS_OBJPROPERTY_OPEN_STATUS, objHdl->getOpenStatus());
@@ -217,14 +232,14 @@ namespace
             }
             else
             {
-                if(!NT_SUCCESS(objHdl->getQueryStatus()))
+                if (!NT_SUCCESS(objHdl->getQueryStatus()))
                 {
                     CSimpleBuf<TCHAR> status(getStatusString(objHdl->getQueryStatus()));
                     sObjDetails.AppendFormat(IDS_OBJPROPERTY_QUERY_STATUS, objHdl->getQueryStatus());
                     sObjDetails.AppendFormat(_T("    %s\r\n"), status.Buffer());
                 }
             }
-            if(objHdl->hasObjectInfo())
+            if (objHdl->hasObjectInfo())
             {
                 sObjDetails.AppendFormat(IDS_OBJPROPERTY_HANDLE_COUNT, objHdl->getObjectInfo().HandleCount);
                 sObjDetails.AppendFormat(IDS_OBJPROPERTY_REFERENCE_COUNT, objHdl->getObjectInfo().ReferenceCount);
@@ -248,10 +263,10 @@ namespace
     void copyItemToClipboard(HWND hWndSource, int idCmd, GenericObject* obj, ObjectHandle* objHdl = NULL)
     {
         ATLASSERT(obj != NULL);
-        if(::OpenClipboard(hWndSource))
+        if (::OpenClipboard(hWndSource))
         {
             CString s;
-            switch(idCmd)
+            switch (idCmd)
             {
             case ID_POPUPMENU_COPYNAME:
                 s = obj->name();
@@ -264,21 +279,21 @@ namespace
             case ID_POPUPMENU_COPYASCSTRING:
                 {
 
-#   if defined(_UNICODE) || defined(UNICODE)
+#if defined(_UNICODE) || defined(UNICODE)
                     CString fullName(obj->fullname());
                     CString escapedName;
                     LPTSTR str = fullName.LockBuffer();
                     escapedName.Preallocate(fullName.GetAllocLength());
-                    for(int i = 0; i < fullName.GetLength(); i++)
+                    for (int i = 0; i < fullName.GetLength(); i++)
                     {
                         USHORT w = static_cast<USHORT>(str[i]);
-                        if(w > 0xFF)
+                        if (w > 0xFF)
                         {
                             escapedName.AppendFormat(_T("\\u%04X"), w);
                         }
                         else
                         {
-                            switch(str[i])
+                            switch (str[i])
                             {
                             case _T('\a'):
                                 escapedName.Append(_T("\\a"));
@@ -308,7 +323,7 @@ namespace
                                 escapedName.Append(_T("\\\\"));
                                 break;
                             default:
-                                if(_istprint(str[i]))
+                                if (_istprint(str[i]))
                                     escapedName.AppendChar(str[i]);
                                 else
                                     escapedName.AppendFormat(_T("\\u%04X"), w);
@@ -318,14 +333,14 @@ namespace
                     }
                     escapedName.AppendChar(0);
                     s.Format(_T("L\"%s\""), escapedName.GetString());
-#   else
+#else
                     s.Format(_T("\"%s\""), obj->fullname());
-#   endif
+#endif
                     ATLTRACE2(_T("Copy full path as C string: %s\n"), s.GetString());
                 }
                 break;
             case ID_POPUPMENU_COPYSYMLINKTARGET:
-                if(SymbolicLink* symlink = dynamic_cast<SymbolicLink*>(obj))
+                if (SymbolicLink* symlink = dynamic_cast<SymbolicLink*>(obj))
                 {
                     s = symlink->target();
                     ATLTRACE2(_T("Copy symlink target: %s\n"), s.GetString());
@@ -342,7 +357,7 @@ namespace
 
     CSimpleBuf<TCHAR> getStatusString(LONG status)
     {
-        if(HRESULT_FACILITY(status) == FACILITY_WIN32)
+        if (HRESULT_FACILITY(status) == FACILITY_WIN32)
         {
             CLoadLibrary kernel32;
             return CSimpleBuf<TCHAR>(kernel32.formatSystemMessage<TCHAR>(static_cast<DWORD>(status)));
@@ -360,10 +375,20 @@ namespace
         BOOL bResult;
         SID_IDENTIFIER_AUTHORITY NtAuthority = SECURITY_NT_AUTHORITY;
         PSID AdministratorsGroup;
-        bResult = ::AllocateAndInitializeSid(&NtAuthority, 2, SECURITY_BUILTIN_DOMAIN_RID, DOMAIN_ALIAS_RID_ADMINS, 0, 0, 0, 0, 0, 0, &AdministratorsGroup);
-        if(bResult)
+        bResult = ::AllocateAndInitializeSid(&NtAuthority,
+                                             2,
+                                             SECURITY_BUILTIN_DOMAIN_RID,
+                                             DOMAIN_ALIAS_RID_ADMINS,
+                                             0,
+                                             0,
+                                             0,
+                                             0,
+                                             0,
+                                             0,
+                                             &AdministratorsGroup);
+        if (bResult)
         {
-            if(!::CheckTokenMembership(NULL, AdministratorsGroup, &bResult))
+            if (!::CheckTokenMembership(NULL, AdministratorsGroup, &bResult))
             {
                 bResult = FALSE;
             }
@@ -377,16 +402,16 @@ namespace
     {
         BOOL bResult = FALSE;
         HANDLE hToken = NULL;
-        if(::OpenProcessToken(GetCurrentProcess(), TOKEN_QUERY, &hToken))
+        if (::OpenProcessToken(GetCurrentProcess(), TOKEN_QUERY, &hToken))
         {
             TOKEN_ELEVATION Elevation;
             DWORD cbSize = sizeof(TOKEN_ELEVATION);
-            if(::GetTokenInformation(hToken, TokenElevation, &Elevation, sizeof(Elevation), &cbSize))
+            if (::GetTokenInformation(hToken, TokenElevation, &Elevation, sizeof(Elevation), &cbSize))
             {
                 bResult = Elevation.TokenIsElevated;
             }
         }
-        if(hToken)
+        if (hToken)
         {
             ::CloseHandle(hToken);
         }
@@ -401,11 +426,12 @@ class CSuppressRedraw
     CSuppressRedraw();
     CSuppressRedraw(CSuppressRedraw const&);
     CSuppressRedraw& operator=(CSuppressRedraw const&);
-public:
+
+  public:
     CSuppressRedraw(HWND hWnd)
         : m_hWnd(hWnd)
     {
-        if(::IsWindow(m_hWnd))
+        if (::IsWindow(m_hWnd))
         {
             ::SendMessage(m_hWnd, WM_SETREDRAW, FALSE, 0);
         }
@@ -413,7 +439,7 @@ public:
 
     ~CSuppressRedraw()
     {
-        if(::IsWindow(m_hWnd))
+        if (::IsWindow(m_hWnd))
         {
             ::SendMessage(m_hWnd, WM_SETREDRAW, TRUE, 0);
             try
@@ -433,7 +459,8 @@ public:
 class CObjectImageList
 {
     CImageList m_imagelist;
-public:
+
+  public:
     CObjectImageList()
         : m_imagelist()
     {
@@ -444,7 +471,7 @@ public:
     {
     }
 
-    inline operator CImageList const&() const
+    inline operator CImageList const &() const
     {
         return m_imagelist;
     }
@@ -484,31 +511,30 @@ public:
         return m_imagelist.ExtractIcon(GetImageIndexByType_(obj));
     }
 
-private:
-
+  private:
     // Retrieve the image index based on the type string
     int GetImageIndexByType_(GenericObject* obj) const
     {
         ATLASSERT(obj != NULL);
         LPCTSTR typeName = obj->type();
         int retval = 0;
-        for(size_t i = 0; i < resIconTypeMappingSize; i++)
+        for (size_t i = 0; i < resIconTypeMappingSize; i++)
         {
-            if(0 == _tcsicmp(typeName, resIconTypeMapping[i].typeName))
+            if (0 == _tcsicmp(typeName, resIconTypeMapping[i].typeName))
             {
-                if(IDI_DIRECTORY == resIconTypeMapping[i].resId)
+                if (IDI_DIRECTORY == resIconTypeMapping[i].resId)
                 {
                     // This program is not multi-threaded, so this works, otherwise we'd need locking here
                     static int emptydir = -1;
-                    if(Directory* dir = dynamic_cast<Directory*>(obj))
+                    if (Directory* dir = dynamic_cast<Directory*>(obj))
                     {
-                        if(!dir->size())
+                        if (!dir->size())
                         {
-                            if(-1 == emptydir)
+                            if (-1 == emptydir)
                             {
-                                for(size_t j = 0; j < resIconTypeMappingSize; j++)
+                                for (size_t j = 0; j < resIconTypeMappingSize; j++)
                                 {
-                                    if(0 == _tcsicmp(_T(OBJTYPESTR_EMPTY_DIRECTORY), resIconTypeMapping[j].typeName))
+                                    if (0 == _tcsicmp(_T(OBJTYPESTR_EMPTY_DIRECTORY), resIconTypeMapping[j].typeName))
                                     {
                                         emptydir = static_cast<int>(j);
                                         break;
@@ -531,10 +557,17 @@ private:
     {
         ATLTRACE2(_T("Preparing image list for %hs\n"), __func__);
         const int iResIconTypeMappingSize = static_cast<int>(resIconTypeMappingSize);
-        ATLVERIFY(m_imagelist.Create(imgListElemWidth, imgListElemHeight, ILC_COLOR32 | ILC_MASK, iResIconTypeMappingSize, iResIconTypeMappingSize));
-        for(int i = 0; i < iResIconTypeMappingSize; i++)
+        ATLVERIFY(m_imagelist.Create(imgListElemWidth,
+                                     imgListElemHeight,
+                                     ILC_COLOR32 | ILC_MASK,
+                                     iResIconTypeMappingSize,
+                                     iResIconTypeMappingSize));
+        for (int i = 0; i < iResIconTypeMappingSize; i++)
         {
-            HICON hIcon = static_cast<HICON>(AtlLoadIconImage(MAKEINTRESOURCE(resIconTypeMapping[i].resId), LR_CREATEDIBSECTION, imgListElemWidth, imgListElemHeight));
+            HICON hIcon = static_cast<HICON>(AtlLoadIconImage(MAKEINTRESOURCE(resIconTypeMapping[i].resId),
+                                                              LR_CREATEDIBSECTION,
+                                                              imgListElemWidth,
+                                                              imgListElemHeight));
             ATLTRACE2(_T("Icon handle: %p - %s\n"), hIcon, resIconTypeMapping[i].typeName);
             m_imagelist.AddIcon(hIcon);
         }
@@ -542,38 +575,39 @@ private:
 };
 
 #if FEATURE_OBJECT_SECURITY
-#   include <Aclui.h>
-#   ifndef __ACCESS_CONTROL_API__
-#       include <Aclapi.h>
-#   endif
-#   pragma comment(lib, "aclui.lib")
+#include <Aclui.h>
+#ifndef __ACCESS_CONTROL_API__
+#include <Aclapi.h>
+#endif
+#pragma comment(lib, "aclui.lib")
 #endif // FEATURE_OBJECT_SECURITY
 
-template <typename T> class CObjectPropertySheetT :
-    public CPropertySheetImpl<CObjectPropertySheetT<T> >
+template <typename T> class CObjectPropertySheetT : public CPropertySheetImpl<CObjectPropertySheetT<T>>
 {
-    class CObjectSecurityNAPage :
-        public CPropertyPageImpl<CObjectSecurityNAPage>
+    class CObjectSecurityNAPage : public CPropertyPageImpl<CObjectSecurityNAPage>
     {
         typedef CPropertyPageImpl<CObjectSecurityNAPage> baseClass;
-        GenericObject*  m_obj;
-        ObjectHandle&   m_objHdl;
-        bool            m_bFeatureUnavailable;
-        CFont           m_font;
-        CBrush          m_bkBrush;
-        CEdit           m_edtExplanation;
+        GenericObject* m_obj;
+        ObjectHandle& m_objHdl;
+        bool m_bFeatureUnavailable;
+        CFont m_font;
+        CBrush m_bkBrush;
+        CEdit m_edtExplanation;
         CObjectSecurityNAPage(); // hide it
-    public:
-        enum { IDD = IDD_SECURITY_NOT_AVAILABLE };
+      public:
+        enum
+        {
+            IDD = IDD_SECURITY_NOT_AVAILABLE
+        };
 
         BEGIN_MSG_MAP(CObjectSecurityNAPage)
-            MESSAGE_HANDLER(WM_INITDIALOG, OnInitDialog)
-            MESSAGE_HANDLER(WM_CTLCOLORSTATIC, OnCtlColorStatic)
-            CHAIN_MSG_MAP(baseClass)
+        MESSAGE_HANDLER(WM_INITDIALOG, OnInitDialog)
+        MESSAGE_HANDLER(WM_CTLCOLORSTATIC, OnCtlColorStatic)
+        CHAIN_MSG_MAP(baseClass)
         END_MSG_MAP()
 
         CObjectSecurityNAPage(GenericObject* obj, ObjectHandle& objHdl, bool bFeatureUnavailable = false)
-#           pragma warning(suppress: 6387)
+#pragma warning(suppress : 6387)
             : baseClass()
             , m_obj(obj)
             , m_objHdl(objHdl)
@@ -590,15 +624,15 @@ template <typename T> class CObjectPropertySheetT :
         {
             m_edtExplanation.Attach(GetDlgItem(IDC_EXPLANATION_WHY));
 
-            if(m_bFeatureUnavailable)
+            if (m_bFeatureUnavailable)
             {
                 CString str;
-#               pragma warning(suppress: 6031)
+#pragma warning(suppress : 6031)
                 m_edtExplanation.SetWindowText(str);
             }
             else
             {
-                if(!m_objHdl)
+                if (!m_objHdl)
                 {
                     CSimpleBuf<TCHAR> status(getStatusString(m_objHdl.getOpenStatus()));
                     CString sStatus;
@@ -609,16 +643,16 @@ template <typename T> class CObjectPropertySheetT :
             m_edtExplanation.ModifyStyle(ES_NOHIDESEL, 0);
             m_edtExplanation.SetSelNone(TRUE);
 
-            NONCLIENTMETRICS ncm = { 0 };
+            NONCLIENTMETRICS ncm = {0};
             ncm.cbSize = sizeof(ncm);
 
-            if(::SystemParametersInfo(SPI_GETNONCLIENTMETRICS, sizeof(ncm), &ncm, 0))
+            if (::SystemParametersInfo(SPI_GETNONCLIENTMETRICS, sizeof(ncm), &ncm, 0))
             {
                 LOGFONT logFont;
                 memcpy(&logFont, &ncm.lfMessageFont, sizeof(LOGFONT));
                 logFont.lfWeight = FW_BOLD;
                 HFONT hFont = m_font.CreateFontIndirect(&logFont);
-                if(hFont)
+                if (hFont)
                 {
                     SendDlgItemMessage(IDC_EXPLANATION_WHY, WM_SETFONT, reinterpret_cast<WPARAM>(hFont));
                     SendDlgItemMessage(IDC_NO_SECURITY_CAPTION, WM_SETFONT, reinterpret_cast<WPARAM>(hFont));
@@ -636,14 +670,14 @@ template <typename T> class CObjectPropertySheetT :
             switch (::GetDlgCtrlID(hStatic))
             {
             case IDC_EXPLANATION_WHY:
-            {
-                ::SetTextColor(hdcStatic, RGB(0x80, 0, 0));
-                CDC dc(GetDC());
-                COLORREF dlgBkColor = dc.GetBkColor();
-                ::SetBkColor(hdcStatic, dlgBkColor);
-                m_bkBrush = ::CreateSolidBrush(dlgBkColor);
-                return reinterpret_cast<LRESULT>(HBRUSH(m_bkBrush));
-            }
+                {
+                    ::SetTextColor(hdcStatic, RGB(0x80, 0, 0));
+                    CDC dc(GetDC());
+                    COLORREF dlgBkColor = dc.GetBkColor();
+                    ::SetBkColor(hdcStatic, dlgBkColor);
+                    m_bkBrush = ::CreateSolidBrush(dlgBkColor);
+                    return reinterpret_cast<LRESULT>(HBRUSH(m_bkBrush));
+                }
             default:
                 break;
             }
@@ -652,45 +686,47 @@ template <typename T> class CObjectPropertySheetT :
         }
     };
 
-    class CObjectDetailsPage :
-        public CPropertyPageImpl<CObjectDetailsPage>
+    class CObjectDetailsPage : public CPropertyPageImpl<CObjectDetailsPage>
     {
         typedef CPropertyPageImpl<CObjectDetailsPage> baseClass;
-        GenericObject*  m_obj;
-        ObjectHandle&   m_objHdl;
-        CAccelerator    m_Accel;
-        CEdit           m_edtName;
-        CEdit           m_edtFullname;
-        CEdit           m_edtType;
-        CFont           m_font;
-        CBrush          m_bkBrush;
-        CEdit           m_edtExplanation;
-        CStatic         m_stcRefByPtr;
-        CStatic         m_stcRefByHdl;
-        CStatic         m_stcQuotaPaged;
-        CStatic         m_stcQuotaNonPaged;
-        CStatic         m_stcCreationTime;
-        CStatic         m_stcGroupObjSpecific;
-        CStatic         m_stcObjSpecName1;
-        CStatic         m_stcObjSpecName2;
-        CStatic         m_stcObjSpecName3;
-        CStatic         m_stcObjSpecAttr1;
-        CStatic         m_stcObjSpecAttr2;
-        CStatic         m_stcObjSpecAttr3;
+        GenericObject* m_obj;
+        ObjectHandle& m_objHdl;
+        CAccelerator m_Accel;
+        CEdit m_edtName;
+        CEdit m_edtFullname;
+        CEdit m_edtType;
+        CFont m_font;
+        CBrush m_bkBrush;
+        CEdit m_edtExplanation;
+        CStatic m_stcRefByPtr;
+        CStatic m_stcRefByHdl;
+        CStatic m_stcQuotaPaged;
+        CStatic m_stcQuotaNonPaged;
+        CStatic m_stcCreationTime;
+        CStatic m_stcGroupObjSpecific;
+        CStatic m_stcObjSpecName1;
+        CStatic m_stcObjSpecName2;
+        CStatic m_stcObjSpecName3;
+        CStatic m_stcObjSpecAttr1;
+        CStatic m_stcObjSpecAttr2;
+        CStatic m_stcObjSpecAttr3;
 
         CObjectDetailsPage(); // hide it
-    public:
-        enum { IDD = IDD_PROPERTIES };
+      public:
+        enum
+        {
+            IDD = IDD_PROPERTIES
+        };
 
         BEGIN_MSG_MAP(CObjectDetailsPage)
-            MESSAGE_HANDLER(WM_INITDIALOG, OnInitDialog)
-            MESSAGE_HANDLER(WM_CTLCOLORSTATIC, OnCtlColorStatic)
-            COMMAND_ID_HANDLER(ID_COPY_DETAILS, OnCopyObjectDetails)
-            CHAIN_MSG_MAP(baseClass)
+        MESSAGE_HANDLER(WM_INITDIALOG, OnInitDialog)
+        MESSAGE_HANDLER(WM_CTLCOLORSTATIC, OnCtlColorStatic)
+        COMMAND_ID_HANDLER(ID_COPY_DETAILS, OnCopyObjectDetails)
+        CHAIN_MSG_MAP(baseClass)
         END_MSG_MAP()
 
         CObjectDetailsPage(GenericObject* obj, ObjectHandle& objHdl)
-#           pragma warning(suppress: 6387)
+#pragma warning(suppress : 6387)
             : baseClass()
             , m_obj(obj)
             , m_objHdl(objHdl)
@@ -717,7 +753,7 @@ template <typename T> class CObjectPropertySheetT :
             m_stcObjSpecAttr3.Attach(GetDlgItem(IDC_STATIC_OBJSPEC_ATTR3));
 
             ATLASSERT(m_obj);
-            if(m_obj)
+            if (m_obj)
             {
                 m_edtName.SetWindowText(m_obj->name());
                 m_edtFullname.SetWindowText(m_obj->fullname());
@@ -725,12 +761,12 @@ template <typename T> class CObjectPropertySheetT :
             }
 
             CString na;
-#           pragma warning(suppress: 6031)
+#pragma warning(suppress : 6031)
             ATLVERIFY(na.LoadString(IDS_NOT_AVAILABLE_SHORT));
-            if(m_objHdl)
+            if (m_objHdl)
             {
                 CString str;
-                if(m_objHdl.hasObjectInfo())
+                if (m_objHdl.hasObjectInfo())
                 {
                     str.Format(_T("%u"), m_objHdl.getObjectInfo().HandleCount);
                     m_stcRefByHdl.SetWindowText(str);
@@ -767,16 +803,16 @@ template <typename T> class CObjectPropertySheetT :
                 m_stcCreationTime.SetWindowText(str);
             }
 
-            NONCLIENTMETRICS ncm = { 0 };
+            NONCLIENTMETRICS ncm = {0};
             ncm.cbSize = sizeof(ncm);
 
-            if(::SystemParametersInfo(SPI_GETNONCLIENTMETRICS, sizeof(ncm), &ncm, 0))
+            if (::SystemParametersInfo(SPI_GETNONCLIENTMETRICS, sizeof(ncm), &ncm, 0))
             {
                 LOGFONT logFont;
                 memcpy(&logFont, &ncm.lfMessageFont, sizeof(LOGFONT));
                 logFont.lfWeight = FW_BOLD;
                 HFONT hFont = m_font.CreateFontIndirect(&logFont);
-                if(hFont)
+                if (hFont)
                 {
                     SendDlgItemMessage(IDC_EXPLANATION_WHY, WM_SETFONT, reinterpret_cast<WPARAM>(hFont));
                 }
@@ -787,7 +823,7 @@ template <typename T> class CObjectPropertySheetT :
 
             // Load the accelerator table corresponding to the dialog's resource ID
             m_Accel.LoadAccelerators(IDD);
-            if(!m_Accel.IsNull())
+            if (!m_Accel.IsNull())
             {
                 ATLTRACE2(_T("Loaded accelerator table: %p\n"), HACCEL(m_Accel));
             }
@@ -806,14 +842,14 @@ template <typename T> class CObjectPropertySheetT :
             switch (::GetDlgCtrlID(hStatic))
             {
             case IDC_EXPLANATION_WHY:
-            {
-                ::SetTextColor(hdcStatic, RGB(0x80, 0, 0));
-                CDC dc(GetDC());
-                COLORREF dlgBkColor = dc.GetBkColor();
-                ::SetBkColor(hdcStatic, dlgBkColor);
-                m_bkBrush = ::CreateSolidBrush(dlgBkColor);
-                return reinterpret_cast<LRESULT>(HBRUSH(m_bkBrush));
-            }
+                {
+                    ::SetTextColor(hdcStatic, RGB(0x80, 0, 0));
+                    CDC dc(GetDC());
+                    COLORREF dlgBkColor = dc.GetBkColor();
+                    ::SetBkColor(hdcStatic, dlgBkColor);
+                    m_bkBrush = ::CreateSolidBrush(dlgBkColor);
+                    return reinterpret_cast<LRESULT>(HBRUSH(m_bkBrush));
+                }
             default:
                 break;
             }
@@ -823,9 +859,9 @@ template <typename T> class CObjectPropertySheetT :
 
         LRESULT OnTranslateAccelerator(MSG* pMsg)
         {
-            if(!m_Accel.IsNull())
+            if (!m_Accel.IsNull())
             {
-                if(m_Accel.TranslateAccelerator(m_hWnd, pMsg))
+                if (m_Accel.TranslateAccelerator(m_hWnd, pMsg))
                 {
                     return PSNRET_MESSAGEHANDLED;
                 }
@@ -840,32 +876,32 @@ template <typename T> class CObjectPropertySheetT :
             return FALSE;
         }
 
-    private:
+      private:
         void setAttributesVisible_(int num)
         {
             m_stcGroupObjSpecific.ShowWindow(SW_SHOWNOACTIVATE);
-            if(num < 0)
+            if (num < 0)
             {
                 m_edtExplanation.ShowWindow(SW_SHOWNOACTIVATE);
                 return;
             }
-            if(m_obj)
+            if (m_obj)
             {
                 CString str;
                 str.Format(IDS_OBJSPEC_INFO, m_obj->type().GetString());
                 m_stcGroupObjSpecific.SetWindowText(str);
             }
-            if(num >= 1)
+            if (num >= 1)
             {
                 m_stcObjSpecName1.ShowWindow(SW_SHOWNOACTIVATE);
                 m_stcObjSpecAttr1.ShowWindow(SW_SHOWNOACTIVATE);
             }
-            if(num >= 2)
+            if (num >= 2)
             {
                 m_stcObjSpecName2.ShowWindow(SW_SHOWNOACTIVATE);
                 m_stcObjSpecAttr2.ShowWindow(SW_SHOWNOACTIVATE);
             }
-            if(num >= 3)
+            if (num >= 3)
             {
                 m_stcObjSpecName3.ShowWindow(SW_SHOWNOACTIVATE);
                 m_stcObjSpecAttr3.ShowWindow(SW_SHOWNOACTIVATE);
@@ -878,7 +914,7 @@ template <typename T> class CObjectPropertySheetT :
             CString sStatus;
             sStatus.Format(IDS_STATUS_DESCRIPTION, statusCode, status.Buffer());
             m_edtExplanation.SetWindowText(sStatus);
-            if(m_obj)
+            if (m_obj)
             {
                 CString str;
                 str.Format(IDS_OBJSPEC_ERROR, m_obj->type().GetString());
@@ -888,63 +924,63 @@ template <typename T> class CObjectPropertySheetT :
         }
 
 #ifndef SEC_IMAGE_NO_EXECUTE
-#   define SEC_IMAGE_NO_EXECUTE (SEC_IMAGE | SEC_NOCACHE)
+#define SEC_IMAGE_NO_EXECUTE (SEC_IMAGE | SEC_NOCACHE)
 #endif
         static CString getReadableAllocationAttributesString_(ULONG aa)
         {
             // TBD: should we localize these strings or rather not?
             CString str;
-            if(PAGE_NOACCESS & aa)
+            if (PAGE_NOACCESS & aa)
             {
                 str.Append(_T("!access+"));
             }
-            if(PAGE_READONLY & aa)
+            if (PAGE_READONLY & aa)
             {
                 str.Append(_T("ro+"));
             }
-            if(PAGE_READWRITE & aa)
+            if (PAGE_READWRITE & aa)
             {
                 str.Append(_T("rw+"));
             }
-            if(PAGE_WRITECOPY & aa)
+            if (PAGE_WRITECOPY & aa)
             {
                 str.Append(_T("cow+"));
             }
-            if(PAGE_EXECUTE & aa)
+            if (PAGE_EXECUTE & aa)
             {
                 str.Append(_T("x+"));
             }
-            if(PAGE_EXECUTE_READ & aa)
+            if (PAGE_EXECUTE_READ & aa)
             {
                 str.Append(_T("xro+"));
             }
-            if(PAGE_EXECUTE_READWRITE & aa)
+            if (PAGE_EXECUTE_READWRITE & aa)
             {
                 str.Append(_T("xrw+"));
             }
-            if(PAGE_EXECUTE_WRITECOPY & aa)
+            if (PAGE_EXECUTE_WRITECOPY & aa)
             {
                 str.Append(_T("xcow+"));
             }
-            if(PAGE_GUARD & aa)
+            if (PAGE_GUARD & aa)
             {
                 str.Append(_T("guard+"));
             }
-            if((PAGE_NOCACHE & aa) || (SEC_NOCACHE & aa))
+            if ((PAGE_NOCACHE & aa) || (SEC_NOCACHE & aa))
             {
                 str.Append(_T("!cache+"));
             }
-            if((PAGE_WRITECOMBINE & aa) || (SEC_WRITECOMBINE & aa))
+            if ((PAGE_WRITECOMBINE & aa) || (SEC_WRITECOMBINE & aa))
             {
                 str.Append(_T("wcomb+"));
             }
-            if(SEC_FILE & aa)
+            if (SEC_FILE & aa)
             {
                 str.Append(_T("file+"));
             }
-            if(SEC_IMAGE & aa)
+            if (SEC_IMAGE & aa)
             {
-                if(SEC_IMAGE_NO_EXECUTE & aa)
+                if (SEC_IMAGE_NO_EXECUTE & aa)
                 {
                     str.Append(_T("img!x+"));
                 }
@@ -953,24 +989,24 @@ template <typename T> class CObjectPropertySheetT :
                     str.Append(_T("img+"));
                 }
             }
-            if(SEC_PROTECTED_IMAGE & aa)
+            if (SEC_PROTECTED_IMAGE & aa)
             {
                 str.Append(_T("protimg+"));
             }
-            if(SEC_RESERVE & aa)
+            if (SEC_RESERVE & aa)
             {
                 str.Append(_T("resrv+"));
             }
-            if(SEC_COMMIT & aa)
+            if (SEC_COMMIT & aa)
             {
                 str.Append(_T("commit+"));
             }
-            if(SEC_LARGE_PAGES & aa)
+            if (SEC_LARGE_PAGES & aa)
             {
                 str.Append(_T("lrgpgs+"));
             }
 
-            if(str.GetLength())
+            if (str.GetLength())
             {
                 str.Truncate(str.GetLength() - 1);
             }
@@ -981,28 +1017,28 @@ template <typename T> class CObjectPropertySheetT :
         {
             CString str;
 
-            if(m_obj && otSymlink == m_obj->objtype())
+            if (m_obj && otSymlink == m_obj->objtype())
             {
-                if(SymbolicLink* symlink = dynamic_cast<SymbolicLink*>(m_obj))
+                if (SymbolicLink* symlink = dynamic_cast<SymbolicLink*>(m_obj))
                 {
                     setAttributesVisible_(1);
-#                   pragma warning(suppress: 6031)
+#pragma warning(suppress : 6031)
                     ATLVERIFY(str.LoadString(IDS_OBJSPEC_NAME1_SYMLINK));
                     m_stcObjSpecName1.SetWindowText(str);
                     m_stcObjSpecAttr1.SetWindowText(symlink->target());
-                    //m_tooltip.Attach(GetDlgItem(IDC_STATIC_OBJSPEC_ATTR3));
+                    // m_tooltip.Attach(GetDlgItem(IDC_STATIC_OBJSPEC_ATTR3));
                 }
             }
 
-            if(ObjectHandle::CEventBasicInformation const* info = m_objHdl.getEventBasicInfo())
+            if (ObjectHandle::CEventBasicInformation const* info = m_objHdl.getEventBasicInfo())
             {
-                if(*info)
+                if (*info)
                 {
                     setAttributesVisible_(2);
-#                   pragma warning(suppress: 6031)
+#pragma warning(suppress : 6031)
                     ATLVERIFY(str.LoadString(IDS_OBJSPEC_NAME1_EVENT));
                     m_stcObjSpecName1.SetWindowText(str);
-#                   pragma warning(suppress: 6031)
+#pragma warning(suppress : 6031)
                     ATLVERIFY(str.LoadString(IDS_OBJSPEC_NAME2_EVENT));
                     m_stcObjSpecName2.SetWindowText(str);
                     str.Format(_T("%d"), info->EventState);
@@ -1010,11 +1046,11 @@ template <typename T> class CObjectPropertySheetT :
                     switch (info->EventType)
                     {
                     case SynchronizationEvent:
-#                       pragma warning(suppress: 6031)
+#pragma warning(suppress : 6031)
                         ATLVERIFY(str.LoadString(IDS_OBJSPEC_ATTR2_EVENT_SYNC));
                         break;
                     case NotificationEvent:
-#                       pragma warning(suppress: 6031)
+#pragma warning(suppress : 6031)
                         ATLVERIFY(str.LoadString(IDS_OBJSPEC_ATTR2_EVENT_NOTIFY));
                         break;
                     default:
@@ -1027,12 +1063,12 @@ template <typename T> class CObjectPropertySheetT :
                     showObjectSpecificError_(info->getQueryStatus());
             }
 
-            if(ObjectHandle::CIoCompletionBasicInformation const* info = m_objHdl.getIoCompletionBasicInfo())
+            if (ObjectHandle::CIoCompletionBasicInformation const* info = m_objHdl.getIoCompletionBasicInfo())
             {
-                if(*info)
+                if (*info)
                 {
                     setAttributesVisible_(1);
-#                   pragma warning(suppress: 6031)
+#pragma warning(suppress : 6031)
                     ATLVERIFY(str.LoadString(IDS_OBJSPEC_NAME1_IOCOMPLETION));
                     m_stcObjSpecName1.SetWindowText(str);
                     str.Format(_T("%u"), info->Depth);
@@ -1042,15 +1078,15 @@ template <typename T> class CObjectPropertySheetT :
                     showObjectSpecificError_(info->getQueryStatus());
             }
 
-            if(ObjectHandle::CKeyBasicInformation const* info = m_objHdl.getKeyBasicInfo())
+            if (ObjectHandle::CKeyBasicInformation const* info = m_objHdl.getKeyBasicInfo())
             {
-                if(*info)
+                if (*info)
                 {
                     setAttributesVisible_(2);
-#                   pragma warning(suppress: 6031)
+#pragma warning(suppress : 6031)
                     ATLVERIFY(str.LoadString(IDS_OBJSPEC_NAME1_KEY));
                     m_stcObjSpecName1.SetWindowText(str);
-#                   pragma warning(suppress: 6031)
+#pragma warning(suppress : 6031)
                     ATLVERIFY(str.LoadString(IDS_OBJSPEC_NAME2_KEY));
                     m_stcObjSpecName2.SetWindowText(str);
                     str = getformatCreationTimeString(info->LastWriteTime);
@@ -1062,18 +1098,18 @@ template <typename T> class CObjectPropertySheetT :
                     showObjectSpecificError_(info->getQueryStatus());
             }
 
-            if(ObjectHandle::CMutantBasicInformation const* info = m_objHdl.getMutantBasicInfo())
+            if (ObjectHandle::CMutantBasicInformation const* info = m_objHdl.getMutantBasicInfo())
             {
-                if(*info)
+                if (*info)
                 {
                     setAttributesVisible_(3);
-#                   pragma warning(suppress: 6031)
+#pragma warning(suppress : 6031)
                     ATLVERIFY(str.LoadString(IDS_OBJSPEC_NAME1_MUTANT));
                     m_stcObjSpecName1.SetWindowText(str);
-#                   pragma warning(suppress: 6031)
+#pragma warning(suppress : 6031)
                     ATLVERIFY(str.LoadString(IDS_OBJSPEC_NAME2_MUTANT));
                     m_stcObjSpecName2.SetWindowText(str);
-#                   pragma warning(suppress: 6031)
+#pragma warning(suppress : 6031)
                     ATLVERIFY(str.LoadString(IDS_OBJSPEC_NAME3_MUTANT));
                     m_stcObjSpecName3.SetWindowText(str);
                     str = info->AbandonedState ? _T("yes") : _T("no");
@@ -1087,18 +1123,18 @@ template <typename T> class CObjectPropertySheetT :
                     showObjectSpecificError_(info->getQueryStatus());
             }
 
-            if(ObjectHandle::CSectionBasicInformation const* info = m_objHdl.getSectionBasicInfo())
+            if (ObjectHandle::CSectionBasicInformation const* info = m_objHdl.getSectionBasicInfo())
             {
-                if(*info)
+                if (*info)
                 {
                     setAttributesVisible_(3);
-#                   pragma warning(suppress: 6031)
+#pragma warning(suppress : 6031)
                     ATLVERIFY(str.LoadString(IDS_OBJSPEC_NAME1_SECTION));
                     m_stcObjSpecName1.SetWindowText(str);
-#                   pragma warning(suppress: 6031)
+#pragma warning(suppress : 6031)
                     ATLVERIFY(str.LoadString(IDS_OBJSPEC_NAME2_SECTION));
                     m_stcObjSpecName2.SetWindowText(str);
-#                   pragma warning(suppress: 6031)
+#pragma warning(suppress : 6031)
                     ATLVERIFY(str.LoadString(IDS_OBJSPEC_NAME3_SECTION));
                     m_stcObjSpecName3.SetWindowText(str);
                     str.Format(_T("0x%p"), info->BaseAddress);
@@ -1107,7 +1143,7 @@ template <typename T> class CObjectPropertySheetT :
                     m_stcObjSpecAttr2.SetWindowText(str);
                     str.Format(_T("%08X"), info->AllocationAttributes);
                     CString readable = getReadableAllocationAttributesString_(info->AllocationAttributes);
-                    if(readable.GetLength())
+                    if (readable.GetLength())
                     {
                         str.AppendFormat(_T(" (%s)"), readable.GetString());
                     }
@@ -1117,15 +1153,15 @@ template <typename T> class CObjectPropertySheetT :
                     showObjectSpecificError_(info->getQueryStatus());
             }
 
-            if(ObjectHandle::CSemaphoreBasicInformation const* info = m_objHdl.getSemaphoreBasicInfo())
+            if (ObjectHandle::CSemaphoreBasicInformation const* info = m_objHdl.getSemaphoreBasicInfo())
             {
-                if(*info)
+                if (*info)
                 {
                     setAttributesVisible_(2);
-#                   pragma warning(suppress: 6031)
+#pragma warning(suppress : 6031)
                     ATLVERIFY(str.LoadString(IDS_OBJSPEC_NAME1_SEMAPHORE));
                     m_stcObjSpecName1.SetWindowText(str);
-#                   pragma warning(suppress: 6031)
+#pragma warning(suppress : 6031)
                     ATLVERIFY(str.LoadString(IDS_OBJSPEC_NAME2_SEMAPHORE));
                     m_stcObjSpecName2.SetWindowText(str);
                     str.Format(_T("%u"), info->CurrentCount);
@@ -1137,15 +1173,15 @@ template <typename T> class CObjectPropertySheetT :
                     showObjectSpecificError_(info->getQueryStatus());
             }
 
-            if(ObjectHandle::CTimerBasicInformation const* info = m_objHdl.getTimerBasicInfo())
+            if (ObjectHandle::CTimerBasicInformation const* info = m_objHdl.getTimerBasicInfo())
             {
-                if(*info)
+                if (*info)
                 {
                     setAttributesVisible_(2);
-#                   pragma warning(suppress: 6031)
+#pragma warning(suppress : 6031)
                     ATLVERIFY(str.LoadString(IDS_OBJSPEC_NAME1_TIMER));
                     m_stcObjSpecName1.SetWindowText(str);
-#                   pragma warning(suppress: 6031)
+#pragma warning(suppress : 6031)
                     ATLVERIFY(str.LoadString(IDS_OBJSPEC_NAME2_TIMER));
                     m_stcObjSpecName2.SetWindowText(str);
                     str = info->TimerState ? _T("on") : _T("off");
@@ -1157,22 +1193,22 @@ template <typename T> class CObjectPropertySheetT :
                     showObjectSpecificError_(info->getQueryStatus());
             }
 
-            if(ObjectHandle::CWinStaInformation const* info = m_objHdl.getWinStaInfo())
+            if (ObjectHandle::CWinStaInformation const* info = m_objHdl.getWinStaInfo())
             {
                 ATLTRACE2(_T("info = %p\n"), info);
-                if(*info)
+                if (*info)
                 {
                     setAttributesVisible_(3);
-#                   pragma warning(suppress: 6031)
+#pragma warning(suppress : 6031)
                     ATLVERIFY(str.LoadString(IDS_OBJSPEC_NAME1_WINSTA));
                     m_stcObjSpecName1.SetWindowText(str);
-#                   pragma warning(suppress: 6031)
+#pragma warning(suppress : 6031)
                     ATLVERIFY(str.LoadString(IDS_OBJSPEC_NAME2_WINSTA));
                     m_stcObjSpecName2.SetWindowText(str);
-#                   pragma warning(suppress: 6031)
+#pragma warning(suppress : 6031)
                     ATLVERIFY(str.LoadString(IDS_OBJSPEC_NAME3_WINSTA));
                     m_stcObjSpecName3.SetWindowText(str);
-#                   pragma warning(suppress: 6031)
+#pragma warning(suppress : 6031)
                     ATLVERIFY(str.LoadString(IDS_NOT_AVAILABLE_SHORT));
                     m_stcObjSpecAttr1.SetWindowText(info->username.GetLength() ? info->username : str);
                     m_stcObjSpecAttr2.SetWindowText(info->sid.GetLength() ? info->sid : str);
@@ -1188,21 +1224,21 @@ template <typename T> class CObjectPropertySheetT :
     };
 
 #if FEATURE_OBJECT_SECURITY
-    class CSecurityInformation :
-        public ISecurityInformation
+    class CSecurityInformation : public ISecurityInformation
     {
-        GenericObject*  m_obj;
-        ObjectHandle&   m_objHdl;
-    public:
+        GenericObject* m_obj;
+        ObjectHandle& m_objHdl;
+
+      public:
         CSecurityInformation(GenericObject* obj, ObjectHandle& objHdl)
             : m_obj(obj)
             , m_objHdl(objHdl)
         {
         }
 
-        STDMETHOD(QueryInterface)(REFIID riid, void **ppvObj)
+        STDMETHOD(QueryInterface)(REFIID riid, void** ppvObj)
         {
-            if(riid == IID_IUnknown || riid == IID_ISecurityInformation)
+            if (riid == IID_IUnknown || riid == IID_ISecurityInformation)
             {
                 *ppvObj = this;
                 return S_OK;
@@ -1229,12 +1265,13 @@ template <typename T> class CObjectPropertySheetT :
             return S_OK;
         }
 
-        STDMETHOD(GetSecurity)(SECURITY_INFORMATION si, PSECURITY_DESCRIPTOR *ppSecurityDescriptor, BOOL /*fDefault*/)
+        STDMETHOD(GetSecurity)(SECURITY_INFORMATION si, PSECURITY_DESCRIPTOR* ppSecurityDescriptor, BOOL /*fDefault*/)
         {
             HANDLE hObj = m_objHdl.getHandle();
             ATLASSERT(hObj != INVALID_HANDLE_VALUE);
             ATLASSERT(hObj != NULL);
-            DWORD dwResult = ::GetSecurityInfo(hObj, SE_KERNEL_OBJECT, si, NULL, NULL, NULL, NULL, ppSecurityDescriptor);
+            DWORD dwResult =
+                ::GetSecurityInfo(hObj, SE_KERNEL_OBJECT, si, NULL, NULL, NULL, NULL, ppSecurityDescriptor);
             return (ERROR_SUCCESS == dwResult) ? S_OK : HRESULT_FROM_WIN32(GetLastError());
         }
 
@@ -1243,22 +1280,27 @@ template <typename T> class CObjectPropertySheetT :
             ATLTRACENOTIMPL(_T(__FUNCTION__));
         }
 
-        STDMETHOD(GetAccessRights) (const GUID* /*pguidObjectType*/, DWORD /*dwFlags*/, PSI_ACCESS *ppAccess, ULONG *pcAccesses, ULONG *piDefaultAccess)
+        STDMETHOD(GetAccessRights)
+        (const GUID* /*pguidObjectType*/,
+         DWORD /*dwFlags*/,
+         PSI_ACCESS* ppAccess,
+         ULONG* pcAccesses,
+         ULONG* piDefaultAccess)
         {
             ATLASSERT(TIMER_QUERY_STATE == 0x0001);
             ATLASSERT(TIMER_MODIFY_STATE == 0x0002);
             ATLASSERT(TIMER_QUERY_STATE == MUTANT_QUERY_STATE);
             ATLASSERT(TIMER_MODIFY_STATE == SEMAPHORE_MODIFY_STATE);
             ATLASSERT(TIMER_MODIFY_STATE == IO_COMPLETION_MODIFY_STATE);
-            static SI_ACCESS accessNameMapping[] =
-            {
-                { &GUID_NULL, GENERIC_READ, _T("Read"), SI_ACCESS_GENERAL },
-                { &GUID_NULL, GENERIC_WRITE, _T("Write"), SI_ACCESS_GENERAL },
-                { &GUID_NULL, GENERIC_EXECUTE, _T("Execute"), SI_ACCESS_GENERAL },
-                { &GUID_NULL, 0x0001, _T("Query State"), SI_ACCESS_GENERAL },
-                { &GUID_NULL, 0x0002, _T("Modify State"), SI_ACCESS_GENERAL },
-                { &GUID_NULL, SYNCHRONIZE, _T("Synchronize"), SI_ACCESS_GENERAL }
-            };
+            static SI_ACCESS accessNameMapping[] = {{&GUID_NULL, GENERIC_READ, _T("Read"), SI_ACCESS_GENERAL},
+                                                    {&GUID_NULL, GENERIC_WRITE, _T("Write"), SI_ACCESS_GENERAL},
+                                                    {&GUID_NULL, GENERIC_EXECUTE, _T("Execute"), SI_ACCESS_GENERAL},
+                                                    {&GUID_NULL, 0x0001, _T("Query State"), SI_ACCESS_GENERAL},
+                                                    {&GUID_NULL, 0x0002, _T("Modify State"), SI_ACCESS_GENERAL},
+                                                    { &GUID_NULL,
+                                                      SYNCHRONIZE,
+                                                      _T("Synchronize"),
+                                                      SI_ACCESS_GENERAL }};
 
             *ppAccess = accessNameMapping;
             *pcAccesses = _countof(accessNameMapping);
@@ -1284,29 +1326,30 @@ template <typename T> class CObjectPropertySheetT :
     };
 #endif // FEATURE_OBJECT_SECURITY
 
-    typedef CPropertySheetImpl<CObjectPropertySheetT<T> > baseClass;
+    typedef CPropertySheetImpl<CObjectPropertySheetT<T>> baseClass;
     GenericObject* m_obj;
-    ObjectHandle   m_objHdl;
+    ObjectHandle m_objHdl;
     CObjectDetailsPage m_details;
 #if FEATURE_OBJECT_SECURITY
     ATL::CAutoPtr<CSecurityInformation> m_security;
 #endif // FEATURE_OBJECT_SECURITY
     ATL::CAutoPtr<CObjectSecurityNAPage> m_securityNA;
-public:
+
+  public:
     BEGIN_MSG_MAP(CObjectPropertySheetT<T>)
-        MESSAGE_HANDLER(WM_INITDIALOG, OnInitDialog)
-        CHAIN_MSG_MAP(baseClass)
+    MESSAGE_HANDLER(WM_INITDIALOG, OnInitDialog)
+    CHAIN_MSG_MAP(baseClass)
     END_MSG_MAP()
 
     CObjectPropertySheetT(GenericObject* obj, T& imagelist)
-#       pragma warning(suppress: 6387)
+#pragma warning(suppress : 6387)
         : baseClass((LPCTSTR)NULL, 0, NULL)
         , m_obj(obj)
         , m_objHdl(obj)
         , m_details(m_obj, m_objHdl)
     {
         baseClass::m_psh.dwFlags |= PSH_NOAPPLYNOW;
-        if(m_obj && imagelist.IndexByObjType(m_obj) >= 0)
+        if (m_obj && imagelist.IndexByObjType(m_obj) >= 0)
         {
             baseClass::m_psh.dwFlags |= PSH_USEHICON;
             baseClass::m_psh.hIcon = imagelist.IconByObjType(m_obj);
@@ -1317,7 +1360,7 @@ public:
         AddPage(m_details);
 
 #if FEATURE_OBJECT_SECURITY
-        if(!m_objHdl)
+        if (!m_objHdl)
         {
             m_securityNA.Attach(new CObjectSecurityNAPage(m_obj, m_objHdl));
             ATLTRACE2(_T("Adding 'Security (N/A)' property page\n"));
@@ -1329,7 +1372,7 @@ public:
             ATLTRACE2(_T("Adding 'Security' property page\n"));
             AddPage(::CreateSecurityPage(m_security));
         }
-#else // FEATURE_OBJECT_SECURITY
+#else  // FEATURE_OBJECT_SECURITY
         m_securityNA.Attach(new CObjectSecurityNAPage(m_obj, m_objHdl, true));
         ATLTRACE2(_T("Adding 'Security (N/A)' property page - feature not built into program\n"));
         AddPage(*m_securityNA);
@@ -1351,14 +1394,13 @@ public:
 };
 typedef CObjectPropertySheetT<CObjectImageList> CObjectPropertySheet;
 
-template <typename T>
-class CHyperLinkCtxMenuImpl : public CHyperLinkImpl<T>
+template <typename T> class CHyperLinkCtxMenuImpl : public CHyperLinkImpl<T>
 {
-public:
+  public:
     BEGIN_MSG_MAP(CHyperLinkCtxMenuImpl<T>)
-        MESSAGE_HANDLER(WM_CONTEXTMENU, OnContextMenu)
-        CHAIN_MSG_MAP(CHyperLinkImpl<T>)
-        DEFAULT_REFLECTION_HANDLER()
+    MESSAGE_HANDLER(WM_CONTEXTMENU, OnContextMenu)
+    CHAIN_MSG_MAP(CHyperLinkImpl<T>)
+    DEFAULT_REFLECTION_HANDLER()
     END_MSG_MAP()
 
     LRESULT OnContextMenu(UINT /*uMsg*/, WPARAM /*wParam*/, LPARAM /*lParam*/, BOOL& /*bHandled*/)
@@ -1371,32 +1413,27 @@ public:
         ATLVERIFY(menu.LoadMenu(IDR_POPUP_HYPERLINK1));
         ATLASSERT(menu.IsMenu());
 
-        if(menu.IsMenu())
+        if (menu.IsMenu())
         {
             // Get the popup menu at index 0 from the menu resource
             CMenuHandle popup = menu.GetSubMenu(0);
             ATLASSERT(popup.IsMenu());
 
-            if(popup.IsMenu())
+            if (popup.IsMenu())
             {
                 // Let the user pick
                 int idCmd = popup.TrackPopupMenuEx(
-                    TPM_LEFTALIGN | TPM_RETURNCMD | TPM_RIGHTBUTTON
-                    , pt.x
-                    , pt.y
-                    , GetParent()
-                    , NULL
-                );
+                    TPM_LEFTALIGN | TPM_RETURNCMD | TPM_RIGHTBUTTON, pt.x, pt.y, GetParent(), NULL);
 
-                if(idCmd)
+                if (idCmd)
                 {
                     switch (idCmd)
                     {
                     case ID_POPUPMENU_COPYURL:
-                        if(m_lpstrHyperLink)
+                        if (m_lpstrHyperLink)
                         {
                             ATLTRACE2(_T("Copy URL\n"), idCmd);
-                            if(::OpenClipboard(GetParent()))
+                            if (::OpenClipboard(GetParent()))
                             {
                                 ATLVERIFY(setClipboardString(m_lpstrHyperLink));
                                 ATLVERIFY(::CloseClipboard());
@@ -1417,13 +1454,11 @@ public:
 
 class CHyperLinkCtxMenu : public CHyperLinkCtxMenuImpl<CHyperLinkCtxMenu>
 {
-public:
+  public:
     DECLARE_WND_CLASS(_T("NtObjectsHyperLinkCtxMenu"))
 };
 
-class CAboutDlg :
-    public CDialogImpl<CAboutDlg>,
-    public CMessageFilter
+class CAboutDlg : public CDialogImpl<CAboutDlg>, public CMessageFilter
 {
     typedef CDialogImpl<CAboutDlg> baseClass;
     CHyperLinkCtxMenu m_website, m_projectpage, m_revisionurl;
@@ -1432,15 +1467,19 @@ class CAboutDlg :
     CFont m_progNameFont;
     CAccelerator m_Accel;
     CMessageLoop m_loop;
-public:
-    enum { IDD = IDD_ABOUT };
+
+  public:
+    enum
+    {
+        IDD = IDD_ABOUT
+    };
 
     BEGIN_MSG_MAP(CAboutDlg)
-        MESSAGE_HANDLER(WM_INITDIALOG, OnInitDialog)
-        MESSAGE_HANDLER(WM_CTLCOLORSTATIC, OnCtlColorStatic)
-        COMMAND_ID_HANDLER(ID_COPY_ABOUT_INFO, OnCopyAboutInfo)
-        COMMAND_ID_HANDLER(IDOK, OnCloseCmd)
-        COMMAND_ID_HANDLER(IDCANCEL, OnCloseCmd)
+    MESSAGE_HANDLER(WM_INITDIALOG, OnInitDialog)
+    MESSAGE_HANDLER(WM_CTLCOLORSTATIC, OnCtlColorStatic)
+    COMMAND_ID_HANDLER(ID_COPY_ABOUT_INFO, OnCopyAboutInfo)
+    COMMAND_ID_HANDLER(IDOK, OnCloseCmd)
+    COMMAND_ID_HANDLER(IDCANCEL, OnCloseCmd)
     END_MSG_MAP()
 
     CAboutDlg(CVersionInfo& verinfo)
@@ -1450,14 +1489,14 @@ public:
 
     virtual BOOL PreTranslateMessage(MSG* pMsg)
     {
-        if(!m_Accel.IsNull())
+        if (!m_Accel.IsNull())
         {
-            if(m_Accel.TranslateAccelerator(m_hWnd, pMsg))
+            if (m_Accel.TranslateAccelerator(m_hWnd, pMsg))
             {
                 return TRUE;
             }
         }
-        if(IsWindow())
+        if (IsWindow())
         {
             return baseClass::IsDialogMessage(pMsg);
         }
@@ -1491,9 +1530,9 @@ public:
         CString revisionurl(m_verinfo[_T("Mercurial revision URL")]);
 
         ATLVERIFY(m_website.SetHyperLink(website));
-        if(int slash = website.ReverseFind(_T('/')))
+        if (int slash = website.ReverseFind(_T('/')))
         {
-            ATLVERIFY(m_website.SetLabel(&website.GetString()[slash+1]));
+            ATLVERIFY(m_website.SetLabel(&website.GetString()[slash + 1]));
         }
         else
         {
@@ -1510,7 +1549,7 @@ public:
         ATLVERIFY(m_revisionurl.SubclassWindow(GetDlgItem(IDC_STATIC_REVISION)));
 
         CString str;
-#       pragma warning(suppress: 6031)
+#pragma warning(suppress : 6031)
         ATLVERIFY(str.LoadString(IDS_PROGRAM_DESCRIPTION));
         ATLVERIFY(SetDlgItemText(IDC_STATIC_COPYRIGHT, m_verinfo[_T("LegalCopyright")]));
         ATLVERIFY(SetDlgItemText(IDC_STATIC_DESCRIPTION, str));
@@ -1525,16 +1564,16 @@ public:
         ATLVERIFY(!m_appicon.IsNull());
         SetIcon(m_appicon);
 
-        NONCLIENTMETRICS ncm = { 0 };
+        NONCLIENTMETRICS ncm = {0};
         ncm.cbSize = sizeof(ncm);
 
-        if(::SystemParametersInfo(SPI_GETNONCLIENTMETRICS, sizeof(ncm), &ncm, 0))
+        if (::SystemParametersInfo(SPI_GETNONCLIENTMETRICS, sizeof(ncm), &ncm, 0))
         {
             LOGFONT logFont;
             memcpy(&logFont, &ncm.lfMessageFont, sizeof(LOGFONT));
             logFont.lfWeight = FW_BOLD;
             HFONT hFont = m_progNameFont.CreateFontIndirect(&logFont);
-            if(hFont)
+            if (hFont)
             {
                 SendDlgItemMessage(IDC_STATIC_PROGNAME, WM_SETFONT, reinterpret_cast<WPARAM>(hFont));
             }
@@ -1542,7 +1581,7 @@ public:
 
         // Load the accelerator table corresponding to the dialog's resource ID
         m_Accel.LoadAccelerators(IDD);
-        if(!m_Accel.IsNull())
+        if (!m_Accel.IsNull())
         {
             ATLTRACE2(_T("Loaded accelerator table: %p\n"), HACCEL(m_Accel));
         }
@@ -1579,10 +1618,13 @@ public:
     {
         UNREFERENCED_PARAMETER(wID);
         ATLASSERT(wID == ID_COPY_ABOUT_INFO);
-        if(::OpenClipboard(m_hWnd))
+        if (::OpenClipboard(m_hWnd))
         {
             CString str;
-            str.AppendFormat(_T("%s %s\r\n\r\n%s\r\n\r\n"), m_verinfo[_T("ProductName")], m_verinfo[_T("FileVersion")], m_verinfo[_T("LegalCopyright")]);
+            str.AppendFormat(_T("%s %s\r\n\r\n%s\r\n\r\n"),
+                             m_verinfo[_T("ProductName")],
+                             m_verinfo[_T("FileVersion")],
+                             m_verinfo[_T("LegalCopyright")]);
             str.AppendFormat(IDS_PROGRAM_DESCRIPTION);
             str.Append(_T("\r\n\r\n"));
             str.AppendFormat(IDS_MERCURIAL_REVISION, m_verinfo[_T("Mercurial revision")]);
@@ -1598,7 +1640,7 @@ public:
     LRESULT OnCloseCmd(WORD /*wNotifyCode*/, WORD wID, HWND /*hWndCtl*/, BOOL& /*bHandled*/)
     {
 #ifdef _DEBUG
-        if(m_bModal)
+        if (m_bModal)
         {
             EndDialog(wID);
         }
@@ -1618,11 +1660,17 @@ public:
     }
 };
 
-typedef CWinTraitsOR<WS_TABSTOP | TVS_HASLINES | TVS_HASBUTTONS | TVS_SHOWSELALWAYS | TVS_INFOTIP, WS_EX_CLIENTEDGE, CControlWinTraits> CNtObjectsTreeViewTraits;
-typedef CWinTraitsOR<WS_TABSTOP | LVS_SHAREIMAGELISTS | LVS_SINGLESEL, LVS_EX_FULLROWSELECT | LVS_EX_INFOTIP, CSortListViewCtrlTraits> CNtObjectsListViewTraits;
+typedef CWinTraitsOR<WS_TABSTOP | TVS_HASLINES | TVS_HASBUTTONS | TVS_SHOWSELALWAYS | TVS_INFOTIP,
+                     WS_EX_CLIENTEDGE,
+                     CControlWinTraits>
+    CNtObjectsTreeViewTraits;
+typedef CWinTraitsOR<WS_TABSTOP | LVS_SHAREIMAGELISTS | LVS_SINGLESEL,
+                     LVS_EX_FULLROWSELECT | LVS_EX_INFOTIP,
+                     CSortListViewCtrlTraits>
+    CNtObjectsListViewTraits;
 
-template <typename T> class CNtObjectsTreeViewT :
-    public CWindowImpl<CNtObjectsTreeViewT<T>, CTreeViewCtrlEx, CNtObjectsTreeViewTraits>
+template <typename T>
+class CNtObjectsTreeViewT : public CWindowImpl<CNtObjectsTreeViewT<T>, CTreeViewCtrlEx, CNtObjectsTreeViewTraits>
 {
     typedef CAtlMap<Directory*, HTREEITEM> CReverseDirTreeMap;
     typedef CWindowImpl<CNtObjectsTreeViewT<T>, CTreeViewCtrlEx, CNtObjectsTreeViewTraits> baseClass;
@@ -1632,23 +1680,25 @@ template <typename T> class CNtObjectsTreeViewT :
     CImageList m_imagelist;
     HWND m_hFrameWnd;
     CReverseDirTreeMap m_reverseLookup;
-public:
+
+  public:
     /*lint -save -e446 */
     DECLARE_WND_SUPERCLASS(_T("NtObjectsTreeView"), CTreeViewCtrlEx::GetWndClassName())
     /*lint -restore */
 
     BEGIN_MSG_MAP(CNtObjectsTreeViewT<T>)
-        MESSAGE_HANDLER(WM_CONTEXTMENU, OnContextMenu)
-        NOTIFY_CODE_HANDLER(TVN_ITEMEXPANDING, OnTVItemExpanding)
-        NOTIFY_CODE_HANDLER(TVN_GETINFOTIP, OnGetInfoTip)
-        NOTIFY_CODE_HANDLER(TVN_SELCHANGED, OnTVSelChanged)
-        DEFAULT_REFLECTION_HANDLER()
+    MESSAGE_HANDLER(WM_CONTEXTMENU, OnContextMenu)
+    NOTIFY_CODE_HANDLER(TVN_ITEMEXPANDING, OnTVItemExpanding)
+    NOTIFY_CODE_HANDLER(TVN_GETINFOTIP, OnGetInfoTip)
+    NOTIFY_CODE_HANDLER(TVN_SELCHANGED, OnTVSelChanged)
+    DEFAULT_REFLECTION_HANDLER()
     END_MSG_MAP()
 
     CNtObjectsTreeViewT()
         : m_bInitialized(false)
         , m_hFrameWnd(NULL)
-    {}
+    {
+    }
 
     inline void setFrameWindow(HWND hFrameWnd)
     {
@@ -1666,34 +1716,29 @@ public:
         ATLVERIFY(ScreenToClient(&pt));
         UINT flags = 0;
         CTreeItem ti = HitTest(pt, &flags);
-        if(!ti.IsNull())
+        if (!ti.IsNull())
         {
             ATLVERIFY(SelectItem(ti));
 
-            if(Directory* dir = reinterpret_cast<Directory*>(ti.GetData()))
+            if (Directory* dir = reinterpret_cast<Directory*>(ti.GetData()))
             {
                 // Load menu resource
                 CMenu menu;
                 ATLVERIFY(menu.LoadMenu(IDR_POPUP_MENU1));
                 ATLASSERT(menu.IsMenu());
-                if(menu.IsMenu())
+                if (menu.IsMenu())
                 {
                     // Get the popup menu at index 0 from the menu resource
                     CMenuHandle popup = menu.GetSubMenu(0);
                     ATLASSERT(popup.IsMenu());
-                    if(popup.IsMenu())
+                    if (popup.IsMenu())
                     {
 
                         // Let the user pick
                         int idCmd = popup.TrackPopupMenuEx(
-                            TPM_LEFTALIGN | TPM_RETURNCMD | TPM_RIGHTBUTTON
-                            , spt.x
-                            , spt.y
-                            , GetParent()
-                            , NULL
-                        );
+                            TPM_LEFTALIGN | TPM_RETURNCMD | TPM_RIGHTBUTTON, spt.x, spt.y, GetParent(), NULL);
 
-                        if(idCmd)
+                        if (idCmd)
                         {
                             switch (idCmd)
                             {
@@ -1704,7 +1749,10 @@ public:
                                 copyItemToClipboard(m_hWnd, idCmd, dir);
                                 break;
                             case ID_POPUPMENU_PROPERTIES:
-                                ::SendMessage(GetParent(), WM_COMMAND, MAKEWPARAM(ID_VIEW_PROPERTIES, 0), reinterpret_cast<LPARAM>(m_hWnd));
+                                ::SendMessage(GetParent(),
+                                              WM_COMMAND,
+                                              MAKEWPARAM(ID_VIEW_PROPERTIES, 0),
+                                              reinterpret_cast<LPARAM>(m_hWnd));
                                 break;
                             default:
                                 ATLTRACE2(_T("Chosen command: %i\n"), idCmd);
@@ -1724,17 +1772,17 @@ public:
         ATLTRACE2(_T("%hs\n"), __func__);
         LPNMTREEVIEW pnmtv = reinterpret_cast<LPNMTREEVIEW>(pnmh);
         // Don't allow to collapse the root item (which is the one without a pointer to the NtObjMgr::Directory)
-        if((TVE_COLLAPSE == pnmtv->action) && (pnmtv->itemNew.hItem == GetRootItem()))
+        if ((TVE_COLLAPSE == pnmtv->action) && (pnmtv->itemNew.hItem == GetRootItem()))
         {
             ATLTRACE2(_T("Root item must not be collapsed\n"));
             return (bHandled = TRUE);
         }
-        if(pnmtv->itemNew.state & TVIS_EXPANDEDONCE)
+        if (pnmtv->itemNew.state & TVIS_EXPANDEDONCE)
             return 0;
-        if(pnmtv->itemNew.cChildren)
+        if (pnmtv->itemNew.cChildren)
         {
 #ifdef _DEBUG
-            if(Directory* dir = reinterpret_cast<Directory*>(GetItemData(pnmtv->itemNew.hItem)))
+            if (Directory* dir = reinterpret_cast<Directory*>(GetItemData(pnmtv->itemNew.hItem)))
                 ATLTRACE2(_T("Sort children of %s (%p)\n"), dir->fullname().GetString(), pnmtv->itemNew.hItem);
             else
                 ATLTRACE2(_T("Sort children of %p\n"), pnmtv->itemNew.hItem);
@@ -1750,10 +1798,10 @@ public:
         ATLASSERT(NULL != pnmtv);
         Directory* dir = reinterpret_cast<Directory*>(pnmtv->lParam);
         bHandled = FALSE;
-        if(dir)
+        if (dir)
         {
             CString comment;
-            if(comment.LoadString(findComment(dir->fullname())))
+            if (comment.LoadString(findComment(dir->fullname())))
             {
                 CString tip;
                 tip.Preallocate(pnmtv->cchTextMax);
@@ -1776,7 +1824,7 @@ public:
         ATLASSERT(NULL != pnmtv);
         bHandled = FALSE;
         Directory* dir = reinterpret_cast<Directory*>(pnmtv->itemNew.lParam);
-        if(m_bInitialized && dir)
+        if (m_bInitialized && dir)
         {
             ATLTRACE2(_T("%hs: %s\n"), __func__, dir->fullname().GetString());
             // Tell the frame to update the listview with the new Directory
@@ -1796,13 +1844,13 @@ public:
     bool emptyAndRefill()
     {
         CSuppressRedraw suppressRedraw(m_hWnd);
-        if(m_objroot.refresh())
+        if (m_objroot.refresh())
         {
-            if(::IsWindow(m_hWnd) && m_imagelist.IsNull())
+            if (::IsWindow(m_hWnd) && m_imagelist.IsNull())
             {
                 prepareImageList_();
             }
-            if(DeleteAllItems())
+            if (DeleteAllItems())
             {
                 // Recursively fill the tree
                 fill_(NULL, m_objroot);
@@ -1810,12 +1858,12 @@ public:
                 sortTreeItemChildren_(GetRootItem());
                 (void)Expand(GetRootItem());
                 // Signal that the tree has been initialized
-                m_bInitialized=true;
+                m_bInitialized = true;
                 return m_bInitialized;
             }
         }
         // Something failed
-        m_bInitialized=false;
+        m_bInitialized = false;
         return m_bInitialized;
     }
 
@@ -1828,7 +1876,7 @@ public:
     inline CTreeItem lookupTreeItem(Directory* dir)
     {
         HTREEITEM ret = NULL;
-        if(m_reverseLookup.Lookup(dir, ret))
+        if (m_reverseLookup.Lookup(dir, ret))
         {
             ATLTRACE2(_T("Found %s in treeview\n"), dir->fullname().GetString());
             return CTreeItem(ret, this);
@@ -1839,11 +1887,11 @@ public:
     void selectDirectory(Directory* dir, BOOL bIfNotAlreadySelected = FALSE)
     {
         CTreeItem ti(lookupTreeItem(dir));
-        if(!ti.IsNull())
+        if (!ti.IsNull())
         {
-            if(bIfNotAlreadySelected)
+            if (bIfNotAlreadySelected)
             {
-                if(0 == (TVIS_SELECTED & ti.GetState(TVIS_SELECTED))) // better select always? ...
+                if (0 == (TVIS_SELECTED & ti.GetState(TVIS_SELECTED))) // better select always? ...
                 {
                     ti.Select();
                 }
@@ -1852,7 +1900,6 @@ public:
             {
                 ti.Select();
             }
-
         }
     }
 
@@ -1860,19 +1907,19 @@ public:
     {
         CTreeItem ti(GetSelectedItem());
         ATLASSERT(!ti.IsNull());
-        if(!ti.IsNull())
+        if (!ti.IsNull())
         {
             CTreeItem parent(ti.GetParent());
-            if(!parent.IsNull()) // we only want to navigate up if there is a parent ...
+            if (!parent.IsNull()) // we only want to navigate up if there is a parent ...
             {
-                if(Directory* dir = reinterpret_cast<Directory*>(parent.GetData()))
+                if (Directory* dir = reinterpret_cast<Directory*>(parent.GetData()))
                     return dir;
             }
         }
         return 0;
     }
 
-private:
+  private:
     static int CALLBACK TreeViewCompareProc_(LPARAM lparam1, LPARAM lparam2, LPARAM /*lparamSort*/)
     {
         Directory* dir1 = reinterpret_cast<Directory*>(lparam1);
@@ -1886,11 +1933,16 @@ private:
     void prepareImageList_()
     {
         ATLTRACE2(_T("Preparing image list for %hs\n"), __func__);
-        WORD iconList[] = { IDI_OBJMGR_ROOT, IDI_DIRECTORY, IDI_EMPTY_DIRECTORY };
-        ATLVERIFY(m_imagelist.Create(imgListElemWidth, imgListElemHeight, ILC_COLOR32 | ILC_MASK, (int)_countof(iconList), (int)_countof(iconList)));
-        for(size_t i = 0; i < _countof(iconList); i++)
+        WORD iconList[] = {IDI_OBJMGR_ROOT, IDI_DIRECTORY, IDI_EMPTY_DIRECTORY};
+        ATLVERIFY(m_imagelist.Create(imgListElemWidth,
+                                     imgListElemHeight,
+                                     ILC_COLOR32 | ILC_MASK,
+                                     (int)_countof(iconList),
+                                     (int)_countof(iconList)));
+        for (size_t i = 0; i < _countof(iconList); i++)
         {
-            HICON hIcon = static_cast<HICON>(AtlLoadIconImage(MAKEINTRESOURCE(iconList[i]), LR_CREATEDIBSECTION, imgListElemWidth, imgListElemHeight));
+            HICON hIcon = static_cast<HICON>(AtlLoadIconImage(
+                MAKEINTRESOURCE(iconList[i]), LR_CREATEDIBSECTION, imgListElemWidth, imgListElemHeight));
             ATLTRACE2(_T("Icon handle: %p\n"), hIcon);
             m_imagelist.AddIcon(hIcon);
         }
@@ -1899,25 +1951,41 @@ private:
 
     void sortTreeItemChildren_(HTREEITEM parent)
     {
-        TVSORTCB tvscb = { parent, TreeViewCompareProc_, 0 };
+        TVSORTCB tvscb = {parent, TreeViewCompareProc_, 0};
         (void)SortChildrenCB(&tvscb, TRUE);
     }
 
     void fill_(HTREEITEM parent, Directory& current)
     {
-        if(!parent)
+        if (!parent)
         {
             m_reverseLookup.RemoveAll();
-            parent = InsertItem(TVIF_TEXT | TVIF_SELECTEDIMAGE | TVIF_IMAGE | TVIF_PARAM, current.fullname(), 0, 0, 0, 0, reinterpret_cast<LPARAM>(&m_objroot), TVI_ROOT, TVI_LAST);
+            parent = InsertItem(TVIF_TEXT | TVIF_SELECTEDIMAGE | TVIF_IMAGE | TVIF_PARAM,
+                                current.fullname(),
+                                0,
+                                0,
+                                0,
+                                0,
+                                reinterpret_cast<LPARAM>(&m_objroot),
+                                TVI_ROOT,
+                                TVI_LAST);
             m_reverseLookup[&m_objroot] = parent;
         }
-        for(size_t i = 0; i < current.size(); i++)
+        for (size_t i = 0; i < current.size(); i++)
         {
             Directory* entry = dynamic_cast<Directory*>(current[i]);
-            if(entry)
+            if (entry)
             {
                 const int imgidx = entry->size() ? 1 : 2;
-                HTREEITEM curritem = InsertItem(TVIF_TEXT | TVIF_SELECTEDIMAGE | TVIF_IMAGE | TVIF_PARAM, entry->name(), imgidx, imgidx, 0, 0, reinterpret_cast<LPARAM>(entry), parent, TVI_LAST);
+                HTREEITEM curritem = InsertItem(TVIF_TEXT | TVIF_SELECTEDIMAGE | TVIF_IMAGE | TVIF_PARAM,
+                                                entry->name(),
+                                                imgidx,
+                                                imgidx,
+                                                0,
+                                                0,
+                                                reinterpret_cast<LPARAM>(entry),
+                                                parent,
+                                                TVI_LAST);
                 m_reverseLookup[entry] = curritem;
                 fill_(curritem, *entry);
             }
@@ -1926,35 +1994,38 @@ private:
 };
 typedef CNtObjectsTreeViewT<CObjectImageList> CNtObjectsTreeView;
 
-template <typename T> class CNtObjectsListViewT :
-    public CSortListViewCtrlImpl<CNtObjectsListViewT<T>, CListViewCtrl, CNtObjectsListViewTraits>
+template <typename T>
+class CNtObjectsListViewT
+    : public CSortListViewCtrlImpl<CNtObjectsListViewT<T>, CListViewCtrl, CNtObjectsListViewTraits>
 {
     HWND m_hFrameWnd;
     T& m_imagelist;
     typedef CSortListViewCtrlImpl<CNtObjectsListViewT<T>, CListViewCtrl, CNtObjectsListViewTraits> baseClass;
-public:
+
+  public:
     /*lint -save -e446 */
     DECLARE_WND_SUPERCLASS(_T("NtObjectsListView"), CListViewCtrl::GetWndClassName())
     /*lint -restore */
 
     BEGIN_MSG_MAP(CNtObjectsListView<T>)
-        MESSAGE_HANDLER(WM_CONTEXTMENU, OnContextMenu)
-        MESSAGE_HANDLER(WM_GETDLGCODE, OnGetDlgCode)
-        MESSAGE_HANDLER(WM_LBUTTONDBLCLK, OnDoubleClick)
-        MESSAGE_HANDLER(WM_CHAR, OnChar)
-        NOTIFY_CODE_HANDLER(HDN_ITEMCLICKA, OnHeaderItemClick)
-        NOTIFY_CODE_HANDLER(HDN_ITEMCLICKW, OnHeaderItemClick)
-        NOTIFY_CODE_HANDLER(LVN_ITEMCHANGED, OnLVItemChanged)
-        NOTIFY_CODE_HANDLER(LVN_GETINFOTIP, OnGetInfoTip)
-        DEFAULT_REFLECTION_HANDLER()
-        CHAIN_MSG_MAP(baseClass)
+    MESSAGE_HANDLER(WM_CONTEXTMENU, OnContextMenu)
+    MESSAGE_HANDLER(WM_GETDLGCODE, OnGetDlgCode)
+    MESSAGE_HANDLER(WM_LBUTTONDBLCLK, OnDoubleClick)
+    MESSAGE_HANDLER(WM_CHAR, OnChar)
+    NOTIFY_CODE_HANDLER(HDN_ITEMCLICKA, OnHeaderItemClick)
+    NOTIFY_CODE_HANDLER(HDN_ITEMCLICKW, OnHeaderItemClick)
+    NOTIFY_CODE_HANDLER(LVN_ITEMCHANGED, OnLVItemChanged)
+    NOTIFY_CODE_HANDLER(LVN_GETINFOTIP, OnGetInfoTip)
+    DEFAULT_REFLECTION_HANDLER()
+    CHAIN_MSG_MAP(baseClass)
     END_MSG_MAP()
 
     CNtObjectsListViewT(T& imagelist)
         : baseClass()
         , m_hFrameWnd(NULL)
         , m_imagelist(imagelist)
-    {}
+    {
+    }
 
     inline void setFrameWindow(HWND hFrameWnd)
     {
@@ -1965,7 +2036,7 @@ public:
     {
         CSuppressRedraw suppressRedraw(m_hWnd);
         DeleteAllItems();
-        if(::IsWindow(m_hWnd) && !m_imagelist.IsNull())
+        if (::IsWindow(m_hWnd) && !m_imagelist.IsNull())
         {
             (void)SetImageList(m_imagelist, LVSIL_SMALL);
         }
@@ -1974,47 +2045,40 @@ public:
         ATLTRACE2(_T("%hs: %s\n"), __func__, current.fullname().GetString());
         // To determine the required width for each column
         int widths[] = {-1, -1, -1};
-        for(size_t i = 0; i < current.size(); i++)
+        for (size_t i = 0; i < current.size(); i++)
         {
-            int currItem = InsertItem(
-                LVIF_TEXT | LVIF_IMAGE | LVIF_PARAM
-                , static_cast<int>(i)
-                , current[i]->name()
-                , 0
-                , 0
-                , m_imagelist.IndexByObjType(current[i])
-                , reinterpret_cast<LPARAM>(current[i])
-                );
+            int currItem = InsertItem(LVIF_TEXT | LVIF_IMAGE | LVIF_PARAM,
+                                      static_cast<int>(i),
+                                      current[i]->name(),
+                                      0,
+                                      0,
+                                      m_imagelist.IndexByObjType(current[i]),
+                                      reinterpret_cast<LPARAM>(current[i]));
             int const nameWidth = GetStringWidth(current[i]->name());
             widths[0] = max(nameWidth, widths[0]);
-            AddItem(
-                currItem
-                , 1
-                , current[i]->type()
-                );
+            AddItem(currItem, 1, current[i]->type());
             int const typeWidth = GetStringWidth(current[i]->type());
             widths[1] = max(typeWidth, widths[1]);
-            //ATLTRACE2(_T("%s:%i [%s:%i] / %i:%i\n"), current[i]->name().GetString(), GetStringWidth(current[i]->name()), current[i]->type().GetString(), GetStringWidth(current[i]->type()), widths[0], widths[1]);
+            // ATLTRACE2(_T("%s:%i [%s:%i] / %i:%i\n"), current[i]->name().GetString(),
+            // GetStringWidth(current[i]->name()), current[i]->type().GetString(), GetStringWidth(current[i]->type()),
+            // widths[0], widths[1]);
             SymbolicLink* symlink = dynamic_cast<SymbolicLink*>(current[i]);
-            if(symlink)
+            if (symlink)
             {
-                AddItem(
-                    currItem
-                    , 2
-                    , symlink->target()
-                    );
+                AddItem(currItem, 2, symlink->target());
                 int const targetWidth = GetStringWidth(symlink->target());
                 widths[2] = max(targetWidth, widths[2]);
-                //ATLTRACE2(_T("    %s:%i [%i]\n"), symlink->target().GetString(), GetStringWidth(symlink->target()), widths[2]);
+                // ATLTRACE2(_T("    %s:%i [%i]\n"), symlink->target().GetString(), GetStringWidth(symlink->target()),
+                // widths[2]);
             }
         }
         CRect rect;
         ATLVERIFY(GetWindowRect(&rect));
-        int const maxWidths[] = {rect.right-rect.left - 50, 150, 200};
+        int const maxWidths[] = {rect.right - rect.left - 50, 150, 200};
         // Try to set an optimum column width
-        for(int i = 0; i <  static_cast<int>(_countof(widths)); i++)
+        for (int i = 0; i < static_cast<int>(_countof(widths)); i++)
         {
-            if(-1 != widths[i])
+            if (-1 != widths[i])
             {
                 int currcol = min(widths[i] + imgListElemWidth + (i ? 0 : 0x10), maxWidths[i]);
                 ATLVERIFY(SetColumnWidth(i, currcol));
@@ -2030,7 +2094,7 @@ public:
         LVHITTESTINFO lvhtti = {0};
         CPoint pt;
 
-        if(getItemFromHitTest_(lvhtti, pt))
+        if (getItemFromHitTest_(lvhtti, pt))
         {
             // If we found an item, select it
             ATLVERIFY(SelectItem(lvhtti.iItem));
@@ -2055,11 +2119,11 @@ public:
             matches the sub menu indexes.
             */
             int submenuidx = itemobj->objtype();
-            if(otDirectory == submenuidx)
+            if (otDirectory == submenuidx)
             {
-                if(Directory* dir = dynamic_cast<Directory*>(itemobj))
+                if (Directory* dir = dynamic_cast<Directory*>(itemobj))
                 {
-                    if(!dir->size())
+                    if (!dir->size())
                         submenuidx = otGeneric;
                 }
             }
@@ -2068,24 +2132,19 @@ public:
             CMenu menu;
             ATLVERIFY(menu.LoadMenu(IDR_POPUP_MENU1));
             ATLASSERT(menu.IsMenu());
-            if(menu.IsMenu())
+            if (menu.IsMenu())
             {
                 // Get the popup menu at index 0 from the menu resource
                 CMenuHandle popup = menu.GetSubMenu(submenuidx);
                 ATLASSERT(popup.IsMenu());
 
-                if(popup.IsMenu())
+                if (popup.IsMenu())
                 {
                     // Let the user pick
                     int idCmd = popup.TrackPopupMenuEx(
-                        TPM_LEFTALIGN | TPM_RETURNCMD | TPM_RIGHTBUTTON
-                        , pt.x
-                        , pt.y
-                        , GetParent()
-                        , NULL
-                    );
+                        TPM_LEFTALIGN | TPM_RETURNCMD | TPM_RIGHTBUTTON, pt.x, pt.y, GetParent(), NULL);
 
-                    if(idCmd)
+                    if (idCmd)
                     {
                         switch (idCmd)
                         {
@@ -2096,10 +2155,13 @@ public:
                             copyItemToClipboard(m_hWnd, idCmd, itemobj);
                             break;
                         case ID_POPUPMENU_PROPERTIES:
-                            ::SendMessage(GetParent(), WM_COMMAND, MAKEWPARAM(ID_VIEW_PROPERTIES, 0), reinterpret_cast<LPARAM>(m_hWnd));
+                            ::SendMessage(GetParent(),
+                                          WM_COMMAND,
+                                          MAKEWPARAM(ID_VIEW_PROPERTIES, 0),
+                                          reinterpret_cast<LPARAM>(m_hWnd));
                             break;
                         case ID_POPUPMENU_OPENDIRECTORY:
-                            if(Directory* dir = dynamic_cast<Directory*>(itemobj))
+                            if (Directory* dir = dynamic_cast<Directory*>(itemobj))
                             {
                                 openDirectory_(dir);
                             }
@@ -2124,16 +2186,16 @@ public:
     LRESULT OnChar(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL& /*bHandled*/)
     {
         ATLTRACE2(_T("key code: %u\n"), wParam);
-        switch(wParam)
+        switch (wParam)
         {
         case VK_RETURN:
             {
                 int idx = GetNextItem(-1, LVNI_SELECTED);
                 ATLTRACE2(_T("%i == GetNextItem(-1, LVNI_SELECTED)\n"), idx);
-                if(idx >= 0)
+                if (idx >= 0)
                 {
                     ATLASSERT(1 == GetSelectedCount());
-                    if(-1 != idx)
+                    if (-1 != idx)
                     {
                         openPropertiesOrDirectory_(idx);
                     }
@@ -2158,7 +2220,7 @@ public:
         LVHITTESTINFO lvhtti = {0};
         CPoint pt;
 
-        if(getItemFromHitTest_(lvhtti, pt))
+        if (getItemFromHitTest_(lvhtti, pt))
         {
             // If we found an item, select it
             ATLVERIFY(SelectItem(lvhtti.iItem));
@@ -2171,11 +2233,11 @@ public:
     {
         ATLTRACE2(_T("%hs\n"), __func__);
         LPNMHEADER p = reinterpret_cast<LPNMHEADER>(pnmh);
-        if(p->iButton == 0)
+        if (p->iButton == 0)
         {
             int iOld = m_iSortColumn;
             bool bDescending = (m_iSortColumn == p->iItem) ? !m_bSortDescending : false;
-            if(DoSortItems(p->iItem, bDescending))
+            if (DoSortItems(p->iItem, bDescending))
             {
                 NotifyParentSortChanged(p->iItem, iOld);
             }
@@ -2188,11 +2250,11 @@ public:
         LPNMLISTVIEW pnmlv = reinterpret_cast<LPNMLISTVIEW>(pnmh);
         ATLASSERT(NULL != pnmlv);
         bHandled = FALSE;
-        if(pnmlv && (pnmlv->uChanged & LVIF_STATE) && (pnmlv->uNewState & LVIS_SELECTED))
+        if (pnmlv && (pnmlv->uChanged & LVIF_STATE) && (pnmlv->uNewState & LVIS_SELECTED))
         {
             GenericObject* obj = reinterpret_cast<GenericObject*>(pnmlv->lParam);
             ATLASSERT(NULL != obj);
-            if(obj)
+            if (obj)
             {
                 // Tell the frame that this object is now to be considered active
                 (void)::SendMessage(m_hFrameWnd, WM_SET_ACTIVE_OBJECT, 0, reinterpret_cast<LPARAM>(obj));
@@ -2207,19 +2269,19 @@ public:
         LPNMLVGETINFOTIP pnmlv = reinterpret_cast<LPNMLVGETINFOTIP>(pnmh);
         ATLASSERT(NULL != pnmlv);
         bHandled = FALSE;
-        if(pnmlv)
+        if (pnmlv)
         {
-            LVITEM item = { 0 };
+            LVITEM item = {0};
             item.iItem = pnmlv->iItem;
             item.mask = LVIF_PARAM;
             ATLVERIFY(GetItem(&item));
 
             GenericObject* obj = reinterpret_cast<GenericObject*>(item.lParam);
             ATLASSERT(NULL != obj);
-            if(obj)
+            if (obj)
             {
                 CString comment;
-                if(comment.LoadString(findComment(obj->fullname())))
+                if (comment.LoadString(findComment(obj->fullname())))
                 {
                     CString tip;
                     tip.Preallocate(pnmlv->cchTextMax);
@@ -2240,19 +2302,19 @@ public:
     // If item1 > item2 return 1, if item1 < item2 return -1, else return 0.
     int CompareItemsCustom(LVCompareParam* pItem1, LVCompareParam* pItem2, int iSortCol)
     {
-        if(!iSortCol)
+        if (!iSortCol)
         {
             GenericObject* obj1 = reinterpret_cast<GenericObject*>(pItem1->dwItemData);
             GenericObject* obj2 = reinterpret_cast<GenericObject*>(pItem2->dwItemData);
             bool isDir1 = (otDirectory == obj1->objtype());
             bool isDir2 = (otDirectory == obj2->objtype());
-            if(isDir1 && isDir2)
+            if (isDir1 && isDir2)
                 return _tcsicmp(pItem1->pszValue, pItem2->pszValue);
-            if(!isDir1 && !isDir2)
+            if (!isDir1 && !isDir2)
                 return _tcsicmp(pItem1->pszValue, pItem2->pszValue);
-            if(!isDir1 && isDir2)
+            if (!isDir1 && isDir2)
                 return 1;
-            if(isDir1 && !isDir2)
+            if (isDir1 && !isDir2)
                 return -1;
         }
         return _tcsicmp(pItem1->pszValue, pItem2->pszValue);
@@ -2260,16 +2322,16 @@ public:
 
     void reloadColumnNames()
     {
-        if(static_cast<int>(_countof(lvColumnDefaults)) == GetColumnCount())
+        if (static_cast<int>(_countof(lvColumnDefaults)) == GetColumnCount())
         {
             CString columnName;
 
             for (int idx = 0; idx < static_cast<int>(_countof(lvColumnDefaults)); idx++)
             {
-#               pragma warning(suppress: 6031)
+#pragma warning(suppress : 6031)
                 ATLVERIFY(columnName.LoadString(lvColumnDefaults[idx].resId));
 
-                LVCOLUMN lvc = { 0 };
+                LVCOLUMN lvc = {0};
                 lvc.mask = LVCF_TEXT;
                 lvc.pszText = const_cast<LPTSTR>(columnName.GetString());
                 lvc.cchTextMax = columnName.GetLength() + 1;
@@ -2278,8 +2340,7 @@ public:
         }
     }
 
-private:
-
+  private:
     void openDirectory_(Directory* dir) const
     {
         ATLASSERT(dir != NULL);
@@ -2296,11 +2357,11 @@ private:
         item.mask = LVIF_PARAM;
         ATLVERIFY(GetItem(&item));
         GenericObject* itemobj = reinterpret_cast<GenericObject*>(item.lParam);
-        if(otDirectory == itemobj->objtype())
+        if (otDirectory == itemobj->objtype())
         {
-            if(Directory* dir = dynamic_cast<Directory*>(itemobj))
+            if (Directory* dir = dynamic_cast<Directory*>(itemobj))
             {
-                if(dir->size())
+                if (dir->size())
                 {
                     openDirectory_(dir);
                     return;
@@ -2326,7 +2387,7 @@ private:
     {
         ATLTRACE2(_T("Column count: %i\n"), GetColumnCount());
         // On older Windows/common control versions it's impossible to remove column 0
-        for(int i = 1; i < GetColumnCount(); i++)
+        for (int i = 1; i < GetColumnCount(); i++)
         {
             ATLVERIFY(DeleteColumn(i));
         }
@@ -2334,15 +2395,15 @@ private:
 
     void resetAllColumns_()
     {
-        if(GetColumnCount() < static_cast<int>(_countof(lvColumnDefaults)))
+        if (GetColumnCount() < static_cast<int>(_countof(lvColumnDefaults)))
         {
             deleteAllColumns_();
             CString columnName;
-            for(int idx = 0; idx < static_cast<int>(_countof(lvColumnDefaults)); idx++)
+            for (int idx = 0; idx < static_cast<int>(_countof(lvColumnDefaults)); idx++)
             {
-#               pragma warning(suppress: 6031)
+#pragma warning(suppress : 6031)
                 ATLVERIFY(columnName.LoadString(lvColumnDefaults[idx].resId));
-                if(idx > (GetColumnCount() - 1))
+                if (idx > (GetColumnCount() - 1))
                 {
                     InsertColumn(idx, columnName);
                     SetColumnSortType(idx, LVCOLSORT_CUSTOM);
@@ -2364,29 +2425,35 @@ private:
 typedef CNtObjectsListViewT<CObjectImageList> CNtObjectsListView;
 
 #if FEATURE_FIND_OBJECT
-typedef CWinTraitsOR<WS_TABSTOP | LVS_SHAREIMAGELISTS | LVS_SINGLESEL, LVS_EX_FULLROWSELECT | LVS_EX_INFOTIP, CSortListViewCtrlTraits> CNtObjectsFindResultsTraits;
+typedef CWinTraitsOR<WS_TABSTOP | LVS_SHAREIMAGELISTS | LVS_SINGLESEL,
+                     LVS_EX_FULLROWSELECT | LVS_EX_INFOTIP,
+                     CSortListViewCtrlTraits>
+    CNtObjectsFindResultsTraits;
 
-template <typename T> class CNtObjectsFindResultsT :
-    public CSortListViewCtrlImpl<CNtObjectsFindResultsT<T>, CListViewCtrl, CNtObjectsFindResultsTraits>
+template <typename T>
+class CNtObjectsFindResultsT
+    : public CSortListViewCtrlImpl<CNtObjectsFindResultsT<T>, CListViewCtrl, CNtObjectsFindResultsTraits>
 {
     HWND m_hFrameWnd;
     T& m_imagelist;
     typedef CSortListViewCtrlImpl<CNtObjectsFindResultsT<T>, CListViewCtrl, CNtObjectsFindResultsTraits> baseClass;
-public:
+
+  public:
     /*lint -save -e446 */
     DECLARE_WND_SUPERCLASS(_T("NtObjectsFindResults"), CListViewCtrl::GetWndClassName())
     /*lint -restore */
 
     BEGIN_MSG_MAP(CNtObjectsFindResultsT)
-        DEFAULT_REFLECTION_HANDLER()
-        CHAIN_MSG_MAP(baseClass)
+    DEFAULT_REFLECTION_HANDLER()
+    CHAIN_MSG_MAP(baseClass)
     END_MSG_MAP()
 
     CNtObjectsFindResultsT(T& imagelist)
         : baseClass()
         , m_hFrameWnd(NULL)
         , m_imagelist(imagelist)
-    {}
+    {
+    }
 
     inline void setFrameWindow(HWND hFrameWnd)
     {
@@ -2400,13 +2467,14 @@ class CSearchPane : public CPaneContainerImpl<CSearchPane>
     typedef CPaneContainerImpl<CSearchPane> baseClass;
 
     UINT const m_strID;
-public:
+
+  public:
     DECLARE_WND_CLASS(_T("SearchPane"))
 
     BEGIN_MSG_MAP(CSearchPane)
-        DEFAULT_REFLECTION_HANDLER()
-        CHAIN_MSG_MAP(baseClass)
-        FORWARD_NOTIFICATIONS()
+    DEFAULT_REFLECTION_HANDLER()
+    CHAIN_MSG_MAP(baseClass)
+    FORWARD_NOTIFICATIONS()
     END_MSG_MAP()
 
     CSearchPane()
@@ -2419,9 +2487,9 @@ public:
     HWND Create(HWND hWndParent, LPCTSTR lpstrTitle = NULL)
     {
         CString caption;
-        if(!lpstrTitle)
+        if (!lpstrTitle)
         {
-            if(caption.LoadString(m_strID))
+            if (caption.LoadString(m_strID))
             {
                 lpstrTitle = caption.GetString();
             }
@@ -2432,23 +2500,24 @@ public:
     void renewVisibleTexts()
     {
         CString caption;
-        if(caption.LoadString(m_strID))
+        if (caption.LoadString(m_strID))
         {
             SetTitle(caption);
         }
     }
 };
 
-template <typename T> class CNtObjectsFoundSplitterT : public CSplitterWindowImpl<CNtObjectsFoundSplitterT<T> >
+template <typename T> class CNtObjectsFoundSplitterT : public CSplitterWindowImpl<CNtObjectsFoundSplitterT<T>>
 {
-    typedef CSplitterWindowImpl<CNtObjectsFoundSplitterT<T> > baseClass;
+    typedef CSplitterWindowImpl<CNtObjectsFoundSplitterT<T>> baseClass;
     T& m_imagelist;
     CNtObjectsFindResultsT<T> m_findresults;
     CSearchPane m_searchPane;
     int m_bSearchSplitPct;
     int m_cxySplitterMin;
-    HRESULT(CALLBACK* DllGetVersion)(DLLVERSIONINFO *);
-public:
+    HRESULT(CALLBACK* DllGetVersion)(DLLVERSIONINFO*);
+
+  public:
     DECLARE_WND_CLASS_EX(_T("NtObjectsFoundSplitter"), CS_DBLCLKS, COLOR_INFOBK)
 
     CNtObjectsFoundSplitterT(T& imagelist)
@@ -2461,7 +2530,7 @@ public:
         , DllGetVersion(0)
     {
         HMODULE hShell32 = ::GetModuleHandle(_T("shell32.dll"));
-        if(hShell32)
+        if (hShell32)
         {
             *(FARPROC*)&DllGetVersion = ::GetProcAddress(hShell32, "DllGetVersion");
         }
@@ -2475,10 +2544,10 @@ public:
         ATLVERIFY(::IsWindow(m_findresults));
         m_searchPane.SetClient(m_findresults);
 
-        if(DllGetVersion)
+        if (DllGetVersion)
         {
-            DLLVERSIONINFO dllvi = { sizeof(DLLVERSIONINFO), 0, 0, 0, 0 };
-            if(SUCCEEDED(DllGetVersion(&dllvi)) && dllvi.dwMajorVersion >= 6)
+            DLLVERSIONINFO dllvi = {sizeof(DLLVERSIONINFO), 0, 0, 0, 0};
+            if (SUCCEEDED(DllGetVersion(&dllvi)) && dllvi.dwMajorVersion >= 6)
             {
                 m_findresults.SetExtendedListViewStyle(CNtObjectsFindResultsTraits::GetWndExStyle(LVS_EX_DOUBLEBUFFER));
             }
@@ -2487,7 +2556,8 @@ public:
                 m_findresults.SetExtendedListViewStyle(CNtObjectsFindResultsTraits::GetWndExStyle(0));
             }
         }
-        m_findresults.setFrameWindow(hFrameWnd); // make the frame window known to the listview control for found objects
+        m_findresults.setFrameWindow(
+            hFrameWnd); // make the frame window known to the listview control for found objects
     }
 
     void setTopPane(HWND hTopPane, bool bUpdate = true)
@@ -2504,7 +2574,7 @@ public:
     void toggleHidden()
     {
         ATLTRACE2(_T("Single pane mode before toggling search pane: %d\n"), GetSinglePaneMode());
-        switch(GetSinglePaneMode())
+        switch (GetSinglePaneMode())
         {
         case SPLIT_PANE_NONE:
             m_bSearchSplitPct = GetSplitterPosPct(); // save old splitter position percentage
@@ -2514,7 +2584,7 @@ public:
             break;
         case SPLIT_PANE_TOP:
             SetSinglePaneMode(SPLIT_PANE_NONE);
-            if(m_cxySplitterMin < 0)
+            if (m_cxySplitterMin < 0)
                 m_cxySplitterMin = m_cxyMin;
             m_cxyMin = 100;
             SetSplitterPosPct(m_bSearchSplitPct);
@@ -2530,7 +2600,8 @@ public:
     {
         m_searchPane.renewVisibleTexts();
     }
-private:
+
+  private:
     CNtObjectsFoundSplitterT(); // hide
 };
 typedef CNtObjectsFoundSplitterT<CObjectImageList> CNtObjectsFoundSplitter;
@@ -2538,7 +2609,7 @@ typedef CNtObjectsFoundSplitterT<CObjectImageList> CNtObjectsFoundSplitter;
 
 class CNtObjectsStatusBar : public CMultiPaneStatusBarCtrlImpl<CNtObjectsStatusBar>
 {
-public:
+  public:
     /*lint -save -e446 */
     DECLARE_WND_SUPERCLASS(_T("NtObjectsStatusBar"), GetWndClassName())
     /*lint -restore */
@@ -2547,17 +2618,19 @@ public:
     {
         ATLASSERT(!IsSimple());
         ATLASSERT(m_nPanes == 0);
-        int panes[] = { ID_DEFAULT_PANE, bIsAdmin ? IDS_STATUSBAR_ADMIN : IDS_STATUSBAR_NOTADMIN, bIsElevated ? IDS_STATUSBAR_ELEVATED : IDS_STATUSBAR_NOTELEVATED };
+        int panes[] = {ID_DEFAULT_PANE,
+                       bIsAdmin ? IDS_STATUSBAR_ADMIN : IDS_STATUSBAR_NOTADMIN,
+                       bIsElevated ? IDS_STATUSBAR_ELEVATED : IDS_STATUSBAR_NOTELEVATED};
         ATLVERIFY(SetPanes(panes, _countof(panes), bSetText));
     }
 
     void reloadPaneText(int idx)
     {
         ATLVERIFY(idx < m_nPanes);
-        if(idx < m_nPanes)
+        if (idx < m_nPanes)
         {
             CString resStr;
-#           pragma warning(suppress: 6031)
+#pragma warning(suppress : 6031)
             ATLVERIFY(resStr.LoadString(m_pPane[idx]));
             ATLVERIFY(SetPaneText(m_pPane[idx], resStr));
         }
@@ -2567,7 +2640,8 @@ public:
 class CNtObjectsSplitter : public CSplitterWindowImpl<CNtObjectsSplitter>
 {
     typedef CSplitterWindowImpl<CNtObjectsSplitter> baseClass;
-public:
+
+  public:
     DECLARE_WND_CLASS_EX(_T("NtObjectsSplitter"), CS_DBLCLKS, COLOR_INFOBK)
 
     CNtObjectsSplitter()
@@ -2576,15 +2650,15 @@ public:
     }
 };
 
-template <typename T> class CVisitedListT
-    : protected CSimpleArray<T>
+template <typename T> class CVisitedListT : protected CSimpleArray<T>
 {
     typedef CSimpleArray<T> baseClass;
     int const m_maxDepth;
     int m_cursorIdx;
 
     CVisitedListT(const CSimpleArray<T>& src);
-public:
+
+  public:
     CVisitedListT(int const maxDepth = maxVisitedDepth)
         : baseClass()
         , m_maxDepth(maxDepth)
@@ -2601,20 +2675,26 @@ public:
     inline T navigate(bool forward)
     {
         ATLASSERT(m_cursorIdx < 0);
-        if(forward)
+        if (forward)
         {
-            if(m_cursorIdx + 1 == 0)
+            if (m_cursorIdx + 1 == 0)
             {
-                ATLTRACE2(_T("Navigating forward doesn't work. Cursor already at the end of the list: %i (size == %i).\n"), m_cursorIdx, getSize());
+                ATLTRACE2(
+                    _T("Navigating forward doesn't work. Cursor already at the end of the list: %i (size == %i).\n"),
+                    m_cursorIdx,
+                    getSize());
                 return NULL; // must be able to convert to NULL
             }
             m_cursorIdx = -1;
         }
         else
         {
-            if(getSize() + m_cursorIdx - 1 < 0)
+            if (getSize() + m_cursorIdx - 1 < 0)
             {
-                ATLTRACE2(_T("Navigating backward doesn't work. Cursor already at the start of the list: %i (size == %i).\n"), m_cursorIdx, getSize());
+                ATLTRACE2(
+                    _T("Navigating backward doesn't work. Cursor already at the start of the list: %i (size == %i).\n"),
+                    m_cursorIdx,
+                    getSize());
                 return NULL; // must be able to convert to NULL
             }
             m_cursorIdx--;
@@ -2622,9 +2702,9 @@ public:
 #ifdef _DEBUG
         for (int i = 0; i < getSize(); i++)
         {
-            T item = baseClass::operator [](i);
+            T item = baseClass::operator[](i);
             ATLASSERT(item != NULL);
-            if(i == getSize() + m_cursorIdx)
+            if (i == getSize() + m_cursorIdx)
             {
                 ATLTRACE2(_T("->  [%i] %s\n"), i, item->fullname().GetString());
             }
@@ -2637,15 +2717,15 @@ public:
         ATLASSERT(getSize() + m_cursorIdx >= 0);
         ATLASSERT(getSize() + m_cursorIdx < getSize());
         ATLTRACE2(_T("New cursor position: %i (size == %i).\n"), m_cursorIdx, getSize());
-        return baseClass::operator [](getSize() + m_cursorIdx);
+        return baseClass::operator[](getSize() + m_cursorIdx);
     }
 
     inline BOOL push(T t)
     {
         int const nLast = getSize() - 1;
-        if(nLast >= 0)
+        if (nLast >= 0)
         {
-            if(baseClass::operator [](nLast) == t)
+            if (baseClass::operator[](nLast) == t)
             {
                 return TRUE; // do not add dupes if the previous entry contained the same item
             }
@@ -2660,9 +2740,9 @@ public:
 #ifdef _DEBUG
         for (int i = 0; i < getSize(); i++)
         {
-            T item = baseClass::operator [](i);
+            T item = baseClass::operator[](i);
             ATLASSERT(item != NULL);
-            if(i == getSize() + m_cursorIdx)
+            if (i == getSize() + m_cursorIdx)
             {
                 ATLTRACE2(_T("->  [%i] %s\n"), i, item->fullname().GetString());
             }
@@ -2678,32 +2758,32 @@ public:
     inline T pop()
     {
         int const nLast = getSize() - 1;
-        if(nLast < 0)
+        if (nLast < 0)
             return NULL; // must be able to convert to NULL
         T t = m_aT[nLast];
-        if(!RemoveAt(nLast))
+        if (!RemoveAt(nLast))
             return NULL;
         return t;
     }
 
     inline T shift()
     {
-        if(getSize() <= 0)
+        if (getSize() <= 0)
             return NULL; // must be able to convert to NULL
         T t = m_aT[0];
-        if(!RemoveAt(0))
+        if (!RemoveAt(0))
             return NULL;
         return t;
     }
 
-    inline const T& operator[] (int nIndex) const
+    inline const T& operator[](int nIndex) const
     {
-        return baseClass::operator [](nIndex);
+        return baseClass::operator[](nIndex);
     }
 
-    inline T& operator[] (int nIndex)
+    inline T& operator[](int nIndex)
     {
-        return baseClass::operator [](nIndex);
+        return baseClass::operator[](nIndex);
     }
 
     inline void resetList()
@@ -2729,14 +2809,14 @@ public:
 };
 
 /*lint -esym(1509, CNtObjectsMainFrame) */
-class CNtObjectsMainFrame :
-    public CFrameWindowImpl<CNtObjectsMainFrame>,
-    public CUpdateUI<CNtObjectsMainFrame>,
-    public CMessageFilter,
-    public CIdleHandler
+class CNtObjectsMainFrame : public CFrameWindowImpl<CNtObjectsMainFrame>,
+                            public CUpdateUI<CNtObjectsMainFrame>,
+                            public CMessageFilter,
+                            public CIdleHandler
 {
     typedef CFrameWindowImpl<CNtObjectsMainFrame> baseClass;
-public:
+
+  public:
     DECLARE_FRAME_WND_CLASS(_T("NtObjectsMainFrame"), IDR_MAINFRAME)
 
     CLanguageSetter& m_langSetter;
@@ -2752,7 +2832,7 @@ public:
     GenericObject* m_activeObject;
     CVersionInfo m_verinfo;
     CVisitedListT<Directory*> m_visitedList;
-    HRESULT (CALLBACK* DllGetVersion)(DLLVERSIONINFO *);
+    HRESULT(CALLBACK* DllGetVersion)(DLLVERSIONINFO*);
     CAccessToken m_Token;
     const bool m_bIsAdmin;
     const bool m_bIsElevated;
@@ -2766,7 +2846,7 @@ public:
         , m_listview(m_imagelist)
 #if FEATURE_FIND_OBJECT
         , m_splitFind(m_imagelist)
-#endif // FEATURE_FIND_OBJECT
+#endif                         // FEATURE_FIND_OBJECT
         , m_bFirstOnIdle(true) // to force initial refresh
         , m_activeObject(0)
         , m_verinfo(ModuleHelper::GetResourceInstance())
@@ -2777,7 +2857,7 @@ public:
         , m_osvix(osvix)
     {
         HMODULE hShell32 = ::GetModuleHandle(_T("shell32.dll"));
-        if(hShell32)
+        if (hShell32)
         {
             *(FARPROC*)&DllGetVersion = ::GetProcAddress(hShell32, "DllGetVersion");
         }
@@ -2786,46 +2866,46 @@ public:
     virtual BOOL PreTranslateMessage(MSG* pMsg)
     {
         ATLASSERT(::IsWindow(m_hWnd));
-        if(CFrameWindowImpl<CNtObjectsMainFrame>::PreTranslateMessage(pMsg))
+        if (CFrameWindowImpl<CNtObjectsMainFrame>::PreTranslateMessage(pMsg))
             return TRUE;
-        if(IsDialogMessage(pMsg))
+        if (IsDialogMessage(pMsg))
             return TRUE;
         return FALSE;
     }
 
     BEGIN_UPDATE_UI_MAP(CNtObjectsMainFrame)
-        UPDATE_ELEMENT(ID_SWITCHLANGUAGE_ENGLISH, UPDUI_MENUPOPUP)
-        UPDATE_ELEMENT(ID_SWITCHLANGUAGE_GERMAN, UPDUI_MENUPOPUP)
+    UPDATE_ELEMENT(ID_SWITCHLANGUAGE_ENGLISH, UPDUI_MENUPOPUP)
+    UPDATE_ELEMENT(ID_SWITCHLANGUAGE_GERMAN, UPDUI_MENUPOPUP)
     END_UPDATE_UI_MAP()
 
     BEGIN_MSG_MAP(CNtObjectsMainFrame)
-        CHAIN_MSG_MAP_MEMBER(m_treeview)
-        CHAIN_MSG_MAP_MEMBER(m_listview)
-        MESSAGE_HANDLER(WM_CREATE, OnCreate)
-        MESSAGE_HANDLER(WM_DESTROY, OnDestroy)
-        MESSAGE_HANDLER(WM_GETMINMAXINFO, OnGetMinMaxInfo)
-        MESSAGE_HANDLER(WM_SYSCOMMAND, OnSysCommand)
-        MESSAGE_HANDLER(WM_APPCOMMAND, OnAppCommand)
-        MESSAGE_HANDLER(WM_VISIT_DIRECTORY, OnVisitDirectory)
-        MESSAGE_HANDLER(WM_SELECT_TREEVIEW_DIRECTORY, OnSelectTreeviewDirectory)
-        MESSAGE_HANDLER(WM_SET_ACTIVE_OBJECT, OnSetActiveObject)
-        MESSAGE_HANDLER(WM_DIRECTORY_UP, OnDirectoryUp)
-        MESSAGE_HANDLER(WM_MENUSELECT, OnMenuSelect)
-        COMMAND_ID_HANDLER(ID_APP_EXIT, OnFileExit)
-        COMMAND_ID_HANDLER(ID_VIEW_PROPERTIES, OnViewProperties)
-        COMMAND_ID_HANDLER(ID_VIEW_REFRESH, OnViewRefresh)
-        COMMAND_ID_HANDLER(ID_SHOW_ABOUT, OnShowAbout)
-        COMMAND_ID_HANDLER(ID_SHOW_ONLINEHELP, OnShowOnlineHelp)
-        COMMAND_ID_HANDLER(ID_FILE_SAVE_AS, OnSaveAs)
+    CHAIN_MSG_MAP_MEMBER(m_treeview)
+    CHAIN_MSG_MAP_MEMBER(m_listview)
+    MESSAGE_HANDLER(WM_CREATE, OnCreate)
+    MESSAGE_HANDLER(WM_DESTROY, OnDestroy)
+    MESSAGE_HANDLER(WM_GETMINMAXINFO, OnGetMinMaxInfo)
+    MESSAGE_HANDLER(WM_SYSCOMMAND, OnSysCommand)
+    MESSAGE_HANDLER(WM_APPCOMMAND, OnAppCommand)
+    MESSAGE_HANDLER(WM_VISIT_DIRECTORY, OnVisitDirectory)
+    MESSAGE_HANDLER(WM_SELECT_TREEVIEW_DIRECTORY, OnSelectTreeviewDirectory)
+    MESSAGE_HANDLER(WM_SET_ACTIVE_OBJECT, OnSetActiveObject)
+    MESSAGE_HANDLER(WM_DIRECTORY_UP, OnDirectoryUp)
+    MESSAGE_HANDLER(WM_MENUSELECT, OnMenuSelect)
+    COMMAND_ID_HANDLER(ID_APP_EXIT, OnFileExit)
+    COMMAND_ID_HANDLER(ID_VIEW_PROPERTIES, OnViewProperties)
+    COMMAND_ID_HANDLER(ID_VIEW_REFRESH, OnViewRefresh)
+    COMMAND_ID_HANDLER(ID_SHOW_ABOUT, OnShowAbout)
+    COMMAND_ID_HANDLER(ID_SHOW_ONLINEHELP, OnShowOnlineHelp)
+    COMMAND_ID_HANDLER(ID_FILE_SAVE_AS, OnSaveAs)
 #if FEATURE_FIND_OBJECT
-        COMMAND_ID_HANDLER(ID_VIEW_FIND, OnFindObject)
+    COMMAND_ID_HANDLER(ID_VIEW_FIND, OnFindObject)
 #endif // FEATURE_FIND_OBJECT
-        COMMAND_ID_HANDLER(ID_SWITCHLANGUAGE_ENGLISH, OnSwitchLanguage)
-        COMMAND_ID_HANDLER(ID_SWITCHLANGUAGE_GERMAN, OnSwitchLanguage)
-        COMMAND_ID_HANDLER(ID_SWITCHLANGUAGE_POPUP, OnSwitchLanguage)
-        CHAIN_MSG_MAP(CUpdateUI<CNtObjectsMainFrame>)
-        CHAIN_MSG_MAP(CFrameWindowImpl<CNtObjectsMainFrame>)
-        DEFAULT_REFLECTION_HANDLER()
+    COMMAND_ID_HANDLER(ID_SWITCHLANGUAGE_ENGLISH, OnSwitchLanguage)
+    COMMAND_ID_HANDLER(ID_SWITCHLANGUAGE_GERMAN, OnSwitchLanguage)
+    COMMAND_ID_HANDLER(ID_SWITCHLANGUAGE_POPUP, OnSwitchLanguage)
+    CHAIN_MSG_MAP(CUpdateUI<CNtObjectsMainFrame>)
+    CHAIN_MSG_MAP(CFrameWindowImpl<CNtObjectsMainFrame>)
+    DEFAULT_REFLECTION_HANDLER()
     END_MSG_MAP()
 
     LRESULT OnCreate(UINT /*uMsg*/, WPARAM /*wParam*/, LPARAM /*lParam*/, BOOL& /*bHandled*/)
@@ -2903,7 +2983,7 @@ public:
 
     virtual BOOL OnIdle()
     {
-        if(m_bFirstOnIdle)
+        if (m_bFirstOnIdle)
         {
             m_bFirstOnIdle = false;
             // Force initial refresh
@@ -2939,7 +3019,7 @@ public:
     LRESULT OnViewRefresh(WORD /*wNotifyCode*/, WORD /*wID*/, HWND /*hWndCtl*/, BOOL& /*bHandled*/)
     {
         CWaitCursor wc;
-        if(m_treeview.emptyAndRefill())
+        if (m_treeview.emptyAndRefill())
         {
             // Invalidate the cached items
             m_visitedList.resetList();
@@ -2963,7 +3043,7 @@ public:
         sei.fMask = SEE_MASK_FLAG_NO_UI;
         sei.lpVerb = _T("open");
         CString url;
-#       pragma warning(suppress: 6031)
+#pragma warning(suppress : 6031)
         ATLVERIFY(url.LoadString(IDS_URL_ONLINEHELP));
         sei.lpFile = url.GetString();
         ATLVERIFY(::ShellExecuteEx(&sei));
@@ -2981,7 +3061,7 @@ public:
         LPCTSTR lpszFileName = _T("ntobjx.txt");
         DWORD const dwFlags = OFN_HIDEREADONLY | OFN_OVERWRITEPROMPT;
         CFileDialog dlg(FALSE, lpszDefExt, lpszFileName, dwFlags, lpmszFilter);
-        if(IDOK == dlg.DoModal(m_hWnd))
+        if (IDOK == dlg.DoModal(m_hWnd))
         {
             ATLTRACE2(_T("The picked file is: %s\n"), dlg.m_szFileName);
             saveAs_(dlg.m_szFileName, m_treeview.getObjectRoot());
@@ -2999,7 +3079,7 @@ public:
 
     LANGID updateMainFormLanguage(LANGID langID, BOOL bRefreshAll = FALSE)
     {
-        if(m_currentLang != langID)
+        if (m_currentLang != langID)
         {
             m_currentLang = m_langSetter.set(langID);
         }
@@ -3045,17 +3125,17 @@ public:
         ATLVERIFY(menu.LoadMenu(IDR_MAINFRAME));
         ATLASSERT(menu.IsMenu());
 
-        if(menu.IsMenu())
+        if (menu.IsMenu())
         {
             ATLTRACE2(_T("%hs: Main menu items %i\n"), __func__, menu.GetMenuItemCount());
 #ifdef _DEBUG
             dumpMenuItems_(menu);
 #endif // _DEBUG
-            // Get the popup menu at index 0 from the menu resource
+       // Get the popup menu at index 0 from the menu resource
             CMenuHandle viewmenu = menu.GetSubMenu(1);
             ATLASSERT(viewmenu.IsMenu());
 
-            if(viewmenu.IsMenu())
+            if (viewmenu.IsMenu())
             {
                 ATLTRACE2(_T("%hs: View menu items %i\n"), __func__, viewmenu.GetMenuItemCount());
 #ifdef _DEBUG
@@ -3065,7 +3145,7 @@ public:
                 ATLTRACE2(_T("%hs: %i == Switch language menu item\n"), __func__, viewmenu.GetMenuItemCount() - 1);
                 ATLASSERT(popup.IsMenu());
 
-                if(popup.IsMenu())
+                if (popup.IsMenu())
                 {
                     ATLTRACE2(_T("%hs: Switch Language menu items %i\n"), __func__, popup.GetMenuItemCount());
 #ifdef _DEBUG
@@ -3074,21 +3154,16 @@ public:
 
                     // Let the user pick
                     int idCmd = popup.TrackPopupMenuEx(
-                        TPM_LEFTALIGN | TPM_RETURNCMD | TPM_RIGHTBUTTON | TPM_NONOTIFY
-                        , spt.x
-                        , spt.y
-                        , m_hWnd
-                        , NULL
-                    );
+                        TPM_LEFTALIGN | TPM_RETURNCMD | TPM_RIGHTBUTTON | TPM_NONOTIFY, spt.x, spt.y, m_hWnd, NULL);
 
-                    if(idCmd)
+                    if (idCmd)
                     {
                         switch (idCmd)
                         {
                         case ID_SWITCHLANGUAGE_ENGLISH:
                         case ID_SWITCHLANGUAGE_GERMAN:
                             ATLTRACE2(_T("Picked language %i\n"), idCmd);
-                            if(static_cast<LANGID>(idCmd) != m_currentLang)
+                            if (static_cast<LANGID>(idCmd) != m_currentLang)
                             {
                                 SendMessage(WM_COMMAND, static_cast<WPARAM>(idCmd));
                             }
@@ -3132,7 +3207,7 @@ public:
     LRESULT OnSysCommand(UINT /*uMsg*/, WPARAM wParam, LPARAM /*lParam*/, BOOL& bHandled)
     {
         ATLTRACE2(_T("WM_SYSCOMMAND lParam: %lu\n"), wParam);
-        if(IDS_ABOUT_DESCRIPTION == wParam)
+        if (IDS_ABOUT_DESCRIPTION == wParam)
             (void)OnShowAbout(0, 0, 0, bHandled);
         else
             bHandled = FALSE;
@@ -3142,10 +3217,10 @@ public:
     LRESULT OnAppCommand(UINT /*uMsg*/, WPARAM /*wParam*/, LPARAM lParam, BOOL& bHandled)
     {
         bHandled = FALSE;
-        SHORT cmd  = GET_APPCOMMAND_LPARAM(lParam);
-        if(m_visitedList)
+        SHORT cmd = GET_APPCOMMAND_LPARAM(lParam);
+        if (m_visitedList)
         {
-            switch(cmd)
+            switch (cmd)
             {
             case APPCOMMAND_BROWSER_BACKWARD:
             case APPCOMMAND_MEDIA_PREVIOUSTRACK:
@@ -3165,7 +3240,7 @@ public:
     LRESULT OnVisitDirectory(UINT /*uMsg*/, WPARAM /*wParam*/, LPARAM lParam, BOOL& /*bHandled*/)
     {
         ATLASSERT(lParam != 0);
-        if(Directory* dir = reinterpret_cast<Directory*>(lParam))
+        if (Directory* dir = reinterpret_cast<Directory*>(lParam))
         {
             ATLTRACE2(_T("%hs: %s\n"), __func__, dir->fullname().GetString());
             visitDirectory_(dir);
@@ -3178,7 +3253,7 @@ public:
     LRESULT OnSelectTreeviewDirectory(UINT /*uMsg*/, WPARAM /*wParam*/, LPARAM lParam, BOOL& /*bHandled*/)
     {
         ATLASSERT(lParam != 0);
-        if(Directory* dir = reinterpret_cast<Directory*>(lParam))
+        if (Directory* dir = reinterpret_cast<Directory*>(lParam))
         {
             ATLTRACE2(_T("%hs: %s\n"), __func__, dir->fullname().GetString());
             m_treeview.selectDirectory(dir);
@@ -3188,7 +3263,7 @@ public:
 
     inline LRESULT OnSetActiveObject(UINT /*uMsg*/, WPARAM /*wParam*/, LPARAM lParam, BOOL& /*bHandled*/)
     {
-        if(GenericObject* obj = reinterpret_cast<GenericObject*>(lParam))
+        if (GenericObject* obj = reinterpret_cast<GenericObject*>(lParam))
         {
             setActiveObject_(obj);
         }
@@ -3197,7 +3272,7 @@ public:
 
     inline LRESULT OnDirectoryUp(UINT /*uMsg*/, WPARAM /*wParam*/, LPARAM /*lParam*/, BOOL& /*bHandled*/)
     {
-        if(Directory* dir = m_treeview.getParentFromSelection())
+        if (Directory* dir = m_treeview.getParentFromSelection())
         {
             ATLTRACE2(_T("%hs: %s\n"), __func__, dir->fullname().GetString());
             m_treeview.selectDirectory(dir);
@@ -3208,21 +3283,21 @@ public:
     LRESULT OnMenuSelect(UINT /*uMsg*/, WPARAM wParam, LPARAM /*lParam*/, BOOL& bHandled)
     {
         WORD wID = LOWORD(wParam);
-        if((MF_SYSMENU & HIWORD(wParam)) && (IDS_ABOUT_DESCRIPTION == wID))
+        if ((MF_SYSMENU & HIWORD(wParam)) && (IDS_ABOUT_DESCRIPTION == wID))
         {
             const int cchBuff = 256;
-            TCHAR szBuff[cchBuff] = { 0 };
+            TCHAR szBuff[cchBuff] = {0};
 
             int nRet = AtlLoadString(wID, szBuff, cchBuff);
-            for(int i = 0; i < nRet; i++)
+            for (int i = 0; i < nRet; i++)
             {
-                if(szBuff[i] == _T('\n'))
+                if (szBuff[i] == _T('\n'))
                 {
                     szBuff[i] = 0;
                     break;
                 }
             }
-            if(::IsWindow(m_status))
+            if (::IsWindow(m_status))
             {
                 ::SendMessage(m_status, SB_SIMPLE, TRUE, 0L);
                 ::SendMessage(m_status, SB_SETTEXT, (255 | SBT_NOBORDERS), (LPARAM)szBuff);
@@ -3246,17 +3321,22 @@ public:
         UNREFERENCED_PARAMETER(wID);
         UNREFERENCED_PARAMETER(hWndCtl);
 #endif
-        ATLTRACE2(_T("hWndCtl = %p; wNotifyCode = %u (%04X); wID = %u (%04X)\n"), hWndCtl, wNotifyCode, wNotifyCode, wID, wID);
+        ATLTRACE2(_T("hWndCtl = %p; wNotifyCode = %u (%04X); wID = %u (%04X)\n"),
+                  hWndCtl,
+                  wNotifyCode,
+                  wNotifyCode,
+                  wID,
+                  wID);
 #ifdef _DEBUG
-        if(m_activeObject)
+        if (m_activeObject)
         {
             ATLTRACE2(_T("Last selected item: %s\n"), m_activeObject->fullname().GetString());
         }
-        if(hWndCtl == m_listview)
+        if (hWndCtl == m_listview)
         {
             ATLTRACE2(_T("From ListView\n"));
         }
-        else if(hWndCtl == m_treeview)
+        else if (hWndCtl == m_treeview)
         {
             ATLTRACE2(_T("From TreeView\n"));
         }
@@ -3266,30 +3346,31 @@ public:
         }
 #endif
 
-        if(m_activeObject)
+        if (m_activeObject)
         {
-#           if FEATURE_OBJECT_SECURITY
+#if FEATURE_OBJECT_SECURITY
             // First time the user wants to see the properties (and security settings), we enable two privileges
-            if(!m_Token.GetHandle())
+            if (!m_Token.GetHandle())
             {
-                if(
-                    m_Token.GetThreadToken(TOKEN_ADJUST_PRIVILEGES | TOKEN_QUERY)
-                    || m_Token.GetProcessToken(TOKEN_ADJUST_PRIVILEGES | TOKEN_QUERY)
-                    )
+                if (m_Token.GetThreadToken(TOKEN_ADJUST_PRIVILEGES | TOKEN_QUERY) ||
+                    m_Token.GetProcessToken(TOKEN_ADJUST_PRIVILEGES | TOKEN_QUERY))
                 {
                     bool bNotAllAssigned = false;
                     ATLTRACE2(_T("Opened thread or process token: %p\n"), m_Token.GetHandle());
-                    LPCTSTR requiredPrivileges[] = { SE_SECURITY_NAME, SE_TAKE_OWNERSHIP_NAME };
-                    for(size_t i = 0; i < _countof(requiredPrivileges); i++)
+                    LPCTSTR requiredPrivileges[] = {SE_SECURITY_NAME, SE_TAKE_OWNERSHIP_NAME};
+                    for (size_t i = 0; i < _countof(requiredPrivileges); i++)
                     {
-                        if(m_Token.EnablePrivilege(requiredPrivileges[i], NULL, &bNotAllAssigned))
+                        if (m_Token.EnablePrivilege(requiredPrivileges[i], NULL, &bNotAllAssigned))
                         {
-                            ATLTRACE2(_T("%s %s enabled (%d)\n"), requiredPrivileges[i], (bNotAllAssigned) ? _T("could not be") : _T("was successfully"), GetLastError());
+                            ATLTRACE2(_T("%s %s enabled (%d)\n"),
+                                      requiredPrivileges[i],
+                                      (bNotAllAssigned) ? _T("could not be") : _T("was successfully"),
+                                      GetLastError());
                         }
                     }
                 }
             }
-#           endif // FEATURE_OBJECT_SECURITY
+#endif // FEATURE_OBJECT_SECURITY
             ATLTRACE2(_T("last selected = %p -> %s\n"), m_activeObject, m_activeObject->fullname().GetString());
             CObjectPropertySheet objprop(m_activeObject, m_imagelist);
             (void)objprop.DoModal(m_hWnd);
@@ -3298,28 +3379,28 @@ public:
         return 0;
     }
 
-private:
+  private:
 #ifdef _DEBUG
-    template<typename T> void dumpMenuItems_(T& menu) const
+    template <typename T> void dumpMenuItems_(T& menu) const
     {
         ATLTRACE2(_T("%hs: ======================================\n"), __func__);
         for (int i = 0; i < menu.GetMenuItemCount(); i++)
         {
-            MENUITEMINFO mii = { 0 };
+            MENUITEMINFO mii = {0};
             mii.cbSize = sizeof(mii);
             mii.fMask = MIIM_FTYPE;
             ATLVERIFY(menu.GetMenuItemInfo(static_cast<UINT>(i), TRUE, &mii));
-            if(mii.fType == MFT_SEPARATOR)
+            if (mii.fType == MFT_SEPARATOR)
             {
                 ATLTRACE2(_T("%hs: %i -> --------------[Separator]-------------\n"), __func__, i);
             }
-            if(mii.fType == MFT_STRING)
+            if (mii.fType == MFT_STRING)
             {
                 CString s;
                 mii.fMask = MIIM_STRING;
                 mii.dwTypeData = s.GetBufferSetLength(MAX_PATH);
                 mii.cch = MAX_PATH;
-                if(menu.GetMenuItemInfo(static_cast<UINT>(i), TRUE, &mii))
+                if (menu.GetMenuItemInfo(static_cast<UINT>(i), TRUE, &mii))
                 {
                     ATLTRACE2(_T("%hs: %i -> %s\n"), __func__, i, mii.dwTypeData);
                 }
@@ -3335,16 +3416,16 @@ private:
     inline void disableSwitchLanguageMenuItem_()
     {
         CMenuHandle mainmenu = GetMenu();
-        if(mainmenu.IsMenu())
+        if (mainmenu.IsMenu())
         {
             CMenuHandle viewmenu = mainmenu.GetSubMenu(1);
-            if(viewmenu.IsMenu())
+            if (viewmenu.IsMenu())
             {
                 int const idx = viewmenu.GetMenuItemCount() - 1;
-                MENUITEMINFO mii = { 0 };
+                MENUITEMINFO mii = {0};
                 mii.cbSize = sizeof(mii);
                 mii.fMask = MIIM_STATE;
-                if(viewmenu.GetMenuItemInfo(static_cast<UINT>(idx), TRUE, &mii))
+                if (viewmenu.GetMenuItemInfo(static_cast<UINT>(idx), TRUE, &mii))
                 {
                     mii.fState |= MFS_DISABLED;
                     ATLVERIFY(viewmenu.SetMenuItemInfo(static_cast<UINT>(idx), TRUE, &mii));
@@ -3356,12 +3437,12 @@ private:
     inline void renewAboutInSystemMenu_(BOOL bInitial = FALSE)
     {
         CMenuHandle sysmenu(GetSystemMenu(FALSE));
-        if(sysmenu.IsMenu())
+        if (sysmenu.IsMenu())
         {
             CString menuString;
-            if(menuString.LoadString(IDS_ABOUT_MENUITEM))
+            if (menuString.LoadString(IDS_ABOUT_MENUITEM))
             {
-                if(bInitial) //append, not just set the text
+                if (bInitial) // append, not just set the text
                 {
                     ATLVERIFY(sysmenu.AppendMenu(MF_SEPARATOR));
                     ATLVERIFY(sysmenu.AppendMenu(MF_STRING, IDS_ABOUT_DESCRIPTION, menuString));
@@ -3382,13 +3463,13 @@ private:
 
     inline void renewStatusBar_()
     {
-        if(::IsWindow(m_status))
+        if (::IsWindow(m_status))
         {
             ATLASSERT(m_status.m_nPanes == 3); // in case I ever change this, that's the tripping wire to notice
             m_status.reloadPaneText(1);
             m_status.reloadPaneText(2);
 
-            if(m_activeObject)
+            if (m_activeObject)
             {
                 setStatusBarItem_(m_activeObject);
             }
@@ -3401,21 +3482,21 @@ private:
         ATLASSERT(hOldMenu != NULL);
         HMENU hNewMenu = AtlLoadMenu(GetWndClassInfo().m_uCommonResourceID);
         ATLASSERT(hNewMenu != NULL);
-        if(hNewMenu != NULL)
+        if (hNewMenu != NULL)
         {
             ATLVERIFY(SetMenu(hNewMenu));
             ATLVERIFY(::DestroyMenu(hOldMenu));
         }
-        if(m_hAccel)
+        if (m_hAccel)
         {
             HACCEL hOldAccel = m_hAccel;
             HACCEL hNewAccel = AtlLoadAccelerators(GetWndClassInfo().m_uCommonResourceID);
             ATLASSERT(hNewAccel != NULL);
-            if(hNewAccel)
+            if (hNewAccel)
             {
                 ATLTRACE2(_T("Loaded accelerator table: %p\n"), hNewAccel);
                 m_hAccel = hNewAccel;
-                if(hOldAccel)
+                if (hOldAccel)
                 {
                     ATLVERIFY(::DestroyAcceleratorTable(hOldAccel));
                 }
@@ -3426,10 +3507,11 @@ private:
     inline void setWindowTitle_()
     {
         CString oldWndTitle, newDlgTitle;
-#       pragma warning(suppress: 6031)
+#pragma warning(suppress : 6031)
         ATLVERIFY(oldWndTitle.LoadString(IDR_MAINFRAME));
         ATLTRACE2(_T("Old title: %s\n"), oldWndTitle.GetString());
-        newDlgTitle.Format(IDS_TITLEBAR_FMTSTR, oldWndTitle.GetString(), m_verinfo[_T("FileVersion")], sizeof(void*) * 8);
+        newDlgTitle.Format(
+            IDS_TITLEBAR_FMTSTR, oldWndTitle.GetString(), m_verinfo[_T("FileVersion")], sizeof(void*) * 8);
         ATLTRACE2(_T("New title: %s\n"), newDlgTitle.GetString());
         ATLVERIFY(SetWindowText(newDlgTitle.GetString()));
     }
@@ -3443,7 +3525,7 @@ private:
     void visitDirectory_(Directory* dir)
     {
         ATLASSERT(dir != NULL);
-        if(!dir)
+        if (!dir)
         {
             return;
         }
@@ -3460,14 +3542,14 @@ private:
     {
         ATLTRACE2(_T("%hs: Navigating %s\n"), __func__, (forward) ? _T("forward") : _T("backward"));
         Directory* dir = static_cast<Directory*>(m_visitedList.navigate(forward));
-        if(!dir)
+        if (!dir)
         {
             ATLTRACE2(_T("No valid Directory* returned.\n"));
             ::MessageBeep(MB_ICONEXCLAMATION);
             return FALSE;
         }
         m_treeview.selectDirectory(dir);
-        if(forward)
+        if (forward)
         {
             // Keep a list of visited directories
             ATLVERIFY(m_visitedList.push(dir));
@@ -3478,13 +3560,13 @@ private:
     inline void setStatusBarItem_(GenericObject* obj)
     {
         ATLASSERT(obj != NULL);
-        if(!::IsWindow(m_status))
+        if (!::IsWindow(m_status))
         {
             return;
         }
 
         LPCWSTR fullName = (obj) ? obj->fullname().GetString() : NULL;
-        if(Directory* pdir = dynamic_cast<Directory*>(obj))
+        if (Directory* pdir = dynamic_cast<Directory*>(obj))
         {
             Directory& dir = *pdir;
             ULONG nSymLinks = 0, nDirectories = 0, nChildren = static_cast<ULONG>(dir.size());
@@ -3493,7 +3575,7 @@ private:
                 GenericObject* childobj = dir[i];
 
                 ATLASSERT(childobj != NULL);
-                if(!childobj)
+                if (!childobj)
                     continue;
 
                 switch (dir[i]->objtype())
@@ -3514,7 +3596,7 @@ private:
         }
         else
         {
-            if(NULL != fullName)
+            if (NULL != fullName)
             {
                 m_status.SetWindowText(fullName);
             }
@@ -3524,8 +3606,10 @@ private:
 
     class IObjectDirectoryDumper
     {
-    public:
-        virtual ~IObjectDirectoryDumper() {}
+      public:
+        virtual ~IObjectDirectoryDumper()
+        {
+        }
         virtual void addSymlinkObject(const SymbolicLink* obj) = 0;
         virtual void addContainedObject(const GenericObject* obj) = 0;
         virtual void enterDirectory(const Directory* obj) = 0;
@@ -3538,14 +3622,14 @@ private:
             {
                 GenericObject* entry = current[i];
 
-                if(Directory* directory = dynamic_cast<Directory*>(entry))
+                if (Directory* directory = dynamic_cast<Directory*>(entry))
                 {
                     this->enterDirectory(directory);
                     this->operator()(*directory);
                     this->leaveDirectory();
                     continue;
                 }
-                if(SymbolicLink const* symlink = dynamic_cast<SymbolicLink const*>(entry))
+                if (SymbolicLink const* symlink = dynamic_cast<SymbolicLink const*>(entry))
                 {
                     this->addSymlinkObject(symlink);
                     continue;
@@ -3556,15 +3640,15 @@ private:
     };
 
 #ifndef NTOBJX_NO_XML_EXPORT
-    class CXmlObjectDirectoryDumper :
-        public IObjectDirectoryDumper
+    class CXmlObjectDirectoryDumper : public IObjectDirectoryDumper
     {
         typedef IObjectDirectoryDumper baseClass;
         pugi::xml_document m_document;
         pugi::xml_node m_currentNode;
         pugi::xml_node m_previousNode;
         CString m_fileName;
-    public:
+
+      public:
         CXmlObjectDirectoryDumper(LPCTSTR lpszFileName)
             : m_document()
             , m_currentNode(m_document.append_child(_T("ObjectManager")).append_child(_T(OBJTYPESTR_DIRECTORY)))
@@ -3615,7 +3699,7 @@ private:
             return m_fileName.GetString();
         }
 
-    private:
+      private:
         pugi::xml_node addStandardObject_(const GenericObject* obj)
         {
             ATLASSERT(obj != NULL);
@@ -3627,8 +3711,7 @@ private:
     };
 #endif // !NTOBJX_NO_XML_EXPORT
 
-    class CTxtObjectDirectoryDumper :
-        public IObjectDirectoryDumper
+    class CTxtObjectDirectoryDumper : public IObjectDirectoryDumper
     {
         typedef IObjectDirectoryDumper baseClass;
         FILE* m_file;
@@ -3636,7 +3719,8 @@ private:
         CString m_fileName;
         CString m_currentPrefix;
         CString m_previousPrefix;
-    public:
+
+      public:
         CTxtObjectDirectoryDumper(LPCTSTR lpszFileName)
             : m_file(NULL)
             , m_bOpened(false)
@@ -3644,7 +3728,7 @@ private:
             , m_currentPrefix(_T("\t"))
         {
             m_bOpened = (0 == _tfopen_s(&m_file, lpszFileName, _T("w+, ccs=UTF-8")));
-            if(m_bOpened && m_file)
+            if (m_bOpened && m_file)
             {
                 _ftprintf(m_file, _T("\\\n")); // Root of object manager namespace
             }
@@ -3660,7 +3744,12 @@ private:
         {
             ATLASSERT(obj != NULL);
             LPCTSTR linePrefix = m_currentPrefix.GetString();
-            _ftprintf(m_file, _T("%s%s [%s] -> %s\n"), linePrefix, obj->name().GetString(), obj->type().GetString(), obj->target().GetString());
+            _ftprintf(m_file,
+                      _T("%s%s [%s] -> %s\n"),
+                      linePrefix,
+                      obj->name().GetString(),
+                      obj->type().GetString(),
+                      obj->target().GetString());
         }
 
         void addContainedObject(const GenericObject* obj)
@@ -3692,10 +3781,10 @@ private:
 
     void saveAs_(LPCTSTR lpszFileName, Directory& objroot)
     {
-        if(size_t len = (lpszFileName) ? _tcslen(lpszFileName) : 0)
+        if (size_t len = (lpszFileName) ? _tcslen(lpszFileName) : 0)
         {
 #ifndef NTOBJX_NO_XML_EXPORT
-            if(lpszFileName && (len > 4) && (0 == _tcsicmp(_T(".xml"), &lpszFileName[len -4])))
+            if (lpszFileName && (len > 4) && (0 == _tcsicmp(_T(".xml"), &lpszFileName[len - 4])))
             {
                 ATLTRACE2(_T("Assuming the user wants to save an XML, based on extension: %s\n"), lpszFileName);
                 CXmlObjectDirectoryDumper dump(lpszFileName);
@@ -3720,9 +3809,10 @@ private:
         return hWndStatusBar;
     }
 
-    template<typename T> HWND createSplitter_(T& splitter, HWND hWndParent, bool bFullDrag = true)
+    template <typename T> HWND createSplitter_(T& splitter, HWND hWndParent, bool bFullDrag = true)
     {
-        HWND hWndSplitter = splitter.Create(hWndParent, rcDefault, NULL, WS_CHILD | WS_VISIBLE | WS_CLIPSIBLINGS | WS_CLIPCHILDREN);
+        HWND hWndSplitter =
+            splitter.Create(hWndParent, rcDefault, NULL, WS_CHILD | WS_VISIBLE | WS_CLIPSIBLINGS | WS_CLIPCHILDREN);
         // Add WS_EX_CONTROLPARENT such that tab stops will work
         splitter.ModifyStyleEx(0, WS_EX_CONTROLPARENT);
         // The splitter should be smaller than the default width
@@ -3733,10 +3823,10 @@ private:
 
     inline void enableShell60Features_()
     {
-        if(DllGetVersion)
+        if (DllGetVersion)
         {
             DLLVERSIONINFO dllvi = {sizeof(DLLVERSIONINFO), 0, 0, 0, 0};
-            if(SUCCEEDED(DllGetVersion(&dllvi)) && dllvi.dwMajorVersion >= 6)
+            if (SUCCEEDED(DllGetVersion(&dllvi)) && dllvi.dwMajorVersion >= 6)
             {
                 m_treeview.ModifyStyleEx(0, TVS_EX_DOUBLEBUFFER);
                 m_listview.SetExtendedListViewStyle(CNtObjectsListViewTraits::GetWndExStyle(LVS_EX_DOUBLEBUFFER));
@@ -3757,5 +3847,4 @@ private:
         m_treeview.setFrameWindow(m_hWnd); // make the frame window known to the treeview control
         m_listview.setFrameWindow(m_hWnd); // make the frame window known to the listview control
     }
-
 };

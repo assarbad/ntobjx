@@ -33,39 +33,48 @@
 #endif // Check for "#pragma once" support
 
 #include "ntnative.h"
-#include <atlstr.h>
+
 #include <atlcoll.h>
+#include <atlstr.h>
+
 #include "objtypes.h"
 #include <WinIoCtl.h>
 #ifdef _DEBUG // for textual NTSTATUS values in trace messages
-#   include "util/SimpleBuffer.h"
-#   ifndef VTRACE
-#       define VTRACE(...) do {} while(false)
-#   endif
-#   define CLL_NO_ENSURE_VERSION_CLASS
-#   include "util/LoadLibrary.h"
-#   include "util/VersionInfo.h"
-#   define TRACE_NTSTATUS(x) \
-        do \
-        { \
-            if (HRESULT_FACILITY(x) == FACILITY_WIN32) \
-            { \
-                CLoadLibrary kernel32; \
-                CSimpleBuf<TCHAR> status(kernel32.formatSystemMessage<TCHAR>(static_cast<DWORD>(x))); \
-                ATLTRACE2(_T("  Win32 status was '%s'\n"), status.Buffer()); \
-            } \
-            else \
-            { \
-                CLoadLibrary ntdll(_T("ntdll.dll")); \
-                CSimpleBuf<TCHAR> status(ntdll.formatMessage<TCHAR>(ntdll.getHandle(), static_cast<DWORD>(x))); \
-                ATLTRACE2(_T("  NTSTATUS was '%s'\n"), status.Buffer()); \
-            } \
-        } while (0)
+#include "util/SimpleBuffer.h"
+#ifndef VTRACE
+#define VTRACE(...) \
+    do              \
+    {               \
+    } while (false)
+#endif
+#define CLL_NO_ENSURE_VERSION_CLASS
+#include "util/LoadLibrary.h"
+#include "util/VersionInfo.h"
+#define TRACE_NTSTATUS(x)                                                                                   \
+    do                                                                                                      \
+    {                                                                                                       \
+        if (HRESULT_FACILITY(x) == FACILITY_WIN32)                                                          \
+        {                                                                                                   \
+            CLoadLibrary kernel32;                                                                          \
+            CSimpleBuf<TCHAR> status(kernel32.formatSystemMessage<TCHAR>(static_cast<DWORD>(x)));           \
+            ATLTRACE2(_T("  Win32 status was '%s'\n"), status.Buffer());                                    \
+        }                                                                                                   \
+        else                                                                                                \
+        {                                                                                                   \
+            CLoadLibrary ntdll(_T("ntdll.dll"));                                                            \
+            CSimpleBuf<TCHAR> status(ntdll.formatMessage<TCHAR>(ntdll.getHandle(), static_cast<DWORD>(x))); \
+            ATLTRACE2(_T("  NTSTATUS was '%s'\n"), status.Buffer());                                        \
+        }                                                                                                   \
+    } while (0)
 #else
-#   define TRACE_NTSTATUS(x) do {} while (0)
+#define TRACE_NTSTATUS(x) \
+    do                    \
+    {                     \
+    } while (0)
 #endif // _DEBUG
 
-namespace NtObjMgr{
+namespace NtObjMgr
+{
 
     typedef enum
     {
@@ -75,48 +84,53 @@ namespace NtObjMgr{
     } objtype_t;
 
     // Base interface from which everything derives
-    template<typename T> interface IObjectT
+    template <typename T> interface IObjectT
     {
-        virtual ~IObjectT() {}
+        virtual ~IObjectT()
+        {
+        }
         virtual T const& name() const = 0;
         virtual T const& fullname() const = 0;
         virtual T const& type() const = 0;
         virtual objtype_t objtype() const = 0;
     };
 
-    template<typename T> interface ISymlinkT
+    template <typename T> interface ISymlinkT
     {
-        virtual ~ISymlinkT() {}
+        virtual ~ISymlinkT()
+        {
+        }
         virtual T const& target() const = 0;
     };
 
-    template<typename T> interface IDirectoryT
+    template <typename T> interface IDirectoryT
     {
-        virtual ~IDirectoryT() {}
+        virtual ~IDirectoryT()
+        {
+        }
         virtual size_t size() const = 0;
     };
 
-    template<typename T> class SymbolicLinkT;
-    template<typename T> class DirectoryT;
+    template <typename T> class SymbolicLinkT;
+    template <typename T> class DirectoryT;
 
-    template<typename T> class GenericObjectT:
-        public IObjectT<T>
+    template <typename T> class GenericObjectT : public IObjectT<T>
     {
         typedef IObjectT<T> Inherited;
 
         inline void setParent_()
         {
-            if((m_parent.GetLength() == 1) && (m_parent[0] == L'\\'))
+            if ((m_parent.GetLength() == 1) && (m_parent[0] == L'\\'))
             {
                 m_parent.Delete(0, 1);
             }
-            if((m_parent.GetLength() > 1) && (m_parent[0] != L'\\'))
+            if ((m_parent.GetLength() > 1) && (m_parent[0] != L'\\'))
             {
                 m_parent.Insert(0, L"\\");
             }
         }
 
-    public:
+      public:
         GenericObjectT(UNICODE_STRING const& name_, UNICODE_STRING const& tpname, LPCWSTR parent = NULL)
             : m_name(name_.Buffer, name_.Length / sizeof(WCHAR))
             , m_type(tpname.Buffer, tpname.Length / sizeof(WCHAR))
@@ -161,28 +175,30 @@ namespace NtObjMgr{
             return otGeneric;
         }
 
-    protected:
+      protected:
         T m_name;
         T m_type;
         T m_parent;
         T m_fullname;
 
-    private:
+      private:
         /* hide copy ctor as well as assignment operator */
-        GenericObjectT(GenericObjectT const& rhs) {}
-        GenericObjectT& operator=(GenericObjectT const&) { }
+        GenericObjectT(GenericObjectT const& rhs)
+        {
+        }
+        GenericObjectT& operator=(GenericObjectT const&)
+        {
+        }
     };
     typedef GenericObjectT<ATL::CString> GenericObject;
 
-    template<typename T> class SymbolicLinkT :
-        public GenericObjectT<T>,
-        public ISymlinkT<T>
+    template <typename T> class SymbolicLinkT : public GenericObjectT<T>, public ISymlinkT<T>
     {
         /*lint -save -e1516 */
         typedef GenericObjectT<T> Inherited;
         /*lint -restore */
 
-    public:
+      public:
         SymbolicLinkT(UNICODE_STRING const& name_, UNICODE_STRING const& tpname, LPCWSTR parent = NULL)
             : Inherited(name_, tpname, parent)
             , m_linktgt()
@@ -226,15 +242,15 @@ namespace NtObjMgr{
             ::RtlInitUnicodeString(&linkname, LPCWSTR(fullname()));
             InitializeObjectAttributes(&oa, &linkname, 0, NULL, NULL);
             m_lastStatus = ::NtOpenSymbolicLinkObject(&hLink, SYMBOLIC_LINK_QUERY, &oa);
-            if(NT_SUCCESS(m_lastStatus))
+            if (NT_SUCCESS(m_lastStatus))
             {
                 size_t const bufSize = 0x7FFF;
                 CTempBuffer<WCHAR> buf(bufSize);
                 LPWSTR lpszBuf = LPWSTR(buf);
-                UNICODE_STRING usLinkTarget = { 0, bufSize * sizeof(WCHAR), lpszBuf };
+                UNICODE_STRING usLinkTarget = {0, bufSize * sizeof(WCHAR), lpszBuf};
                 ULONG len = 0;
                 m_lastStatus = ::NtQuerySymbolicLinkObject(hLink, &usLinkTarget, &len);
-                if(NT_SUCCESS(m_lastStatus))
+                if (NT_SUCCESS(m_lastStatus))
                 {
                     m_linktgt = T(usLinkTarget.Buffer, usLinkTarget.Length / sizeof(WCHAR));
                 }
@@ -243,11 +259,15 @@ namespace NtObjMgr{
 
             return false;
         }
-    private:
 
+      private:
         /* hide copy ctor as well as assignment operator */
-        SymbolicLinkT(SymbolicLinkT const& rhs) {}
-        SymbolicLinkT& operator=(SymbolicLinkT const&) { }
+        SymbolicLinkT(SymbolicLinkT const& rhs)
+        {
+        }
+        SymbolicLinkT& operator=(SymbolicLinkT const&)
+        {
+        }
 
         T m_linktgt;
         NTSTATUS m_lastStatus;
@@ -255,28 +275,26 @@ namespace NtObjMgr{
     };
     typedef SymbolicLinkT<ATL::CString> SymbolicLink;
 
-    template<typename T> class DirectoryT :
-        public GenericObjectT<T>,
-        public IDirectoryT<T>
+    template <typename T> class DirectoryT : public GenericObjectT<T>, public IDirectoryT<T>
     {
         /*lint -save -e1516 */
         typedef GenericObjectT<T> Inherited;
         /*lint -restore */
-        typedef ATL::CAtlArray<Inherited*, ATL::CPrimitiveElementTraits<Inherited*> > EntryList;
+        typedef ATL::CAtlArray<Inherited*, ATL::CPrimitiveElementTraits<Inherited*>> EntryList;
 
-        typedef int (__cdecl* comparefunc_t)(void* /*context*/, const void* /*elem1*/, const void* /*elem2*/);
+        typedef int(__cdecl* comparefunc_t)(void* /*context*/, const void* /*elem1*/, const void* /*elem2*/);
         static int __cdecl compareItem_(void* /*context*/, Inherited*& obj1, Inherited*& obj2)
         {
             ATLASSERT(NULL != obj1);
             ATLASSERT(NULL != obj2);
-            if(obj1 && obj2)
+            if (obj1 && obj2)
             {
                 return _tcsicmp(obj1->name().GetString(), obj2->name().GetString());
             }
             return 0;
         }
 
-    public:
+      public:
         DirectoryT(LPCWSTR objdir = L"")
             : Inherited(objdir, L"Directory")
             , m_entries()
@@ -304,7 +322,7 @@ namespace NtObjMgr{
         virtual ~DirectoryT()
         {
             size_t const listsize = m_entries.GetCount();
-            for(size_t i = 0; i < listsize; i++)
+            for (size_t i = 0; i < listsize; i++)
             {
                 try
                 {
@@ -336,26 +354,32 @@ namespace NtObjMgr{
             ::RtlInitUnicodeString(&objname, LPCWSTR(fullname())); // use m_root.c_str() with STL
             InitializeObjectAttributes(&oa, &objname, 0, NULL, NULL);
             m_lastStatus = ::NtOpenDirectoryObject(&hObjRoot, DIRECTORY_QUERY | DIRECTORY_TRAVERSE, &oa);
-            if(NT_SUCCESS(m_lastStatus))
+            if (NT_SUCCESS(m_lastStatus))
             {
                 EntryList tmplist;
                 size_t const bufSize = 0x10000;
                 CTempBuffer<BYTE> buf(bufSize);
                 ULONG start = 0, idx = 0, bytes;
                 BOOLEAN restart = TRUE;
-                for(;;)
+                for (;;)
                 {
-                    m_lastStatus = ::NtQueryDirectoryObject(hObjRoot, PBYTE(buf), bufSize, FALSE, restart, &idx, &bytes);
-                    if(NT_SUCCESS(m_lastStatus))
+                    m_lastStatus =
+                        ::NtQueryDirectoryObject(hObjRoot, PBYTE(buf), bufSize, FALSE, restart, &idx, &bytes);
+                    if (NT_SUCCESS(m_lastStatus))
                     {
-                        POBJECT_DIRECTORY_INFORMATION const pdilist = reinterpret_cast<POBJECT_DIRECTORY_INFORMATION>(PBYTE(buf));
-                        for(ULONG i = 0; i < idx - start; i++)
+                        POBJECT_DIRECTORY_INFORMATION const pdilist =
+                            reinterpret_cast<POBJECT_DIRECTORY_INFORMATION>(PBYTE(buf));
+                        for (ULONG i = 0; i < idx - start; i++)
                         {
-                            if(0 == wcsncmp(pdilist[i].TypeName.Buffer, L"Directory", pdilist[i].TypeName.Length / sizeof(WCHAR)))
+                            if (0 == wcsncmp(pdilist[i].TypeName.Buffer,
+                                             L"Directory",
+                                             pdilist[i].TypeName.Length / sizeof(WCHAR)))
                             {
                                 tmplist.Add(new DirectoryT<T>(pdilist[i].Name, pdilist[i].TypeName, fullname()));
                             }
-                            else if(0 == wcsncmp(pdilist[i].TypeName.Buffer, L"SymbolicLink", pdilist[i].TypeName.Length / sizeof(WCHAR)))
+                            else if (0 == wcsncmp(pdilist[i].TypeName.Buffer,
+                                                  L"SymbolicLink",
+                                                  pdilist[i].TypeName.Length / sizeof(WCHAR)))
                             {
                                 tmplist.Add(new SymbolicLinkT<T>(pdilist[i].Name, pdilist[i].TypeName, fullname()));
                             }
@@ -368,22 +392,22 @@ namespace NtObjMgr{
 #ifdef _DEBUG
                     else
                     {
-                        if(STATUS_NO_MORE_ENTRIES != m_lastStatus)
+                        if (STATUS_NO_MORE_ENTRIES != m_lastStatus)
                             ATLTRACE2(_T("NtQueryDirectoryObject returned: %08X\n"), m_lastStatus);
                     }
 #endif
-                    if(STATUS_MORE_ENTRIES == m_lastStatus)
+                    if (STATUS_MORE_ENTRIES == m_lastStatus)
                     {
                         start = idx;
                         restart = FALSE;
                         continue;
                     }
-                    if((STATUS_SUCCESS == m_lastStatus) || (STATUS_NO_MORE_ENTRIES == m_lastStatus)) // last items?
+                    if ((STATUS_SUCCESS == m_lastStatus) || (STATUS_NO_MORE_ENTRIES == m_lastStatus)) // last items?
                     {
                         break;
                     }
                 }
-                switch(m_lastStatus)
+                switch (m_lastStatus)
                 {
                 case STATUS_SUCCESS:
                 case STATUS_NO_MORE_ENTRIES:
@@ -391,12 +415,16 @@ namespace NtObjMgr{
                         EntryList deletions;
                         deletions.Copy(m_entries); // take copy of old list
                         size_t const todelete = deletions.GetCount();
-#pragma                 warning(suppress: 6387)
-                        qsort_s(tmplist.GetData(), tmplist.GetCount(), sizeof(EntryList::INARGTYPE), (comparefunc_t)compareItem_, NULL);
+#pragma warning(suppress : 6387)
+                        qsort_s(tmplist.GetData(),
+                                tmplist.GetCount(),
+                                sizeof(EntryList::INARGTYPE),
+                                (comparefunc_t)compareItem_,
+                                NULL);
                         m_entries.Copy(tmplist); // overwrite with new list
                         m_cached = true;
                         // Delete objects from old list
-                        for(size_t i = 0; i < todelete; i++)
+                        for (size_t i = 0; i < todelete; i++)
                         {
                             delete deletions[i];
                         }
@@ -421,10 +449,14 @@ namespace NtObjMgr{
             return m_entries.GetAt(idx);
         }
 
-    private:
+      private:
         /* hide copy ctor as well as assignment operator */
-        DirectoryT(DirectoryT const& rhs) {}
-        DirectoryT& operator=(DirectoryT const&) { }
+        DirectoryT(DirectoryT const& rhs)
+        {
+        }
+        DirectoryT& operator=(DirectoryT const&)
+        {
+        }
 
         EntryList m_entries; // remember, class members get initialized in order of declaration inside ctor!!!
         NTSTATUS m_lastStatus;
@@ -433,21 +465,24 @@ namespace NtObjMgr{
 
     typedef DirectoryT<ATL::CString> Directory;
 
-    template<typename T> class ObjectHandleT
+    template <typename T> class ObjectHandleT
     {
-    public:
+      public:
         struct CEventBasicInformation : public EVENT_BASIC_INFORMATION
         {
             typedef EVENT_BASIC_INFORMATION baseClass;
-        private:
+
+          private:
             CEventBasicInformation();
             CEventBasicInformation& operator=(CEventBasicInformation&);
             NTSTATUS m_queryStatus;
-        public:
+
+          public:
             CEventBasicInformation(HANDLE hObject)
             {
                 ULONG uRetLen = 0;
-                m_queryStatus = ::NtQueryEvent(hObject, EventBasicInformation, static_cast<baseClass*>(this), sizeof(baseClass), &uRetLen);
+                m_queryStatus = ::NtQueryEvent(
+                    hObject, EventBasicInformation, static_cast<baseClass*>(this), sizeof(baseClass), &uRetLen);
                 ATLTRACE2(_T("  status = %08X; length = %u; this = %p\n"), m_queryStatus, uRetLen, this);
                 TRACE_NTSTATUS(m_queryStatus);
             }
@@ -457,7 +492,7 @@ namespace NtObjMgr{
                 return m_queryStatus;
             }
 
-            operator baseClass const*() const
+            operator baseClass const *() const
             {
                 return NT_SUCCESS(m_queryStatus) ? this : 0;
             }
@@ -466,15 +501,18 @@ namespace NtObjMgr{
         struct CIoCompletionBasicInformation : public IO_COMPLETION_BASIC_INFORMATION
         {
             typedef IO_COMPLETION_BASIC_INFORMATION baseClass;
-        private:
+
+          private:
             CIoCompletionBasicInformation();
             CIoCompletionBasicInformation& operator=(CIoCompletionBasicInformation&);
             NTSTATUS m_queryStatus;
-        public:
+
+          public:
             CIoCompletionBasicInformation(HANDLE hObject)
             {
                 ULONG uRetLen = 0;
-                m_queryStatus = ::NtQueryIoCompletion(hObject, IoCompletionBasicInformation, static_cast<baseClass*>(this), sizeof(baseClass), &uRetLen);
+                m_queryStatus = ::NtQueryIoCompletion(
+                    hObject, IoCompletionBasicInformation, static_cast<baseClass*>(this), sizeof(baseClass), &uRetLen);
                 ATLTRACE2(_T("  status = %08X; length = %u; this = %p\n"), m_queryStatus, uRetLen, this);
                 TRACE_NTSTATUS(m_queryStatus);
             }
@@ -503,15 +541,18 @@ namespace NtObjMgr{
         struct CKeyBasicInformation : public KEY_BASIC_INFORMATION_WITH_NAMEBUF
         {
             typedef KEY_BASIC_INFORMATION_WITH_NAMEBUF baseClass;
-        private:
+
+          private:
             CKeyBasicInformation();
             CKeyBasicInformation& operator=(CKeyBasicInformation&);
             NTSTATUS m_queryStatus;
-        public:
+
+          public:
             CKeyBasicInformation(HANDLE hObject)
             {
                 ULONG uRetLen = 0;
-                m_queryStatus = ::NtQueryKey(hObject, KeyBasicInformation, static_cast<baseClass*>(this), sizeof(baseClass), &uRetLen);
+                m_queryStatus = ::NtQueryKey(
+                    hObject, KeyBasicInformation, static_cast<baseClass*>(this), sizeof(baseClass), &uRetLen);
                 ATLTRACE2(_T("  status = %08X; length = %u; this = %p\n"), m_queryStatus, uRetLen, this);
                 TRACE_NTSTATUS(m_queryStatus);
             }
@@ -535,15 +576,18 @@ namespace NtObjMgr{
         struct CMutantBasicInformation : public MUTANT_BASIC_INFORMATION
         {
             typedef MUTANT_BASIC_INFORMATION baseClass;
-        private:
+
+          private:
             CMutantBasicInformation();
             CMutantBasicInformation& operator=(CMutantBasicInformation&);
             NTSTATUS m_queryStatus;
-        public:
+
+          public:
             CMutantBasicInformation(HANDLE hObject)
             {
                 ULONG uRetLen = 0;
-                m_queryStatus = ::NtQueryMutant(hObject, MutantBasicInformation, static_cast<baseClass*>(this), sizeof(baseClass), &uRetLen);
+                m_queryStatus = ::NtQueryMutant(
+                    hObject, MutantBasicInformation, static_cast<baseClass*>(this), sizeof(baseClass), &uRetLen);
                 ATLTRACE2(_T("  status = %08X; length = %u; this = %p\n"), m_queryStatus, uRetLen, this);
                 TRACE_NTSTATUS(m_queryStatus);
             }
@@ -567,15 +611,18 @@ namespace NtObjMgr{
         struct CSectionBasicInformation : public SECTION_BASIC_INFORMATION
         {
             typedef SECTION_BASIC_INFORMATION baseClass;
-        private:
+
+          private:
             CSectionBasicInformation();
             CSectionBasicInformation& operator=(CSectionBasicInformation&);
             NTSTATUS m_queryStatus;
-        public:
+
+          public:
             CSectionBasicInformation(HANDLE hObject)
             {
                 ULONG uRetLen = 0;
-                m_queryStatus = ::NtQuerySection(hObject, SectionBasicInformation, static_cast<baseClass*>(this), sizeof(baseClass), &uRetLen);
+                m_queryStatus = ::NtQuerySection(
+                    hObject, SectionBasicInformation, static_cast<baseClass*>(this), sizeof(baseClass), &uRetLen);
                 ATLTRACE2(_T("  status = %08X; length = %u; this = %p\n"), m_queryStatus, uRetLen, this);
                 TRACE_NTSTATUS(m_queryStatus);
             }
@@ -599,15 +646,18 @@ namespace NtObjMgr{
         struct CSemaphoreBasicInformation : public SEMAPHORE_BASIC_INFORMATION
         {
             typedef SEMAPHORE_BASIC_INFORMATION baseClass;
-        private:
+
+          private:
             CSemaphoreBasicInformation();
             CSemaphoreBasicInformation& operator=(CSemaphoreBasicInformation&);
             NTSTATUS m_queryStatus;
-        public:
+
+          public:
             CSemaphoreBasicInformation(HANDLE hObject)
             {
                 ULONG uRetLen = 0;
-                m_queryStatus = ::NtQuerySemaphore(hObject, SemaphoreBasicInformation, static_cast<baseClass*>(this), sizeof(baseClass), &uRetLen);
+                m_queryStatus = ::NtQuerySemaphore(
+                    hObject, SemaphoreBasicInformation, static_cast<baseClass*>(this), sizeof(baseClass), &uRetLen);
                 ATLTRACE2(_T("  status = %08X; length = %u; this = %p\n"), m_queryStatus, uRetLen, this);
                 TRACE_NTSTATUS(m_queryStatus);
             }
@@ -631,15 +681,18 @@ namespace NtObjMgr{
         struct CTimerBasicInformation : public TIMER_BASIC_INFORMATION
         {
             typedef TIMER_BASIC_INFORMATION baseClass;
-        private:
+
+          private:
             CTimerBasicInformation();
             CTimerBasicInformation& operator=(CTimerBasicInformation&);
             NTSTATUS m_queryStatus;
-        public:
+
+          public:
             CTimerBasicInformation(HANDLE hObject)
             {
                 ULONG uRetLen = 0;
-                m_queryStatus = ::NtQueryTimer(hObject, TimerBasicInformation, static_cast<baseClass*>(this), sizeof(baseClass), &uRetLen);
+                m_queryStatus = ::NtQueryTimer(
+                    hObject, TimerBasicInformation, static_cast<baseClass*>(this), sizeof(baseClass), &uRetLen);
                 ATLTRACE2(_T("  status = %08X; length = %u; this = %p\n"), m_queryStatus, uRetLen, this);
                 TRACE_NTSTATUS(m_queryStatus);
             }
@@ -665,11 +718,13 @@ namespace NtObjMgr{
             ATL::CString flags;
             ATL::CString sid;
             ATL::CString username;
-        private:
+
+          private:
             CWinStaInformation();
             CWinStaInformation& operator=(CWinStaInformation&);
             HRESULT m_queryStatus;
-        public:
+
+          public:
             CWinStaInformation(HANDLE hObject)
             {
                 DWORD dwLen = 0;
@@ -686,7 +741,7 @@ namespace NtObjMgr{
                 }
                 if (!::GetUserObjectInformation(hObject, UOI_USER_SID, NULL, 0, &dwLen))
                 {
-                    CSimpleBuf<BYTE> buf(dwLen+1);
+                    CSimpleBuf<BYTE> buf(dwLen + 1);
                     if (PSID psid = (PSID)buf.Buffer())
                     {
                         if (!::GetUserObjectInformation(hObject, UOI_USER_SID, psid, dwLen, &dwLen))
@@ -712,7 +767,7 @@ namespace NtObjMgr{
                             }
 #endif // _DEBUG
                             LPTSTR lpszSid = NULL;
-                            if(::ConvertSidToStringSid(psid, &lpszSid))
+                            if (::ConvertSidToStringSid(psid, &lpszSid))
                             {
                                 LPCTSTR sidtype = NULL;
                                 switch (sidnu)
@@ -791,8 +846,9 @@ namespace NtObjMgr{
                 return NT_ERROR(m_queryStatus);
             }
         };
-    private:
-        typedef NTSTATUS(NTAPI *openobj_fct_t)(PHANDLE, ACCESS_MASK, POBJECT_ATTRIBUTES);
+
+      private:
+        typedef NTSTATUS(NTAPI* openobj_fct_t)(PHANDLE, ACCESS_MASK, POBJECT_ATTRIBUTES);
 
         NTSTATUS m_openStatus;
         NTSTATUS m_queryStatus;
@@ -809,14 +865,26 @@ namespace NtObjMgr{
         ATL::CAutoPtr<CSemaphoreBasicInformation> m_semaphoreBasicInfo;
         ATL::CAutoPtr<CTimerBasicInformation> m_timerBasicInfo;
         ATL::CAutoPtr<CWinStaInformation> m_winStaInfo;
-    public:
-        ObjectHandleT(GenericObjectT<T>* obj, ACCESS_MASK DesiredAccess = READ_CONTROL | GENERIC_READ, ACCESS_MASK FallbackAccess1 = READ_CONTROL | FILE_READ_ATTRIBUTES | FILE_READ_ACCESS, ACCESS_MASK FallbackAccess2 = READ_CONTROL)
+
+      public:
+        ObjectHandleT(GenericObjectT<T>* obj,
+                      ACCESS_MASK DesiredAccess = READ_CONTROL | GENERIC_READ,
+                      ACCESS_MASK FallbackAccess1 = READ_CONTROL | FILE_READ_ATTRIBUTES | FILE_READ_ACCESS,
+                      ACCESS_MASK FallbackAccess2 = READ_CONTROL)
             : m_openStatus(STATUS_SUCCESS)
             , m_queryStatus(STATUS_SUCCESS)
             , m_bHasObjectInfo(false)
             , m_obj(obj)
             , m_openObjectFunction(m_obj ? PickOpenObjectFunction_(m_obj->type().GetString()) : NULL)
-            , m_hObject(OpenByObjectType_(m_obj, m_openObjectFunction, m_openStatus, m_queryStatus, m_bHasObjectInfo, m_obi , DesiredAccess, FallbackAccess1, FallbackAccess2))
+            , m_hObject(OpenByObjectType_(m_obj,
+                                          m_openObjectFunction,
+                                          m_openStatus,
+                                          m_queryStatus,
+                                          m_bHasObjectInfo,
+                                          m_obi,
+                                          DesiredAccess,
+                                          FallbackAccess1,
+                                          FallbackAccess2))
             , m_eventBasicInfo(0)
             , m_ioCompletionBasicInfo(0)
             , m_keyBasicInfo(0)
@@ -826,7 +894,7 @@ namespace NtObjMgr{
             , m_timerBasicInfo(0)
             , m_winStaInfo(0)
         {
-            if(!m_obj || (INVALID_HANDLE_VALUE == m_hObject))
+            if (!m_obj || (INVALID_HANDLE_VALUE == m_hObject))
             {
                 ATLTRACE2(_T("Bailing out early m_ob == %p; m_hObject == %p\n"), m_obj, m_hObject);
                 return;
@@ -890,7 +958,7 @@ namespace NtObjMgr{
 
         virtual ~ObjectHandleT()
         {
-            if(INVALID_HANDLE_VALUE != m_hObject)
+            if (INVALID_HANDLE_VALUE != m_hObject)
             {
                 if (m_winStaInfo)
                 {
@@ -943,21 +1011,52 @@ namespace NtObjMgr{
         }
 
         // object-specific basic information
-        inline CEventBasicInformation const* getEventBasicInfo() const { return m_eventBasicInfo; };
-        inline CIoCompletionBasicInformation const* getIoCompletionBasicInfo() const { return m_ioCompletionBasicInfo; };
-        inline CKeyBasicInformation const* getKeyBasicInfo() const { return m_keyBasicInfo;  };
-        inline CMutantBasicInformation const* getMutantBasicInfo() const { return m_mutantBasicInfo;  };
-        inline CSectionBasicInformation const* getSectionBasicInfo() const { return m_sectionBasicInfo; };
-        inline CSemaphoreBasicInformation const* getSemaphoreBasicInfo() const { return m_semaphoreBasicInfo;  };
-        inline CTimerBasicInformation const* getTimerBasicInfo() const { return m_timerBasicInfo; };
+        inline CEventBasicInformation const* getEventBasicInfo() const
+        {
+            return m_eventBasicInfo;
+        };
+        inline CIoCompletionBasicInformation const* getIoCompletionBasicInfo() const
+        {
+            return m_ioCompletionBasicInfo;
+        };
+        inline CKeyBasicInformation const* getKeyBasicInfo() const
+        {
+            return m_keyBasicInfo;
+        };
+        inline CMutantBasicInformation const* getMutantBasicInfo() const
+        {
+            return m_mutantBasicInfo;
+        };
+        inline CSectionBasicInformation const* getSectionBasicInfo() const
+        {
+            return m_sectionBasicInfo;
+        };
+        inline CSemaphoreBasicInformation const* getSemaphoreBasicInfo() const
+        {
+            return m_semaphoreBasicInfo;
+        };
+        inline CTimerBasicInformation const* getTimerBasicInfo() const
+        {
+            return m_timerBasicInfo;
+        };
         // this one is actually a Win32 object
-        inline CWinStaInformation const* getWinStaInfo() const { return m_winStaInfo; };
+        inline CWinStaInformation const* getWinStaInfo() const
+        {
+            return m_winStaInfo;
+        };
 
-    private:
-        static NTSTATUS NTAPI OpenObjectAsFile_(__out PHANDLE Handle, __in ACCESS_MASK DesiredAccess, __in POBJECT_ATTRIBUTES ObjectAttributes)
+      private:
+        static NTSTATUS NTAPI OpenObjectAsFile_(__out PHANDLE Handle,
+                                                __in ACCESS_MASK DesiredAccess,
+                                                __in POBJECT_ATTRIBUTES ObjectAttributes)
         {
             IO_STATUS_BLOCK iostat;
-            return ::NtOpenFile(Handle, DesiredAccess, ObjectAttributes, &iostat, FILE_SHARE_READ | FILE_SHARE_WRITE | FILE_SHARE_DELETE, 0);
+            return ::NtOpenFile(Handle,
+                                DesiredAccess,
+                                ObjectAttributes,
+                                &iostat,
+                                FILE_SHARE_READ | FILE_SHARE_WRITE | FILE_SHARE_DELETE,
+                                0);
         }
 
         static openobj_fct_t PickOpenObjectFunction_(LPCTSTR lpszTypeName)
@@ -967,18 +1066,21 @@ namespace NtObjMgr{
                 return NULL;
             }
 
-            static struct { LPCTSTR tpname; openobj_fct_t openFct; } openFunctions[] =
+            static struct
             {
-                { _T(OBJTYPESTR_DIRECTORY), ::NtOpenDirectoryObject },
-                { _T(OBJTYPESTR_EVENT), ::NtOpenEvent },
-                { _T(OBJTYPESTR_EVENTPAIR), ::NtOpenEventPair },
-                { _T(OBJTYPESTR_IOCOMPLETION), ::NtOpenIoCompletion },
-                { _T(OBJTYPESTR_KEY), ::NtOpenKey },
-                { _T(OBJTYPESTR_MUTANT), ::NtOpenMutant },
-                { _T(OBJTYPESTR_SECTION), ::NtOpenSection },
-                { _T(OBJTYPESTR_SEMAPHORE), ::NtOpenSemaphore },
-                { _T(OBJTYPESTR_SYMBOLICLINK), ::NtOpenSymbolicLinkObject },
-                { _T(OBJTYPESTR_TIMER), ::NtOpenTimer },
+                LPCTSTR tpname;
+                openobj_fct_t openFct;
+            } openFunctions[] = {
+                {_T(OBJTYPESTR_DIRECTORY), ::NtOpenDirectoryObject},
+                {_T(OBJTYPESTR_EVENT), ::NtOpenEvent},
+                {_T(OBJTYPESTR_EVENTPAIR), ::NtOpenEventPair},
+                {_T(OBJTYPESTR_IOCOMPLETION), ::NtOpenIoCompletion},
+                {_T(OBJTYPESTR_KEY), ::NtOpenKey},
+                {_T(OBJTYPESTR_MUTANT), ::NtOpenMutant},
+                {_T(OBJTYPESTR_SECTION), ::NtOpenSection},
+                {_T(OBJTYPESTR_SEMAPHORE), ::NtOpenSemaphore},
+                {_T(OBJTYPESTR_SYMBOLICLINK), ::NtOpenSymbolicLinkObject},
+                {_T(OBJTYPESTR_TIMER), ::NtOpenTimer},
             };
             openobj_fct_t OpenObjectFct = OpenObjectAsFile_; // default
 
@@ -996,16 +1098,25 @@ namespace NtObjMgr{
             return OpenObjectFct;
         }
 
-        static HANDLE OpenByObjectType_(GenericObjectT<T>* obj, openobj_fct_t OpenObjectFunc, NTSTATUS& openStatus, NTSTATUS& queryStatus, bool& hasObjInfo, OBJECT_BASIC_INFORMATION& obi, ACCESS_MASK DesiredAccess = READ_CONTROL | GENERIC_READ, ACCESS_MASK FallbackAccess1 = READ_CONTROL | FILE_READ_ATTRIBUTES | FILE_READ_ACCESS, ACCESS_MASK FallbackAccess2 = READ_CONTROL)
+        static HANDLE OpenByObjectType_(GenericObjectT<T>* obj,
+                                        openobj_fct_t OpenObjectFunc,
+                                        NTSTATUS& openStatus,
+                                        NTSTATUS& queryStatus,
+                                        bool& hasObjInfo,
+                                        OBJECT_BASIC_INFORMATION& obi,
+                                        ACCESS_MASK DesiredAccess = READ_CONTROL | GENERIC_READ,
+                                        ACCESS_MASK FallbackAccess1 = READ_CONTROL | FILE_READ_ATTRIBUTES |
+                                                                      FILE_READ_ACCESS,
+                                        ACCESS_MASK FallbackAccess2 = READ_CONTROL)
         {
             memset(&obi, 0, sizeof(obi));
 
-            if(!obj)
+            if (!obj)
             {
                 ATLTRACE2(_T("Passed GenericObjectT<T>* was NULL.\n"));
                 return INVALID_HANDLE_VALUE;
             }
-            if(!OpenObjectFunc)
+            if (!OpenObjectFunc)
             {
                 ATLTRACE2(_T("OpenObjectFunc was NULL.\n"));
                 return INVALID_HANDLE_VALUE;
@@ -1051,12 +1162,14 @@ namespace NtObjMgr{
             // Try with a lesser access mask
             if (STATUS_ACCESS_DENIED == openStatus)
             {
-                ATLTRACE2(_T("Failed open with %08X, trying again with access mask %08X\n"), openStatus, FallbackAccess1);
+                ATLTRACE2(
+                    _T("Failed open with %08X, trying again with access mask %08X\n"), openStatus, FallbackAccess1);
                 NTSTATUS privOpenStatus = OpenObjectFunc(&hObject, FallbackAccess1, &oa);
                 // Try with an even lesser access mask
-                if(STATUS_ACCESS_DENIED == privOpenStatus)
+                if (STATUS_ACCESS_DENIED == privOpenStatus)
                 {
-                    ATLTRACE2(_T("Failed open with %08X, trying again with access mask %08X\n"), openStatus, FallbackAccess2);
+                    ATLTRACE2(
+                        _T("Failed open with %08X, trying again with access mask %08X\n"), openStatus, FallbackAccess2);
                     privOpenStatus = OpenObjectFunc(&hObject, FallbackAccess2, &oa);
                 }
                 openStatus = privOpenStatus;
@@ -1066,7 +1179,8 @@ namespace NtObjMgr{
                 ATLTRACE2(_T("Success. Returning handle %p.\n"), hObject);
                 ULONG retLen = 0;
                 // TODO: https://wj32.org/wp/2012/11/30/obquerytypeinfo-and-ntqueryobject-buffer-overrun-in-windows-8/
-                queryStatus = ::NtQueryObject(hObject, ObjectBasicInformation, &obi, static_cast<ULONG>(sizeof(obi)), &retLen);
+                queryStatus =
+                    ::NtQueryObject(hObject, ObjectBasicInformation, &obi, static_cast<ULONG>(sizeof(obi)), &retLen);
                 if (NT_SUCCESS(queryStatus))
                 {
                     hasObjInfo = true;
@@ -1099,6 +1213,6 @@ namespace NtObjMgr{
     };
 
     typedef ObjectHandleT<ATL::CString> ObjectHandle;
-} /* namespace */
+} // namespace NtObjMgr
 
 #endif // __OBJMGR_HPP_VER__

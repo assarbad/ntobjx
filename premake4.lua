@@ -124,17 +124,29 @@ do
     -- value used by the linker's PDB. This causes error C1052 on VS2017. Fix it.
     local orig_premake_vs2010_vcxproj = premake.vs2010_vcxproj
     premake.vs2010_vcxproj = function(prj)
-        local old_captured = io.captured -- save io.captured state
-        io.capture() -- this sets io.captured = ''
-        orig_premake_vs2010_vcxproj(prj)
-        local captured = io.endcapture()
-        assert(captured ~= nil)
-        captured = captured:gsub("%s+<ProgramDataBaseFileName>[^<]+</ProgramDataBaseFileName>", "")
-        if old_captured ~= nil then
-            io.captured = old_captured .. captured -- restore outer captured state, if any
-        else
-            io.write(captured)
+        -- The whole stunt below is necessary in order to modify the resource_compile()
+        -- output. Given it's a local function we have to go through hoops.
+        local orig_p = _G._p
+        local besilent = false
+        -- We patch the global _p() function
+        _G._p = function(indent, msg, first, ...)
+            -- Look for indent values of 1
+            if msg ~= nil then
+                if msg:match("<ProgramDataBaseFileName>[^<]+</ProgramDataBaseFileName>") then
+                    return -- we want to suppress these
+                end
+                if indent == 2 and msg == '<ClCompile Include=\"%s\">' and first == "delayload-stubs\\ntdll-delayed-stubs.c" then
+                    orig_p(indent, msg, first, ...)
+                    orig_p(indent+1, "<ExcludedFromBuild>true</ExcludedFromBuild>")
+                    return
+                end
+            end
+            if not besilent then -- should we be silent?
+                orig_p(indent, msg, first, ...)
+            end
         end
+        orig_premake_vs2010_vcxproj(prj)
+        _G._p = orig_p -- restore in any case
     end
     -- ... same as above but for VS200x this time
     local function wrap_remove_pdb_attribute(origfunc)
@@ -250,6 +262,7 @@ solution (tgtname .. iif(release, "_release", ""))
         files
         {
             "delayload-stubs/*.txt",
+            "delayload-stubs/*.c",
             "wtl/Include/*.h",
             "pugixml/*.hpp",
             "util/*.h", "util/*.hpp",
@@ -260,6 +273,7 @@ solution (tgtname .. iif(release, "_release", ""))
             "*.hpp",
             "*.manifest",
             "*.cmd", "*.txt", "*.md", "*.rst", "premake4.lua",
+            "*.manifest", "*.props", "*.ruleset", ".editorconfig", ".clang-format",
         }
 
         vpaths
@@ -271,7 +285,7 @@ solution (tgtname .. iif(release, "_release", ""))
             ["Resource Files/*"] = { "**.rc", "res/*.ico" },
             ["Source Files/*"] = { "*.cpp" },
             ["Special Files/*"] = { "**.cmd", "premake4.lua", "**.manifest", },
-            ["Special Files/Module Definition Files/*"] = { "delayload-stubs/*.txt", },
+            ["Special Files/Module Definition Files/*"] = { "delayload-stubs/*.txt", "delayload-stubs/*.c", },
         }
 
         configuration {"*"}
@@ -331,6 +345,7 @@ solution (tgtname .. iif(release, "_release", ""))
             linkoptions     {"/subsystem:windows,5.02"}
 
         configuration {"vs2013 or vs2015 or vs2017 or vs2019"}
+            flags           {"NoMinimalRebuild"}
             defines         {"WINVER=0x0501", "_ALLOW_RTCc_IN_STL"}
 
         configuration {"vs2002 or vs2003 or vs2005 or vs2008 or vs2010 or vs2012", "x32"}

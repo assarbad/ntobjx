@@ -98,7 +98,7 @@
       <Optimization>Disabled</Optimization>
       <AdditionalIncludeDirectories>wtl\Include;pugixml;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <PreprocessorDefinitions>WIN32;_WINDOWS;STRICT;_DEBUG;WINVER=0x0501;_ALLOW_RTCc_IN_STL;%(PreprocessorDefinitions)</PreprocessorDefinitions>
-      <MinimalRebuild>true</MinimalRebuild>
+      <MinimalRebuild>false</MinimalRebuild>
       <BasicRuntimeChecks>EnableFastChecks</BasicRuntimeChecks>
       <SmallerTypeCheck>true</SmallerTypeCheck>
       <RuntimeLibrary>MultiThreadedDebug</RuntimeLibrary>
@@ -131,7 +131,7 @@
       <Optimization>Disabled</Optimization>
       <AdditionalIncludeDirectories>wtl\Include;pugixml;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <PreprocessorDefinitions>WIN32;_WINDOWS;STRICT;_DEBUG;WINVER=0x0501;_ALLOW_RTCc_IN_STL;%(PreprocessorDefinitions)</PreprocessorDefinitions>
-      <MinimalRebuild>true</MinimalRebuild>
+      <MinimalRebuild>false</MinimalRebuild>
       <BasicRuntimeChecks>EnableFastChecks</BasicRuntimeChecks>
       <SmallerTypeCheck>true</SmallerTypeCheck>
       <RuntimeLibrary>MultiThreadedDebug</RuntimeLibrary>
@@ -265,6 +265,10 @@
     <ClInclude Include="objmgr.hpp" />
   </ItemGroup>
   <ItemGroup>
+    <ClCompile Include="delayload-stubs\ntdll-delayed-stubs.c">
+      <ExcludedFromBuild>true</ExcludedFromBuild>
+      <CompileAs>CompileAsC</CompileAs>
+    </ClCompile>
     <ClCompile Include="delayimp.cpp">
     </ClCompile>
     <ClCompile Include="ntobjx.cpp">
@@ -275,7 +279,6 @@
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
-    <None Include="delayload-stubs\kernel32-delayed.txt" />
     <None Include="delayload-stubs\ntdll-delayed.txt" />
     <None Include="res\ntobjx.ico" />
     <None Include="ntobjx.manifest" />
@@ -285,6 +288,10 @@
     <None Include="LICENSE.txt" />
     <None Include="README.rst" />
     <None Include="premake4.lua" />
+    <None Include="Directory.props" />
+    <None Include="ntobjx.ruleset" />
+    <None Include=".editorconfig" />
+    <None Include=".clang-format" />
   </ItemGroup>
   <ItemGroup>
     <ResourceCompile Include="exeversion.rc" />

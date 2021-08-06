@@ -28,6 +28,7 @@
 ///
 ///////////////////////////////////////////////////////////////////////////////
 
+// clang-format off
 #ifndef __NTNATIVE_H_VER__
 #define __NTNATIVE_H_VER__ 2018102619
 #if (defined(_MSC_VER) && (_MSC_VER >= 1020)) || defined(__MCPP)
@@ -1571,3 +1572,4 @@ static UNICODE_STRING const sNtObjMgrNsPfx = RTL_CONSTANT_STRING(NT_OBJMGR_NAMES
 #endif
 
 #endif // __NTNATIVE_H_VER__
+// clang-format on

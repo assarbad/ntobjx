@@ -3,6 +3,7 @@
 //  are changed infrequently
 //
 
+// clang-format off
 #pragma once
 
 #if !defined(_UNICODE) && !defined(UNICODE)
@@ -18,7 +19,7 @@
 #endif
 
 #if 0 && defined(_DEBUG)
-// https://msdn.microsoft.com/en-us/library/x98tx3cf.aspx
+// https://docs.microsoft.com/en-us/visualstudio/debugger/finding-memory-leaks-using-the-crt-library
 #   define _CRTDBG_MAP_ALLOC
 #   include <stdlib.h>
 #   include <crtdbg.h>
@@ -132,5 +133,6 @@ WORD findComment(LPCTSTR matchString);
 
 // Compatibility for VS2003
 #if (_MSC_VER < 1400)
-#	define _tcscpy_s(x, y, z) _tcscpy(x, z)
+#   define _tcscpy_s(x, y, z) _tcscpy(x, z)
 #endif
+// clang-format on

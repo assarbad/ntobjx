@@ -27,9 +27,6 @@
     </Filter>
   </ItemGroup>
   <ItemGroup>
-    <None Include="delayload-stubs\kernel32-delayed.txt">
-      <Filter>Special Files\Module Definition Files</Filter>
-    </None>
     <None Include="delayload-stubs\ntdll-delayed.txt">
       <Filter>Special Files\Module Definition Files</Filter>
     </None>
@@ -53,6 +50,10 @@
     <None Include="premake4.lua">
       <Filter>Special Files</Filter>
     </None>
+    <None Include="Directory.props" />
+    <None Include="ntobjx.ruleset" />
+    <None Include=".editorconfig" />
+    <None Include=".clang-format" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="wtl\Include\atlapp.h">
@@ -165,6 +166,9 @@
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
+    <ClCompile Include="delayload-stubs\ntdll-delayed-stubs.c">
+      <Filter>Special Files\Module Definition Files</Filter>
+    </ClCompile>
     <ClCompile Include="delayimp.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>

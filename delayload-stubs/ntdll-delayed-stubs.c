@@ -1,3 +1,5 @@
+// clang-format off
+
 #ifndef _WIN32_WINNT
 #   define _WIN32_WINNT 0x0500
 #endif
@@ -821,3 +823,5 @@ RtlGetFullPathName_U(
     _Out_writes_bytes_(BufferLength) PWSTR Buffer,
     _Out_opt_ PWSTR *FilePart
     ) { return 0; }
+
+// clang-format on

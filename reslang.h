@@ -34,10 +34,11 @@
 #pragma once
 #endif // Check for "#pragma once" support
 
-#pragma warning(push) /* disable code analyzer warnings for ATL & WTL libraries */
-#pragma warning(disable:6387) /* warning C6387 : '...' could be '0' : this does not adhere to the specification for the function '...'. */
-#pragma warning(disable:6001) /* warning C6001: Using uninitialized memory '...'. */
-#pragma warning(disable:6011) /* warning C6011: Dereferencing NULL pointer '...'.  */
+#pragma warning(push)           /* disable code analyzer warnings for ATL & WTL libraries */
+#pragma warning(disable : 6387) /* warning C6387 : '...' could be '0' : this does not adhere to the specification for \
+                                   the function '...'. */
+#pragma warning(disable : 6001) /* warning C6001: Using uninitialized memory '...'. */
+#pragma warning(disable : 6011) /* warning C6011: Dereferencing NULL pointer '...'.  */
 #include <atlctrls.h>
 #include <atlctrlw.h>
 #pragma warning(pop) /* restore code analyzer warnings*/
@@ -52,7 +53,7 @@ EXTERN_C BOOL HookLdrFindResource_U(HINSTANCE resmodule);
 // (pre-Vista).
 class CLanguageSetter
 {
-    typedef LANGID(WINAPI * TFNSetThreadUILanguage)(LANGID LangId);
+    typedef LANGID(WINAPI* TFNSetThreadUILanguage)(LANGID LangId);
 
     DWORD m_dwMajorVersion;
     TFNSetThreadUILanguage m_pfnSetThreadUILanguage;
@@ -60,15 +61,19 @@ class CLanguageSetter
     LANGID m_fallback;
     LANGID m_pickedLangID;
     bool const m_bHasLists;
-public:
-    CLanguageSetter(LANGID fallback = MAKELANGID(LANG_ENGLISH, SUBLANG_ENGLISH_US), HMODULE hInstance = ModuleHelper::GetResourceInstance(), LPCTSTR lpType = RT_DIALOG, LPCTSTR lpName = MAKEINTRESOURCE(IDD_ABOUT));
-    bool operator !() const;
+
+  public:
+    CLanguageSetter(LANGID fallback = MAKELANGID(LANG_ENGLISH, SUBLANG_ENGLISH_US),
+                    HMODULE hInstance = ModuleHelper::GetResourceInstance(),
+                    LPCTSTR lpType = RT_DIALOG,
+                    LPCTSTR lpName = MAKEINTRESOURCE(IDD_ABOUT));
+    bool operator!() const;
     operator bool() const;
     LANGID set(LANGID langID = ::GetUserDefaultLangID());
     LANGID picked() const;
 
-private:
-#   define RES_LANGID_LIST_LEN 0x10
+  private:
+#define RES_LANGID_LIST_LEN 0x10
     typedef struct _RESLANGIDLIST
     {
         size_t size;
@@ -77,7 +82,8 @@ private:
     } RESLANGIDLIST;
 
     LANGID matchResourceLang_(LANGID localeID) const;
-    static BOOL CALLBACK NtObjectsEnumResLangProc_(HMODULE /*hModule*/, LPCWSTR /*lpType*/, LPCWSTR /*lpName*/, WORD wLanguage, LONG_PTR lParam);
+    static BOOL CALLBACK NtObjectsEnumResLangProc_(
+        HMODULE /*hModule*/, LPCWSTR /*lpType*/, LPCWSTR /*lpName*/, WORD wLanguage, LONG_PTR lParam);
     bool EnumAboutBoxLanguages_(HMODULE hInstance, LPCTSTR lpType, LPCTSTR lpName);
 };
 

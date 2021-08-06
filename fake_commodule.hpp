@@ -48,7 +48,7 @@ namespace ATL
     __declspec(selectany) CComModule* _pModule = NULL;
     class CComModule : public CAtlModuleT<CComModule>
     {
-    public:
+      public:
         CComModule()
         {
             // Should have only one instance of a class
@@ -57,11 +57,23 @@ namespace ATL
             _pModule = this;
         }
 
-        HINSTANCE SetResourceInstance(HINSTANCE h) throw() { return _AtlBaseModule.SetResourceInstance(h); }
-        HINSTANCE GetModuleInstance() throw() { return _AtlBaseModule.m_hInst; }
-        HINSTANCE GetResourceInstance() throw() { return _AtlBaseModule.m_hInstResource; }
-        HRESULT Init(_ATL_OBJMAP_ENTRY*, HINSTANCE, const GUID*) throw() { return S_OK; }
+        HINSTANCE SetResourceInstance(HINSTANCE h) throw()
+        {
+            return _AtlBaseModule.SetResourceInstance(h);
+        }
+        HINSTANCE GetModuleInstance() throw()
+        {
+            return _AtlBaseModule.m_hInst;
+        }
+        HINSTANCE GetResourceInstance() throw()
+        {
+            return _AtlBaseModule.m_hInstResource;
+        }
+        HRESULT Init(_ATL_OBJMAP_ENTRY*, HINSTANCE, const GUID*) throw()
+        {
+            return S_OK;
+        }
     };
-}
+} // namespace ATL
 
 #endif // __FAKE_COMMODULE_HPP_VER__

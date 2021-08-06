@@ -1,5 +1,7 @@
 BasedOnStyle: Microsoft
 AlignAfterOpenBracket: Align
+# Requires clang-format 12
+AlignConsecutiveMacros: AcrossEmptyLinesAndComments
 AlignEscapedNewlinesLeft: true
 AllowShortFunctionsOnASingleLine: false
 BinPackArguments: false
