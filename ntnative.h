@@ -2,11 +2,9 @@
 ///
 /// Type and function declarations for the NT native API.
 ///
-/// Dual-licensed under MS-PL and MIT license (see below).
-///
 ///////////////////////////////////////////////////////////////////////////////
 ///
-/// Copyright (c) 2016-2018 Oliver Schneider (assarbad.net)
+/// Copyright (c) 2016-2018, 2021 Oliver Schneider (assarbad.net)
 ///
 /// Permission is hereby granted, free of charge, to any person obtaining a
 /// copy of this software and associated documentation files (the "Software"),
@@ -27,10 +25,15 @@
 /// DEALINGS IN THE SOFTWARE.
 ///
 ///////////////////////////////////////////////////////////////////////////////
+/// http://terminus.rewolf.pl/terminus/
+/// http://undocumented.ntinternals.net
+/// https://github.com/ntdiff/headers + https://ntdiff.github.io
+/// https://www.vergiliusproject.com/
+///////////////////////////////////////////////////////////////////////////////
 
 // clang-format off
 #ifndef __NTNATIVE_H_VER__
-#define __NTNATIVE_H_VER__ 2018102619
+#define __NTNATIVE_H_VER__ 2021080900
 #if (defined(_MSC_VER) && (_MSC_VER >= 1020)) || defined(__MCPP)
 #pragma once
 #endif // Check for "#pragma once" support
@@ -124,7 +127,17 @@
 #       define NTSYSCALLAPI
 #   endif
 #   pragma warning(disable:4201)
+#   define OBJECT_INFORMATION_CLASS OBJECT_INFORMATION_CLASS_MOCK
+#   define _OBJECT_INFORMATION_CLASS _OBJECT_INFORMATION_CLASS_MOCK
+#   define ObjectBasicInformation ObjectBasicInformation_Mock
+#   define ObjectTypeInformation ObjectTypeInformation_Mock
+#   define NtQueryObject NtQueryObject_Mock
 #   include <winternl.h>
+#   undef OBJECT_INFORMATION_CLASS
+#   undef _OBJECT_INFORMATION_CLASS
+#   undef ObjectBasicInformation
+#   undef ObjectTypeInformation
+#   undef NtQueryObject
 #   pragma warning(default:4201)
 #   pragma pop_macro("NTSYSCALLAPI")
 #endif // DDKBUILD
@@ -226,7 +239,6 @@ extern "C"
         }
 #endif
 
-#if (_MSC_VER < 1400) || defined(DDKBUILD)
 typedef enum _OBJECT_INFORMATION_CLASS {
     ObjectBasicInformation,
     ObjectNameInformation,
@@ -234,7 +246,6 @@ typedef enum _OBJECT_INFORMATION_CLASS {
     ObjectAllInformation,
     ObjectDataInformation
 } OBJECT_INFORMATION_CLASS;
-#endif
 
 #ifndef RTL_CONSTANT_STRING
 #if defined(__cplusplus)
@@ -256,7 +267,7 @@ extern "C++"
 #define RTL_CONSTANT_STRING(s) \
 { \
     sizeof( s ) - sizeof( (s)[0] ), \
-    sizeof( s ) / sizeof(_RTL_CONSTANT_STRING_type_check(s)), \
+    sizeof( s ) / (sizeof(_RTL_CONSTANT_STRING_type_check(s))), \
     _RTL_CONSTANT_STRING_remove_const_macro(s) \
 }
 #endif // RTL_CONSTANT_STRING
@@ -343,6 +354,39 @@ typedef struct _OBJECT_BASIC_INFORMATION {
     ULONG SecurityDescriptorLength;
     LARGE_INTEGER CreationTime;
 } OBJECT_BASIC_INFORMATION, *POBJECT_BASIC_INFORMATION;
+
+typedef struct _OBJECT_TYPE_INFORMATION
+{
+    UNICODE_STRING TypeName;
+    ULONG TotalNumberOfObjects;
+    ULONG TotalNumberOfHandles;
+    ULONG TotalPagedPoolUsage;
+    ULONG TotalNonPagedPoolUsage;
+    ULONG TotalNamePoolUsage;
+    ULONG TotalHandleTableUsage;
+    ULONG HighWaterNumberOfObjects;
+    ULONG HighWaterNumberOfHandles;
+    ULONG HighWaterPagedPoolUsage;
+    ULONG HighWaterNonPagedPoolUsage;
+    ULONG HighWaterNamePoolUsage;
+    ULONG HighWaterHandleTableUsage;
+    ULONG InvalidAttributes;
+    GENERIC_MAPPING GenericMapping;
+    ULONG ValidAccessMask;
+    BOOLEAN SecurityRequired;
+    BOOLEAN MaintainHandleCount;
+    UCHAR TypeIndex;
+    CHAR ReservedByte;
+    ULONG PoolType;
+    ULONG DefaultPagedPoolCharge;
+    ULONG DefaultNonPagedPoolCharge;
+} OBJECT_TYPE_INFORMATION, *POBJECT_TYPE_INFORMATION;
+
+typedef struct _OBJECT_TYPES_INFORMATION
+{
+    ULONG NumberOfTypes;
+    OBJECT_TYPE_INFORMATION TypeInformation[ANYSIZE_ARRAY];
+} OBJECT_TYPES_INFORMATION, *POBJECT_TYPES_INFORMATION;
 
 typedef struct _OBJECT_DIRECTORY_INFORMATION {
     UNICODE_STRING Name;
@@ -851,6 +895,16 @@ NtQueryMutant(
 
 NTSTATUS
 NTAPI
+NtQueryObject(
+    _In_opt_ HANDLE Handle,
+    _In_ OBJECT_INFORMATION_CLASS ObjectInformationClass,
+    _Out_writes_bytes_opt_(ObjectInformationLength) PVOID ObjectInformation,
+    _In_ ULONG ObjectInformationLength,
+    _Out_opt_ PULONG ReturnLength
+    );
+
+NTSTATUS
+NTAPI
 NtQuerySemaphore(
     _In_ HANDLE SemaphoreHandle,
     _In_ SEMAPHORE_INFORMATION_CLASS SemaphoreInformationClass,
@@ -1356,6 +1410,7 @@ typedef NTSTATUS (NTAPI *NtRemoveIoCompletion_t)(_In_ HANDLE, _Out_ PVOID*, _Out
 typedef NTSTATUS (NTAPI *NtQueryEvent_t)(_In_ HANDLE, _In_ EVENT_INFORMATION_CLASS, _Out_ PVOID, _In_ ULONG, _Out_opt_ PULONG);
 typedef NTSTATUS (NTAPI *NtQueryIoCompletion_t)(_In_ HANDLE, _In_ IO_COMPLETION_INFORMATION_CLASS, _Out_ PVOID, _In_ ULONG, _Out_opt_ PULONG);
 typedef NTSTATUS (NTAPI *NtQueryMutant_t)(_In_ HANDLE, _In_ MUTANT_INFORMATION_CLASS, _Out_ PVOID, _In_ ULONG, _Out_opt_ PULONG);
+typedef NTSTATUS (NTAPI *NtQueryObject_t)(_In_opt_ HANDLE, _In_ OBJECT_INFORMATION_CLASS, _Out_ PVOID, _In_ ULONG, _Out_opt_ PULONG);
 typedef NTSTATUS (NTAPI *NtQuerySemaphore_t)(_In_ HANDLE, _In_ SEMAPHORE_INFORMATION_CLASS, _Out_ PVOID, _In_ ULONG, _Out_opt_ PULONG);
 typedef NTSTATUS (NTAPI *NtQuerySection_t)(_In_ HANDLE, _In_ SECTION_INFORMATION_CLASS, _Out_ PVOID, _In_ ULONG, _Out_ PULONG);
 typedef NTSTATUS (NTAPI *NtQueryTimer_t)(_In_ HANDLE, _In_ TIMER_INFORMATION_CLASS, _Out_ PVOID, _In_ ULONG, _Out_ PULONG);
@@ -1506,6 +1561,7 @@ typedef ULONG (NTAPI *RtlUniform_t)(PULONG);
 #define ZwRemoveIoCompletion NtRemoveIoCompletion
 #define ZwQueryIoCompletion NtQueryIoCompletion
 #define ZwQueryMutant NtQueryMutant
+#define ZwQueryObject NtQueryObject
 #define ZwQuerySemaphore NtQuerySemaphore
 #define ZwQuerySection NtQuerySection
 #define ZwQueryTimer NtQueryTimer
@@ -1560,7 +1616,7 @@ namespace NT {
 #define WIN32_DEVICE_NAMESPACE_A    "\\\\.\\"
 #endif // WIN32_DEVICE_NAMESPACE_A
 #ifndef NT_OBJMGR_NAMESPACE_A
-#define NT_OBJMGR_NAMESPACE_A       L"\\??\\"
+#define NT_OBJMGR_NAMESPACE_A       "\\??\\"
 #endif // NT_OBJMGR_NAMESPACE_A
 
 static UNICODE_STRING const sWin32FileNsPfx = RTL_CONSTANT_STRING(WIN32_FILE_NAMESPACE);

@@ -6,7 +6,7 @@
 ///
 ///////////////////////////////////////////////////////////////////////////////
 ///
-/// Copyright (c) 2016-2018 Oliver Schneider (assarbad.net)
+/// Copyright (c) 2016-2018, 2021 Oliver Schneider (assarbad.net)
 ///
 /// Permission is hereby granted, free of charge, to any person obtaining a
 /// copy of this software and associated documentation files (the "Software"),
@@ -140,6 +140,8 @@ OSVERSIONINFOEXW const& GetOSVersionInfo()
     }
     return osvix;
 }
+
+NtObjMgr::ObjectTypeMap g_objTypeMap;
 
 int Run(LPTSTR /*lpstrCmdLine*/ = NULL, int nCmdShow = SW_SHOWDEFAULT)
 {

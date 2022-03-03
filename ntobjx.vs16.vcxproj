@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
-<Project DefaultTargets="Build" ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+<Project DefaultTargets="Build" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
   <ItemGroup Label="ProjectConfigurations">
     <ProjectConfiguration Include="Debug|Win32">
       <Configuration>Debug</Configuration>
@@ -96,21 +96,20 @@
     <ClCompile>
       <AdditionalOptions>/GS %(AdditionalOptions)</AdditionalOptions>
       <Optimization>Disabled</Optimization>
-      <AdditionalIncludeDirectories>wtl\Include;pugixml;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
-      <PreprocessorDefinitions>WIN32;_WINDOWS;STRICT;_DEBUG;WINVER=0x0501;_ALLOW_RTCc_IN_STL;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <AdditionalIncludeDirectories>pugixml;wtl10\Include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <PreprocessorDefinitions>WIN32;_WINDOWS;STRICT;_DEBUG;WINVER=0x0501;_ALLOW_RTCc_IN_STL;WTLVER=10;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <MinimalRebuild>false</MinimalRebuild>
       <BasicRuntimeChecks>EnableFastChecks</BasicRuntimeChecks>
-      <SmallerTypeCheck>true</SmallerTypeCheck>
-      <RuntimeLibrary>MultiThreadedDebug</RuntimeLibrary>
+      <RuntimeLibrary>MultiThreadedDebugDLL</RuntimeLibrary>
       <FunctionLevelLinking>true</FunctionLevelLinking>
       <PrecompiledHeader></PrecompiledHeader>
-      <WarningLevel>Level4</WarningLevel>
+      <WarningLevel>Level3</WarningLevel>
       <TreatWChar_tAsBuiltInType>true</TreatWChar_tAsBuiltInType>
       <DebugInformationFormat>EditAndContinue</DebugInformationFormat>
     </ClCompile>
     <ResourceCompile>
-      <PreprocessorDefinitions>WIN32;_WINDOWS;STRICT;_DEBUG;WINVER=0x0501;_ALLOW_RTCc_IN_STL;%(PreprocessorDefinitions)</PreprocessorDefinitions>
-      <AdditionalIncludeDirectories>wtl\Include;pugixml;.;$(IntDir);%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <PreprocessorDefinitions>WIN32;_WINDOWS;STRICT;_DEBUG;WINVER=0x0501;_ALLOW_RTCc_IN_STL;WTLVER=10;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <AdditionalIncludeDirectories>pugixml;wtl10\Include;.;$(IntDir);%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
     </ResourceCompile>
     <Link>
       <SubSystem>Windows</SubSystem>
@@ -129,21 +128,20 @@
     <ClCompile>
       <AdditionalOptions>/GS %(AdditionalOptions)</AdditionalOptions>
       <Optimization>Disabled</Optimization>
-      <AdditionalIncludeDirectories>wtl\Include;pugixml;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
-      <PreprocessorDefinitions>WIN32;_WINDOWS;STRICT;_DEBUG;WINVER=0x0501;_ALLOW_RTCc_IN_STL;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <AdditionalIncludeDirectories>pugixml;wtl10\Include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <PreprocessorDefinitions>WIN32;_WINDOWS;STRICT;_DEBUG;WINVER=0x0501;_ALLOW_RTCc_IN_STL;WTLVER=10;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <MinimalRebuild>false</MinimalRebuild>
       <BasicRuntimeChecks>EnableFastChecks</BasicRuntimeChecks>
-      <SmallerTypeCheck>true</SmallerTypeCheck>
-      <RuntimeLibrary>MultiThreadedDebug</RuntimeLibrary>
+      <RuntimeLibrary>MultiThreadedDebugDLL</RuntimeLibrary>
       <FunctionLevelLinking>true</FunctionLevelLinking>
       <PrecompiledHeader></PrecompiledHeader>
-      <WarningLevel>Level4</WarningLevel>
+      <WarningLevel>Level3</WarningLevel>
       <TreatWChar_tAsBuiltInType>true</TreatWChar_tAsBuiltInType>
       <DebugInformationFormat>ProgramDatabase</DebugInformationFormat>
     </ClCompile>
     <ResourceCompile>
-      <PreprocessorDefinitions>WIN32;_WINDOWS;STRICT;_DEBUG;WINVER=0x0501;_ALLOW_RTCc_IN_STL;%(PreprocessorDefinitions)</PreprocessorDefinitions>
-      <AdditionalIncludeDirectories>wtl\Include;pugixml;.;$(IntDir);%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <PreprocessorDefinitions>WIN32;_WINDOWS;STRICT;_DEBUG;WINVER=0x0501;_ALLOW_RTCc_IN_STL;WTLVER=10;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <AdditionalIncludeDirectories>pugixml;wtl10\Include;.;$(IntDir);%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
     </ResourceCompile>
     <Link>
       <SubSystem>Windows</SubSystem>
@@ -162,20 +160,20 @@
     <ClCompile>
       <AdditionalOptions>/GS /Oi /Os /Gy %(AdditionalOptions)</AdditionalOptions>
       <Optimization>Full</Optimization>
-      <AdditionalIncludeDirectories>wtl\Include;pugixml;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
-      <PreprocessorDefinitions>WIN32;_WINDOWS;STRICT;NDEBUG;WINVER=0x0501;_ALLOW_RTCc_IN_STL;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <AdditionalIncludeDirectories>pugixml;wtl10\Include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <PreprocessorDefinitions>WIN32;_WINDOWS;STRICT;NDEBUG;WINVER=0x0501;_ALLOW_RTCc_IN_STL;WTLVER=10;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <MinimalRebuild>false</MinimalRebuild>
       <StringPooling>true</StringPooling>
-      <RuntimeLibrary>MultiThreaded</RuntimeLibrary>
+      <RuntimeLibrary>MultiThreadedDLL</RuntimeLibrary>
       <FunctionLevelLinking>true</FunctionLevelLinking>
       <PrecompiledHeader></PrecompiledHeader>
-      <WarningLevel>Level4</WarningLevel>
+      <WarningLevel>Level3</WarningLevel>
       <TreatWChar_tAsBuiltInType>true</TreatWChar_tAsBuiltInType>
       <DebugInformationFormat>ProgramDatabase</DebugInformationFormat>
     </ClCompile>
     <ResourceCompile>
-      <PreprocessorDefinitions>WIN32;_WINDOWS;STRICT;NDEBUG;WINVER=0x0501;_ALLOW_RTCc_IN_STL;%(PreprocessorDefinitions)</PreprocessorDefinitions>
-      <AdditionalIncludeDirectories>wtl\Include;pugixml;.;$(IntDir);%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <PreprocessorDefinitions>WIN32;_WINDOWS;STRICT;NDEBUG;WINVER=0x0501;_ALLOW_RTCc_IN_STL;WTLVER=10;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <AdditionalIncludeDirectories>pugixml;wtl10\Include;.;$(IntDir);%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
     </ResourceCompile>
     <Link>
       <SubSystem>Windows</SubSystem>
@@ -196,20 +194,20 @@
     <ClCompile>
       <AdditionalOptions>/GS /Oi /Os /Gy %(AdditionalOptions)</AdditionalOptions>
       <Optimization>Full</Optimization>
-      <AdditionalIncludeDirectories>wtl\Include;pugixml;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
-      <PreprocessorDefinitions>WIN32;_WINDOWS;STRICT;NDEBUG;WINVER=0x0501;_ALLOW_RTCc_IN_STL;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <AdditionalIncludeDirectories>pugixml;wtl10\Include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <PreprocessorDefinitions>WIN32;_WINDOWS;STRICT;NDEBUG;WINVER=0x0501;_ALLOW_RTCc_IN_STL;WTLVER=10;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <MinimalRebuild>false</MinimalRebuild>
       <StringPooling>true</StringPooling>
-      <RuntimeLibrary>MultiThreaded</RuntimeLibrary>
+      <RuntimeLibrary>MultiThreadedDLL</RuntimeLibrary>
       <FunctionLevelLinking>true</FunctionLevelLinking>
       <PrecompiledHeader></PrecompiledHeader>
-      <WarningLevel>Level4</WarningLevel>
+      <WarningLevel>Level3</WarningLevel>
       <TreatWChar_tAsBuiltInType>true</TreatWChar_tAsBuiltInType>
       <DebugInformationFormat>ProgramDatabase</DebugInformationFormat>
     </ClCompile>
     <ResourceCompile>
-      <PreprocessorDefinitions>WIN32;_WINDOWS;STRICT;NDEBUG;WINVER=0x0501;_ALLOW_RTCc_IN_STL;%(PreprocessorDefinitions)</PreprocessorDefinitions>
-      <AdditionalIncludeDirectories>wtl\Include;pugixml;.;$(IntDir);%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <PreprocessorDefinitions>WIN32;_WINDOWS;STRICT;NDEBUG;WINVER=0x0501;_ALLOW_RTCc_IN_STL;WTLVER=10;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <AdditionalIncludeDirectories>pugixml;wtl10\Include;.;$(IntDir);%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
     </ResourceCompile>
     <Link>
       <SubSystem>Windows</SubSystem>
@@ -227,28 +225,6 @@
     </PreBuildEvent>
   </ItemDefinitionGroup>
   <ItemGroup>
-    <ClInclude Include="wtl\Include\atlapp.h" />
-    <ClInclude Include="wtl\Include\atlcrack.h" />
-    <ClInclude Include="wtl\Include\atlctrls.h" />
-    <ClInclude Include="wtl\Include\atlctrlw.h" />
-    <ClInclude Include="wtl\Include\atlctrlx.h" />
-    <ClInclude Include="wtl\Include\atlddx.h" />
-    <ClInclude Include="wtl\Include\atldlgs.h" />
-    <ClInclude Include="wtl\Include\atldwm.h" />
-    <ClInclude Include="wtl\Include\atlfind.h" />
-    <ClInclude Include="wtl\Include\atlframe.h" />
-    <ClInclude Include="wtl\Include\atlgdi.h" />
-    <ClInclude Include="wtl\Include\atlmisc.h" />
-    <ClInclude Include="wtl\Include\atlprint.h" />
-    <ClInclude Include="wtl\Include\atlres.h" />
-    <ClInclude Include="wtl\Include\atlresce.h" />
-    <ClInclude Include="wtl\Include\atlribbon.h" />
-    <ClInclude Include="wtl\Include\atlscrl.h" />
-    <ClInclude Include="wtl\Include\atlsplit.h" />
-    <ClInclude Include="wtl\Include\atltheme.h" />
-    <ClInclude Include="wtl\Include\atluser.h" />
-    <ClInclude Include="wtl\Include\atlwince.h" />
-    <ClInclude Include="wtl\Include\atlwinx.h" />
     <ClInclude Include="pugixml\pugiconfig.hpp" />
     <ClInclude Include="pugixml\pugixml.hpp" />
     <ClInclude Include="util\LoadLibrary.h" />
@@ -263,12 +239,28 @@
     <ClInclude Include="stdafx.h" />
     <ClInclude Include="fake_commodule.hpp" />
     <ClInclude Include="objmgr.hpp" />
+    <ClInclude Include="wtl10\Include\atlapp.h" />
+    <ClInclude Include="wtl10\Include\atlcrack.h" />
+    <ClInclude Include="wtl10\Include\atlctrls.h" />
+    <ClInclude Include="wtl10\Include\atlctrlw.h" />
+    <ClInclude Include="wtl10\Include\atlctrlx.h" />
+    <ClInclude Include="wtl10\Include\atlddx.h" />
+    <ClInclude Include="wtl10\Include\atldlgs.h" />
+    <ClInclude Include="wtl10\Include\atldwm.h" />
+    <ClInclude Include="wtl10\Include\atlfind.h" />
+    <ClInclude Include="wtl10\Include\atlframe.h" />
+    <ClInclude Include="wtl10\Include\atlgdi.h" />
+    <ClInclude Include="wtl10\Include\atlmisc.h" />
+    <ClInclude Include="wtl10\Include\atlprint.h" />
+    <ClInclude Include="wtl10\Include\atlres.h" />
+    <ClInclude Include="wtl10\Include\atlribbon.h" />
+    <ClInclude Include="wtl10\Include\atlscrl.h" />
+    <ClInclude Include="wtl10\Include\atlsplit.h" />
+    <ClInclude Include="wtl10\Include\atltheme.h" />
+    <ClInclude Include="wtl10\Include\atluser.h" />
+    <ClInclude Include="wtl10\Include\atlwinx.h" />
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="delayload-stubs\ntdll-delayed-stubs.c">
-      <ExcludedFromBuild>true</ExcludedFromBuild>
-      <CompileAs>CompileAsC</CompileAs>
-    </ClCompile>
     <ClCompile Include="delayimp.cpp">
     </ClCompile>
     <ClCompile Include="ntobjx.cpp">
@@ -276,6 +268,10 @@
     <ClCompile Include="reslang.cpp">
     </ClCompile>
     <ClCompile Include="stdafx.cpp">
+    </ClCompile>
+    <ClCompile Include="delayload-stubs\ntdll-delayed-stubs.c">
+      <ExcludedFromBuild>true</ExcludedFromBuild>
+      <CompileAs>CompileAsC</CompileAs>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>

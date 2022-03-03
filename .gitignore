@@ -1,5 +1,4 @@
-syntax: glob
-.git/
+.hg/
 build/**
 build.vs*/**
 intermediate/**

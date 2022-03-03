@@ -1,0 +1,52 @@
+<?xml version="1.0" encoding="utf-8"?>
+<Project xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <ItemGroup>
+    <Filter Include="Special Files">
+      <UniqueIdentifier>{3615BCEA-14AB-5062-9D62-E0A9189D5A15}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Special Files\Module Definition Files">
+      <UniqueIdentifier>{66CD668C-2789-72A1-DEB3-20943EC37B4B}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Header Files">
+      <UniqueIdentifier>{F18A02A9-9A76-A2ED-25AD-655ED7DE44F7}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source Files">
+      <UniqueIdentifier>{80B9709E-D04F-16F7-5D75-6183A486D78D}</UniqueIdentifier>
+    </Filter>
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="delayload-stubs\ntdll-delayed.txt">
+      <Filter>Special Files\Module Definition Files</Filter>
+    </None>
+    <None Include="hgid.cmd">
+      <Filter>Special Files</Filter>
+    </None>
+    <None Include="relbuild.cmd">
+      <Filter>Special Files</Filter>
+    </None>
+    <None Include="setvcvars.cmd">
+      <Filter>Special Files</Filter>
+    </None>
+    <None Include="LICENSE.txt" />
+    <None Include="README.rst" />
+    <None Include="premake4.lua">
+      <Filter>Special Files</Filter>
+    </None>
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="ntnative.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="objmgr.hpp">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+  </ItemGroup>
+  <ItemGroup>
+    <ClCompile Include="delayimp.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="ntobjx_c.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+  </ItemGroup>
+</Project>

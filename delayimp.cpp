@@ -47,7 +47,7 @@
 
 namespace
 {
-    constexpr LPCSTR lpszNtDllName = "ntdll.dll";
+    LPCSTR lpszNtDllName = "ntdll.dll";
 
     typedef struct
     {

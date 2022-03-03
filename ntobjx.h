@@ -94,7 +94,7 @@
 #pragma warning(pop)
 #endif
 
-#define FEATURE_FIND_OBJECT 0
+#define FEATURE_FIND_OBJECT 1
 #ifdef DDKBUILD
 #ifndef FEATURE_OBJECT_SECURITY /* Let this be overridden from the SOURCES file, for example. */
 #define FEATURE_OBJECT_SECURITY 0
@@ -1224,16 +1224,40 @@ template <typename T> class CObjectPropertySheetT : public CPropertySheetImpl<CO
     };
 
 #if FEATURE_OBJECT_SECURITY
+    // https:// raw.githubusercontent.com/microsoft/Windows-classic-samples/main/Samples/CustomResourceManager/cpp/SecurityInformation1.cpp
+
     class CSecurityInformation : public ISecurityInformation
     {
         GenericObject* m_obj;
+        GENERIC_MAPPING m_gmask;
         ObjectHandle& m_objHdl;
+        ULONG m_refCount;
+
+        bool setGenericMapping_(GenericObject* obj, GENERIC_MAPPING& mask)
+        {
+            if (obj)
+            {
+                extern NtObjMgr::ObjectTypeMap g_objTypeMap;
+
+                OBJECT_TYPE_INFORMATION const* potInfo = g_objTypeMap.Lookup(obj->type());
+                //.Lookup(obj->type);
+                if (potInfo)
+                {
+                    mask = potInfo->GenericMapping;
+                    return true;
+                }
+            }
+            return false;
+        }
 
       public:
         CSecurityInformation(GenericObject* obj, ObjectHandle& objHdl)
             : m_obj(obj)
+            , m_gmask({0, 0, 0, 0})
             , m_objHdl(objHdl)
+            , m_refCount(1)
         {
+            ATLVERIFY(setGenericMapping_(m_obj, m_gmask));
         }
 
         STDMETHOD(QueryInterface)(REFIID riid, void** ppvObj)
@@ -1248,12 +1272,12 @@ template <typename T> class CObjectPropertySheetT : public CPropertySheetImpl<CO
 
         STDMETHOD_(ULONG, AddRef)()
         {
-            return 2;
+            return InterlockedIncrement(&m_refCount);
         }
 
         STDMETHOD_(ULONG, Release)()
         {
-            return 1;
+            return InterlockedDecrement(&m_refCount);
         }
 
         STDMETHOD(GetObjectInformation)(PSI_OBJECT_INFO pObjectInfo)
@@ -1261,6 +1285,31 @@ template <typename T> class CObjectPropertySheetT : public CPropertySheetImpl<CO
             pObjectInfo->dwFlags = SI_ADVANCED | SI_NO_TREE_APPLY | SI_READONLY;
             pObjectInfo->hInstance = NULL;
             pObjectInfo->pszObjectName = const_cast<LPTSTR>(m_obj->name().GetString());
+
+#if 0
+    SI_ADVANCED: Specifies the "Advanced" button will be shown so that the user can enter the advanced UI.
+    SI_CONTAINER: Indicates that your object is a directory (or behaves like a directory). You should set this flag if the object is a directory so the ACL editor can apply inheritance on the object. You may also want to enable the inheritance stuff.
+    SI_EDIT_AUDITS: Shows the "Auditing" tab (so the user can edit the SACL). To view / edit the SACL, you must have the "SeSecurityPrivilege".
+    SI_EDIT_PERMS: Shows the "Advanced" permissions tab (so the user can fully edit the DACL).
+    SI_EDIT_OWNER: Shows the Owner tab (so the user can change or take ownership).
+    SI_EDIT_PROPERTIES: Shows the properties tab (so the user can edit the properties associated with the object).
+    SI_EDIT_EFFECTIVE (undocumented, for Windows XP and later): Shows the "Effective Permissions" tab.
+    SI_READONLY: Does not allow the user to change the security descriptor.
+    SI_OWNER_READONLY: Does not allow the user to change the owner (to change ownership, the user must be the owner, or have the "SeTakeOwnershipPrivilege").
+    SI_MAY_WRITE (undocumented): "Not sure if the user may write permission".
+    SI_NO_ADDITIONAL_PERMISSION (Undocumented): ??????
+    SI_NO_ACL_PROTECT: Select this if you haven't implemented inheritance. This hides the auto-inherit checkbox.
+    SI_OWNER_RECURSE: Shows the "Sledgehammer" button, which enables the user to reset all children's security descriptors to default. Do not show this unless you have implemented recursive walking in your object.
+    SI_RESET_DACL_TREE: Like SI_OWNER_RECURSE, but for the Advanced Permissions tab.
+    SI_RESET_SACL_TREE: Like SI_RESET_DACL_TREE, but for the "Auditing" tab.
+    SI_SERVER_IS_DC: Set this if you have determined the computer is in a domain environment.
+    SI_EDIT_ALL: shorthand for SI_EDIT_AUDITS | SI_EDIT_PERMS | SI_EDIT_OWNER.
+    SI_NO_TREE_APPLY: Hides the "Apply these permissions to objects and/or containers within this container only" checkbox. Set this flag if your object does not support inheritance.
+    SI_PAGE_TITLE: Indicates you want a custom title to appear in the ACL editor. Specify the alternate title in the pszPageTitle member.
+    SI_RESET: Shows the "Default" button, which will reset the security descriptor to defaults. If you don't know what the default security descriptor is, do not enable this flag.
+    SI_RESET_SACL, SI_RESET_DACL, SI_RESET_OWNER: shows the "Default" button for certain tabs only.
+    SI_OBJECT_GUID: (domain-specific) If your object supports multiple inheritance, you should enable this flag.
+#endif
 
             return S_OK;
         }
@@ -1309,9 +1358,21 @@ template <typename T> class CObjectPropertySheetT : public CPropertySheetImpl<CO
             return S_OK;
         }
 
-        STDMETHOD(MapGeneric)(const GUID* /*pguidObjectType*/, UCHAR* /*pAceFlags*/, ACCESS_MASK* /*pMask*/)
+        STDMETHOD(MapGeneric)(const GUID* pguidObjectType, UCHAR* pAceFlags, ACCESS_MASK* pMask)
         {
-            ATLTRACENOTIMPL(_T(__FUNCTION__));
+            if (!pAceFlags || !pMask)
+            {
+                return E_INVALIDARG;
+            }
+
+            // This sample doesn't include object inheritance, so that bit can be
+            // safely removed.
+            *pAceFlags &= ~OBJECT_INHERIT_ACE;
+            GENERIC_MAPPING gmapping = m_gmask;
+            ::MapGenericMask(pMask, &gmapping);
+
+            UNREFERENCED_PARAMETER(pguidObjectType);
+            return S_OK;
         }
 
         STDMETHOD(GetInheritTypes)(PSI_INHERIT_TYPE* /*ppInheritTypes*/, ULONG* /*pcInheritTypes*/)

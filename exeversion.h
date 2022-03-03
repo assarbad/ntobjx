@@ -46,7 +46,7 @@
 #define FILE_BUILD_NUMERIC PRD_BUILD_NUMERIC // build number for product
 
 // clang-format off
-#define EXE_YEAR           2016-2018, 2021   // current year or timespan (e.g. 2003-2007)
+#define EXE_YEAR           2016-2018, 2021, 2022  // current year or timespan (e.g. 2003-2007)
 #define TEXT_WEBSITE       https:/##/assarbad.net // website
 // clang-format on
 
@@ -56,7 +56,7 @@
 #define TEXT_MODULE        ntobjx                                   // module name
 #define TEXT_COPYRIGHT     Copyright \xA9 EXE_YEAR TEXT_AUTHOR      // copyright information
 #define TEXT_INTERNALNAME  ntobjx.exe
-#define HG_REPOSITORY      "https://hg.code.sf.net/p/ntobjx/code"
+#define HG_REPOSITORY      "https://sourceforge.net/p/ntobjx/code"
 #define TEXT_PORTIONSCOPYRIGHT                                                                                         \
     "Portions (WTL, pugixml, FRISK utility classes), see source code for details:\r\nCopyright (c) Microsoft "         \
     "Corporation, WTL Team. All rights reserved.\r\nCopyright (c) Arseny Kapoulkine.\r\nCopyright (c) FRISK Software " \

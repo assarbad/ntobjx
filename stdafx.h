@@ -31,7 +31,9 @@
 */
 #endif // _DEBUG
 
+#if (WTLVER < 10)
 #define _ATL_NO_MSIMG
+#endif
 #define _ATL_NOFORCE_MANIFEST
 #define _ATL_NO_OPENGL
 #define _ATL_NO_COM_SUPPORT
@@ -66,7 +68,11 @@
 #   define _WIN32_WINNT     0x0501
 #endif
 #ifndef _WIN32_IE
-#   define _WIN32_IE        0x0501
+#   if (WTLVER > 9)
+#       define _WIN32_IE        0x0600
+#   elif (WTLVER == 9)
+#       define _WIN32_IE        0x0501
+#   endif
 #endif
 #ifdef _RICHEDIT_VER
 #   define _RICHEDIT_VER    0x0500

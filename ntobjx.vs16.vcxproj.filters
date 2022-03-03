@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
-<Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+<Project xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
   <ItemGroup>
     <Filter Include="Special Files">
       <UniqueIdentifier>{1340A817-3DBB-1832-9493-18CD996EA715}</UniqueIdentifier>
@@ -9,9 +9,6 @@
     </Filter>
     <Filter Include="Header Files">
       <UniqueIdentifier>{65BCED7C-5FA8-CAC5-6E75-4B28C447F95A}</UniqueIdentifier>
-    </Filter>
-    <Filter Include="Header Files\WTL">
-      <UniqueIdentifier>{96616F0F-F735-3EF5-FC35-A96C891F724C}</UniqueIdentifier>
     </Filter>
     <Filter Include="Header Files\pugixml">
       <UniqueIdentifier>{CCCB1A24-53CF-5497-4164-7FEBFB53439B}</UniqueIdentifier>
@@ -24,6 +21,9 @@
     </Filter>
     <Filter Include="Source Files">
       <UniqueIdentifier>{DE1861F2-117B-FCB0-B133-291CD2B5E915}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Header Files\WTL">
+      <UniqueIdentifier>{96616F0F-F735-3EF5-FC35-A96C891F724C}</UniqueIdentifier>
     </Filter>
   </ItemGroup>
   <ItemGroup>
@@ -56,72 +56,6 @@
     <None Include=".clang-format" />
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="wtl\Include\atlapp.h">
-      <Filter>Header Files\WTL</Filter>
-    </ClInclude>
-    <ClInclude Include="wtl\Include\atlcrack.h">
-      <Filter>Header Files\WTL</Filter>
-    </ClInclude>
-    <ClInclude Include="wtl\Include\atlctrls.h">
-      <Filter>Header Files\WTL</Filter>
-    </ClInclude>
-    <ClInclude Include="wtl\Include\atlctrlw.h">
-      <Filter>Header Files\WTL</Filter>
-    </ClInclude>
-    <ClInclude Include="wtl\Include\atlctrlx.h">
-      <Filter>Header Files\WTL</Filter>
-    </ClInclude>
-    <ClInclude Include="wtl\Include\atlddx.h">
-      <Filter>Header Files\WTL</Filter>
-    </ClInclude>
-    <ClInclude Include="wtl\Include\atldlgs.h">
-      <Filter>Header Files\WTL</Filter>
-    </ClInclude>
-    <ClInclude Include="wtl\Include\atldwm.h">
-      <Filter>Header Files\WTL</Filter>
-    </ClInclude>
-    <ClInclude Include="wtl\Include\atlfind.h">
-      <Filter>Header Files\WTL</Filter>
-    </ClInclude>
-    <ClInclude Include="wtl\Include\atlframe.h">
-      <Filter>Header Files\WTL</Filter>
-    </ClInclude>
-    <ClInclude Include="wtl\Include\atlgdi.h">
-      <Filter>Header Files\WTL</Filter>
-    </ClInclude>
-    <ClInclude Include="wtl\Include\atlmisc.h">
-      <Filter>Header Files\WTL</Filter>
-    </ClInclude>
-    <ClInclude Include="wtl\Include\atlprint.h">
-      <Filter>Header Files\WTL</Filter>
-    </ClInclude>
-    <ClInclude Include="wtl\Include\atlres.h">
-      <Filter>Header Files\WTL</Filter>
-    </ClInclude>
-    <ClInclude Include="wtl\Include\atlresce.h">
-      <Filter>Header Files\WTL</Filter>
-    </ClInclude>
-    <ClInclude Include="wtl\Include\atlribbon.h">
-      <Filter>Header Files\WTL</Filter>
-    </ClInclude>
-    <ClInclude Include="wtl\Include\atlscrl.h">
-      <Filter>Header Files\WTL</Filter>
-    </ClInclude>
-    <ClInclude Include="wtl\Include\atlsplit.h">
-      <Filter>Header Files\WTL</Filter>
-    </ClInclude>
-    <ClInclude Include="wtl\Include\atltheme.h">
-      <Filter>Header Files\WTL</Filter>
-    </ClInclude>
-    <ClInclude Include="wtl\Include\atluser.h">
-      <Filter>Header Files\WTL</Filter>
-    </ClInclude>
-    <ClInclude Include="wtl\Include\atlwince.h">
-      <Filter>Header Files\WTL</Filter>
-    </ClInclude>
-    <ClInclude Include="wtl\Include\atlwinx.h">
-      <Filter>Header Files\WTL</Filter>
-    </ClInclude>
     <ClInclude Include="pugixml\pugiconfig.hpp">
       <Filter>Header Files\pugixml</Filter>
     </ClInclude>
@@ -164,11 +98,68 @@
     <ClInclude Include="objmgr.hpp">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="wtl10\Include\atlapp.h">
+      <Filter>Header Files\WTL</Filter>
+    </ClInclude>
+    <ClInclude Include="wtl10\Include\atlcrack.h">
+      <Filter>Header Files\WTL</Filter>
+    </ClInclude>
+    <ClInclude Include="wtl10\Include\atlctrls.h">
+      <Filter>Header Files\WTL</Filter>
+    </ClInclude>
+    <ClInclude Include="wtl10\Include\atlctrlw.h">
+      <Filter>Header Files\WTL</Filter>
+    </ClInclude>
+    <ClInclude Include="wtl10\Include\atlctrlx.h">
+      <Filter>Header Files\WTL</Filter>
+    </ClInclude>
+    <ClInclude Include="wtl10\Include\atlddx.h">
+      <Filter>Header Files\WTL</Filter>
+    </ClInclude>
+    <ClInclude Include="wtl10\Include\atldlgs.h">
+      <Filter>Header Files\WTL</Filter>
+    </ClInclude>
+    <ClInclude Include="wtl10\Include\atldwm.h">
+      <Filter>Header Files\WTL</Filter>
+    </ClInclude>
+    <ClInclude Include="wtl10\Include\atlfind.h">
+      <Filter>Header Files\WTL</Filter>
+    </ClInclude>
+    <ClInclude Include="wtl10\Include\atlframe.h">
+      <Filter>Header Files\WTL</Filter>
+    </ClInclude>
+    <ClInclude Include="wtl10\Include\atlgdi.h">
+      <Filter>Header Files\WTL</Filter>
+    </ClInclude>
+    <ClInclude Include="wtl10\Include\atlmisc.h">
+      <Filter>Header Files\WTL</Filter>
+    </ClInclude>
+    <ClInclude Include="wtl10\Include\atlprint.h">
+      <Filter>Header Files\WTL</Filter>
+    </ClInclude>
+    <ClInclude Include="wtl10\Include\atlres.h">
+      <Filter>Header Files\WTL</Filter>
+    </ClInclude>
+    <ClInclude Include="wtl10\Include\atlribbon.h">
+      <Filter>Header Files\WTL</Filter>
+    </ClInclude>
+    <ClInclude Include="wtl10\Include\atlscrl.h">
+      <Filter>Header Files\WTL</Filter>
+    </ClInclude>
+    <ClInclude Include="wtl10\Include\atlsplit.h">
+      <Filter>Header Files\WTL</Filter>
+    </ClInclude>
+    <ClInclude Include="wtl10\Include\atltheme.h">
+      <Filter>Header Files\WTL</Filter>
+    </ClInclude>
+    <ClInclude Include="wtl10\Include\atluser.h">
+      <Filter>Header Files\WTL</Filter>
+    </ClInclude>
+    <ClInclude Include="wtl10\Include\atlwinx.h">
+      <Filter>Header Files\WTL</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="delayload-stubs\ntdll-delayed-stubs.c">
-      <Filter>Special Files\Module Definition Files</Filter>
-    </ClCompile>
     <ClCompile Include="delayimp.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
@@ -180,6 +171,9 @@
     </ClCompile>
     <ClCompile Include="stdafx.cpp">
       <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="delayload-stubs\ntdll-delayed-stubs.c">
+      <Filter>Special Files\Module Definition Files</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>

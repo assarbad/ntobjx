@@ -1,0 +1,8 @@
+{
+  "solution": {
+    "path": "ntobjx.vs16.sln",
+    "projects": [
+      "ntobjx.vs16.vcxproj"
+    ]
+  }
+}

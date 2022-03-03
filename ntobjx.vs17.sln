@@ -1,10 +1,10 @@
 ﻿
 Microsoft Visual Studio Solution File, Format Version 12.00
-# Visual Studio Version 16
-VisualStudioVersion = 16.0.0.0
-Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "ntobjx", "ntobjx.vs16.vcxproj", "{DE5A7539-C36C-4F2E-9CE3-18087DC72346}"
+# Visual Studio Version 17
+VisualStudioVersion = 17.0.0.0
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "ntobjx", "ntobjx.vs17.vcxproj", "{DE5A7539-C36C-4F2E-9CE3-18087DC72346}"
 EndProject
-Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "ntobjx_c", "ntobjx_c.vs16.vcxproj", "{CA1F91D0-7D7E-4A9C-9DD1-6C65C2F37A59}"
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "ntobjx_c", "ntobjx_c.vs17.vcxproj", "{CA1F91D0-7D7E-4A9C-9DD1-6C65C2F37A59}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution

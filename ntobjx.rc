@@ -263,16 +263,16 @@ BEGIN
     IDS_OBJSPEC_INFO        "%s-spezifische grundlegende Informationen"
     IDS_OBJSPEC_NAME1_SYMLINK "Linkziel:"
     IDS_STATUSBAR_NOTELEVATED "!erhöht"
-    IDS_STATUSBAR_DIR_DETAILS 
+    IDS_STATUSBAR_DIR_DETAILS
                             "%s (Verzeichnisse: %u, Verknüpfungen: %u, Alle: %u)"
 END
 
 STRINGTABLE
 BEGIN
     IDS_ABOUT_DESCRIPTION   "Über dieses Programm"
-    ID_SWITCHLANGUAGE_GERMAN 
+    ID_SWITCHLANGUAGE_GERMAN
                             "Anwendungssprache für diese Sitzung auf Deutsch setzen"
-    ID_SWITCHLANGUAGE_ENGLISH 
+    ID_SWITCHLANGUAGE_ENGLISH
                             "Anwendungssprache für diese Sitzung auf Englisch setzen"
 END
 
@@ -286,7 +286,7 @@ STRINGTABLE
 BEGIN
     ID_VIEW_PROPERTIES      "Zeige die Eigenschaften des ausgewählten Objekts\nEigenschaften"
     ID_POPUPMENU_COPYNAME   "Kopiere Objektnamen in Zwischenablage"
-    ID_POPUPMENU_COPYFULLPATH 
+    ID_POPUPMENU_COPYFULLPATH
                             "Kopiere vollständigen Objektpfad in Zwischenablage"
     ID_POPUPMENU_COPYSYMLINKTARGET "Kopiere Linkziel in Zwischenablage"
     ID_POPUPMENU_PROPERTIES "Zeige die Eigenschaften des ausgewählten Objekts"
@@ -353,7 +353,7 @@ BEGIN
     IDS_OBJSPEC_NAME1_TIMER "Timer-Zustand:"
     IDS_OBJSPEC_NAME2_TIMER "Verbleibende Zeit:"
     IDS_OBJTT_ARCNAME       "Symbolische Verknüpfungen welche ARC-Namen (Advanced RISC Computing) auf NT-Namen abbilden; wird während des Bootvorgangs benutzt"
-    IDS_OBJTT_BASENAMEDOBJECTS 
+    IDS_OBJTT_BASENAMEDOBJECTS
                             "Hier werden globale ALPC-Ports, Events, Jobs, Mutexe (Mutanten), Semaphoren, Symbolische Verknüpfungen, Sections (MMFs) und Timer-Objekte untergebracht sind"
     IDS_OBJTT_CALLBACK      "Callback-Objekte"
     IDS_OBJTT_DEVICE        "Wo Treiber üblicherweise Geräte-Objekte anlegen und suchen"
@@ -396,7 +396,7 @@ BEGIN
     IDS_OBJTT_SESSIONS      "Enthält sitzungslokale Objekte, beispielsweise eingebundene Netzwerkfreigaben\nKombiniert mehrere Objektverzeichnisse um einen sitzungsspezifischen Namensraum zu erzeugen\nQuelle:: 'Session Namespace', Kapitel 3, Windows Internals, 6te Auflage"
     IDS_OBJTT_UDFCOMMPORTS  "ALPC-Ports die vom User-Mode Driver Framework (UMDF) benutzt werden\nQuelle: Windows Internals, 6te Auflage"
     IDS_OBJTT_WINDOWS       "Enthält WindowsStation-Objekte"
-    IDS_OBJTT_WINDOWSTATIONS 
+    IDS_OBJTT_WINDOWSTATIONS
                             "Katalog von Window Stations\nEine WindowStation ist ein Behälter für Desktops, welche wiederum sichtbare und unsichtbare Fenster enthalten"
     IDS_OBJTT_DOSDEV        "Enthält sitzungslokale 'DOS'-Gerätenamen, so wie Laufwerksbuchstaben ('C:', ...) und 'NUL'; siehe auch \\GLOBAL??"
     IDS_OBJTT_SYSTEMROOT    "Der Gerätepfad zu eurem %SystemRoot%; und also der wahre Pfad von C:\\Windows"
@@ -416,7 +416,7 @@ BEGIN
     IDS_OBJPROPERTY_SYMLINKTGT "Ziel des symbolischen Links: %s\r\n"
     IDS_OBJPROPERTY_TYPE    "Objekttyp: %s\r\n"
     IDS_OBJPROPERTY_OPEN_STATUS "Status beim Öffnen des Objekts: 0x%08X\r\n"
-    IDS_OBJPROPERTY_QUERY_STATUS 
+    IDS_OBJPROPERTY_QUERY_STATUS
                             "Status beim Ermitteln der Objektdetails: 0x%08X\r\n"
 END
 
@@ -666,18 +666,18 @@ END
 // TEXTINCLUDE
 //
 
-1 TEXTINCLUDE 
+1 TEXTINCLUDE
 BEGIN
     "resource.h\0"
 END
 
-2 TEXTINCLUDE 
+2 TEXTINCLUDE
 BEGIN
     "#include ""atlres.h""\r\n"
     "\0"
 END
 
-3 TEXTINCLUDE 
+3 TEXTINCLUDE
 BEGIN
     "\0"
 END
@@ -722,9 +722,9 @@ END
 STRINGTABLE
 BEGIN
     IDS_ABOUT_DESCRIPTION   "About this program"
-    ID_SWITCHLANGUAGE_GERMAN 
+    ID_SWITCHLANGUAGE_GERMAN
                             "Set application language to German for this session"
-    ID_SWITCHLANGUAGE_ENGLISH 
+    ID_SWITCHLANGUAGE_ENGLISH
                             "Set application language to English for this session"
 END
 
@@ -804,7 +804,7 @@ BEGIN
     IDS_OBJSPEC_NAME1_TIMER "Timer state:"
     IDS_OBJSPEC_NAME2_TIMER "Remaining time:"
     IDS_OBJTT_ARCNAME       "Symlinks mapping ARC-style (Advanced RISC Computing) names to NT-style names; used during early boot stages"
-    IDS_OBJTT_BASENAMEDOBJECTS 
+    IDS_OBJTT_BASENAMEDOBJECTS
                             "This is where global ALPC port, event, job, mutex (mutant), semaphore, symbolic link, section (memory mapped file) and waitable timer objects live"
     IDS_OBJTT_CALLBACK      "Callback objects"
     IDS_OBJTT_DEVICE        "Where drivers conventionally create and look for device objects"
@@ -847,7 +847,7 @@ BEGIN
     IDS_OBJTT_SESSIONS      "Contains session-local objects, e.g. network-drive mappings\nCombines several object directories to provide a per-session namespace\nSource: 'Session Namespace', chapter 3, Windows Internals, 6th ed."
     IDS_OBJTT_UDFCOMMPORTS  "ALPC ports used by the User-Mode Driver Framework (UMDF)\nSource: Windows Internals, 6th ed."
     IDS_OBJTT_WINDOWS       "Contains window station objects"
-    IDS_OBJTT_WINDOWSTATIONS 
+    IDS_OBJTT_WINDOWSTATIONS
                             "Catalog of window stations\nA WindowStation is the container for Desktop objects, which in turn host the visible and invisible windows"
     IDS_OBJTT_DOSDEV        "Contains session-local 'DOS' device names, such as drive letters ('C:', ...) and 'NUL'; also see \\GLOBAL??"
     IDS_OBJTT_SYSTEMROOT    "The device path to your %SystemRoot%; e.g. the true path of C:\\Windows"

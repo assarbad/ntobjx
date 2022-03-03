@@ -1,4 +1,4 @@
-﻿ ntobjx: NT objects
+ ntobjx: NT objects
 ====================
 
 About
@@ -143,7 +143,7 @@ respectively.
 .. _documentation: https://sourceforge.net/p/ntobjx/wiki/ci/default/tree/help/English.md
 .. _download section: https://sourceforge.net/projects/ntobjx/files/
 .. _live.sysinternals.com: https://live.sysinternals.com/sigcheck.exe
-.. _premake4 flavor: https://sourceforge.net/projects/premake4-wds/files/
+.. _premake4 flavor: https://sourceforge.net/projects/windirstat/files/premake-stable/
 .. _WinObj: https://docs.microsoft.com/en-us/sysinternals/downloads/winobj
 .. _Why Programs Fail: http://www.whyprogramsfail.com/
 .. _MS-PL: https://opensource.org/licenses/MS-PL

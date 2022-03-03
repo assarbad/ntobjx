@@ -4,7 +4,7 @@
 ///
 ///////////////////////////////////////////////////////////////////////////////
 ///
-/// Copyright (c) 2016, 2017 Oliver Schneider (assarbad.net)
+/// Copyright (c) 2016, 2017, 2021 Oliver Schneider (assarbad.net)
 ///
 /// Permission is hereby granted, free of charge, to any person obtaining a
 /// copy of this software and associated documentation files (the "Software"),
@@ -831,6 +831,15 @@ namespace NtObjMgr
                 m_queryStatus = STATUS_SUCCESS;
             }
 
+            // TODO:
+            // PUBLIC_OBJECT_BASIC_INFORMATION
+            // TRANSACTION_BASIC_INFORMATION
+            // TRANSACTIONMANAGER_BASIC_INFORMATION
+            // RESOURCEMANAGER_BASIC_INFORMATION
+            // ENLISTMENT_BASIC_INFORMATION
+            // SILOOBJECT_BASIC_INFORMATION
+            // SERVERSILO_BASIC_INFORMATION
+
             inline HRESULT getQueryStatus() const
             {
                 return m_queryStatus;
@@ -1213,6 +1222,98 @@ namespace NtObjMgr
     };
 
     typedef ObjectHandleT<ATL::CString> ObjectHandle;
+
+    template <typename T> class ObjectTypeMapT
+    {
+        ObjectTypeMapT(ObjectTypeMapT const&) = delete;
+        ObjectTypeMapT& operator=(ObjectTypeMapT const&) = delete;
+
+      public:
+        ObjectTypeMapT()
+            : m_buffer(0)
+            , m_status(STATUS_SUCCESS)
+        {
+            ULONG uSize = 0, uDummy = 0;
+            m_status = ::NtQueryObject(NULL, ObjectAllInformation, &uDummy, sizeof(uDummy), &uSize);
+            if (STATUS_INFO_LENGTH_MISMATCH == m_status)
+            {
+                ULONG uSize2 = 0;
+                m_buffer = (BYTE*)::calloc(1, uSize);
+                m_status = ::NtQueryObject(NULL, ObjectAllInformation, m_buffer, uSize, &uSize2);
+
+                if (NT_SUCCESS(m_status) && (uSize2 <= uSize))
+                {
+                    ULONG const uNumTypes = ((OBJECT_TYPES_INFORMATION*)m_buffer)->NumberOfTypes;
+                    OBJECT_TYPE_INFORMATION const* objTypeInfo = ((OBJECT_TYPES_INFORMATION*)m_buffer)->TypeInformation;
+                    for (size_t idx = 0; idx < uNumTypes; idx++)
+                    {
+                        T const sTypeName(objTypeInfo->TypeName.Buffer, objTypeInfo->TypeName.Length / sizeof(WCHAR));
+
+                        m_typeMap[sTypeName] = objTypeInfo;
+                        m_typeMapByIndex[objTypeInfo->TypeIndex] = objTypeInfo;
+
+                        // Round to next "natural" alignment (i.e. depending on process' word size)
+                        USHORT const entryLen =
+                            (objTypeInfo->TypeName.MaximumLength + (sizeof(void*) - 1)) & (~(sizeof(void*) - 1));
+                        objTypeInfo = ((OBJECT_TYPE_INFORMATION*)((BYTE*)objTypeInfo->TypeName.Buffer + entryLen));
+                    }
+                }
+            }
+        }
+
+        ~ObjectTypeMapT()
+        {
+            ::free(m_buffer);
+        }
+
+        inline operator bool() const
+        {
+            return NT_SUCCESS(m_status);
+        }
+
+        inline bool operator!() const
+        {
+            return !operator bool();
+        }
+
+        inline OBJECT_TYPE_INFORMATION const* operator[](ULONG idx) const
+        {
+            OBJECT_TYPE_INFORMATION const* potInfo = 0;
+            if (m_typeMapByIndex.Lookup(idx, potInfo))
+            {
+                return potInfo;
+            }
+            return 0;
+        }
+
+        inline OBJECT_TYPE_INFORMATION const* Lookup(ULONG idx) const
+        {
+            return operator[](idx);
+        }
+
+        inline OBJECT_TYPE_INFORMATION const* operator[](T const& name) const
+        {
+            OBJECT_TYPE_INFORMATION const* potInfo = 0;
+            if (m_typeMap.Lookup(name, potInfo))
+            {
+                return potInfo;
+            }
+            return 0;
+        }
+
+        inline OBJECT_TYPE_INFORMATION const* Lookup(T const& name) const
+        {
+            return operator[](name);
+        }
+
+      private:
+        CAtlMap<T, OBJECT_TYPE_INFORMATION const*> m_typeMap;
+        CAtlMap<ULONG, OBJECT_TYPE_INFORMATION const*> m_typeMapByIndex;
+        BYTE* m_buffer;
+        NTSTATUS m_status;
+    };
+
+    typedef ObjectTypeMapT<ATL::CString> ObjectTypeMap;
 } // namespace NtObjMgr
 
 #endif // __OBJMGR_HPP_VER__
