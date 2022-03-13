@@ -13,7 +13,7 @@
 local action = _ACTION or ""
 local release = false
 local tgtname = "ntobjx"
-local cmdline = iif(action >= "vs2019", true, false)
+local cmdline = iif(action >= "vs2019", true, false) -- newer versions have solution filters to deal with the issue we're trying to address here
 if _OPTIONS["cmdline"] then
     cmdline = true
 end
@@ -23,12 +23,12 @@ if _OPTIONS["release"] then
 end
 
 newoption { trigger = "release", description = "Creates a solution suitable for a release build." }
-newoption { trigger = "cmdline", description = "Also creates the project for the command line tool." }
+newoption { trigger = "cmdline", description = "Also creates the project for the command line tool (default on >=VS2019)." }
 
 solution (tgtname .. iif(release, "_release", ""))
     configurations  (iif(release, {"Release"}, {"Debug", "Release"}))
     platforms       {"x32", "x64"}
-    location        ('.')
+    location        (".")
 
     project (tgtname .. iif(release, "_release", ""))
         local int_dir   = iif(release, "release_", "").."intermediate/" .. action .. "_$(Platform)_$(Configuration)\\$(ProjectName)"
@@ -154,6 +154,9 @@ solution (tgtname .. iif(release, "_release", ""))
                 "wtl10/Include/*.h",
             }
 
+        configuration {"vs2019 or vs2022"}
+            buildoptions    {"/Zc:__cplusplus", "/utf-8",}
+
     if cmdline then
         -- ntobjx_c project
         project (tgtname .. "_c" .. iif(release, "_release", ""))
@@ -233,7 +236,10 @@ solution (tgtname .. iif(release, "_release", ""))
             configuration {"Release", "x64"}
                 linkoptions     {"/subsystem:console,5.02"}
 
-            configuration {"vs2013 or vs2015 or vs2017 or vs2019"}
+            configuration {"vs2019 or vs2022"}
+                buildoptions    {"/Zc:__cplusplus", "/utf-8",}
+
+            configuration {"vs2013 or vs2015 or vs2017 or vs2019 or vs2022"}
                 defines         {"WINVER=0x0501"}
 
             configuration {"vs2002 or vs2003 or vs2005 or vs2008 or vs2010 or vs2012", "x32"}
@@ -246,10 +252,35 @@ solution (tgtname .. iif(release, "_release", ""))
                 linkoptions     {"/opt:nowin98"}
     end
 
+--[[
+    This part of the premake4.lua modifies the core premake4 behavior a little.
+
+    It does the following (in order of appearence below):
+
+    - New option --sdkver to override <WindowsTargetPlatformVersion> on modern VS
+    - New option --clang to request ClangCL toolset on modern VS
+    - New option --xp to request XP-compatible toolset on modern VS
+    - On older premake4 versions it will provide a premake.project.getbasename
+      function, furthermore two other functions get patched to make use of it
+    - premake.project.getbasename() gets overridden to insert a marker into the
+      created file name, based on the chosen action
+      Example: foobar.vcxproj becomes foobar.vs2022.vcxproj etc ...
+      The purpose of this exercise is to allow for projects/solutions of several
+      Visual Studio versions to reside in the same folder
+    - Options "dotnet" gets removed
+    - The "platform" option has some allowed values removed
+    - The "os" option has some allowed values removed
+    - The actions are trimmed to what we know can work
+]]
+
+newoption { trigger = "sdkver", value = "SDKVER", description = "Allows to override SDK version (VS2015 through VS2022)" }
+newoption { trigger = "clang", description = "Allows to use clang-cl as compiler and lld-link as linker (VS2019 and VS2022)" }
+newoption { trigger = "xp", description = "Allows to use a supported XP toolset for some VS versions" }
+
 do
     -- This is mainly to support older premake4 builds
     if not premake.project.getbasename then
-        print "Magic happens ..."
+        print "Magic happens for old premake4 versions without premake.project.getbasename() ..."
         -- override the function to establish the behavior we'd get after patching Premake to have premake.project.getbasename
         premake.project.getbasename = function(prjname, pattern)
             return pattern:gsub("%%%%", prjname)
@@ -289,7 +320,7 @@ do
                     -- element is only written if there *are* filters
                     if not filterfound then
                         filterfound = true
-                        _p(1,'<ItemGroup>')
+                        _p(1,"<ItemGroup>")
                     end
 
                     path = path .. folders[i]
@@ -300,8 +331,8 @@ do
                         local deterministic_uuid = os.str2uuid(seed)
                         filters[path] = true
                         _p(2, '<Filter Include="%s">', path)
-                        _p(3, '<UniqueIdentifier>{%s}</UniqueIdentifier>', deterministic_uuid)
-                        _p(2, '</Filter>')
+                        _p(3, "<UniqueIdentifier>{%s}</UniqueIdentifier>", deterministic_uuid)
+                        _p(2, "</Filter>")
                     end
 
                     -- prepare for the next subfolder
@@ -310,14 +341,14 @@ do
             end
 
             if filterfound then
-                _p(1,'</ItemGroup>')
+                _p(1,"</ItemGroup>")
             end
         end
     end
     -- Name the project files after their VS version
     local orig_getbasename = premake.project.getbasename
     premake.project.getbasename = function(prjname, pattern)
-        -- The below is used to insert the .vs(8|9|10|11|12|14|15|16) into the file names for projects and solutions
+        -- The below is used to insert the .vs(8|9|10|11|12|14|15|16|17) into the file names for projects and solutions
         if _ACTION then
             name_map = {vs2005 = "vs8", vs2008 = "vs9", vs2010 = "vs10", vs2012 = "vs11", vs2013 = "vs12", vs2015 = "vs14", vs2017 = "vs15", vs2019 = "vs16", vs2022 = "vs17"}
             if name_map[_ACTION] then
@@ -328,32 +359,12 @@ do
         end
         return orig_getbasename(prjname, pattern)
     end
-    -- Make sure we can generate XP-compatible projects for newer Visual Studio versions
-    local orig_vc2010_configurationPropertyGroup = premake.vstudio.vc2010.configurationPropertyGroup
-    premake.vstudio.vc2010.configurationPropertyGroup = function(cfg, cfginfo)
-        local old_captured = io.captured -- save io.captured state
-        io.capture() -- this sets io.captured = ''
-        orig_vc2010_configurationPropertyGroup(cfg, cfginfo)
-        local captured = io.endcapture()
-        assert(captured ~= nil)
-        local toolsets = { vs2012 = "v110", vs2013 = "v120", vs2015 = "v140", vs2017 = "v141", vs2019 = "v142" }
-        local toolset = toolsets[_ACTION]
-        if toolset then
-            if _OPTIONS["xp"] then
-                if toolset >= "v141" then
-                    toolset = "v141"
-                end
-                captured = captured:gsub(toolsets[_ACTION] .. "(</PlatformToolset>)", toolset .. "_xp%1")
-            end
-        end
-        if old_captured ~= nil then
-            io.captured = old_captured .. captured -- restore outer captured state, if any
-        else
-            io.write(captured)
-        end
-    end
     -- Premake4 sets the PDB file name for the compiler's PDB to the default
     -- value used by the linker's PDB. This causes error C1052 on VS2017. Fix it.
+    -- But this also fixes up certain other areas of the generated project. The idea
+    -- here is to catch the original _p() invocations, evaluate the arguments and
+    -- then act based on those, using orig_p() as a standin during a call to the
+    -- underlying premake.vs2010_vcxproj() function ;-)
     local orig_premake_vs2010_vcxproj = premake.vs2010_vcxproj
     premake.vs2010_vcxproj = function(prj)
         -- The whole stunt below is necessary in order to modify the resource_compile()
@@ -362,18 +373,64 @@ do
         local besilent = false
         -- We patch the global _p() function
         _G._p = function(indent, msg, first, ...)
-            -- Look for indent values of 1
+            -- Look for non-empty messages and narrow it down by the indent values
             if msg ~= nil then
                 if msg:match("<ProgramDataBaseFileName>[^<]+</ProgramDataBaseFileName>") then
                     return -- we want to suppress these
                 end
-                if indent == 2 and msg == '<ClCompile Include=\"%s\">' and first == "delayload-stubs\\ntdll-delayed-stubs.c" then
-                    orig_p(indent, msg, first, ...)
-                    orig_p(indent+1, "<ExcludedFromBuild>true</ExcludedFromBuild>")
-                    return
+                if indent == 2 then
+                    if msg == '<ClCompile Include=\"%s\">' and first == "delayload-stubs\\ntdll-delayed-stubs.c" then
+                        orig_p(indent, msg, first, ...) -- what was originally supposed to be output
+                        orig_p(indent+1, "<ExcludedFromBuild>true</ExcludedFromBuild>")
+                        return
+                    end
+                    if msg == "<RootNamespace>%s</RootNamespace>" then
+                        local sdkmap = {vs2015 = "8.1", vs2017 = "10.0.17763.0", vs2019 = "10.0", vs2022 = "10.0"}
+                        if (not _ACTION) or (not sdkmap[_ACTION]) then -- should not happen, but tread carefully anyway
+                            orig_p(indent, msg, first, ...) -- what was originally supposed to be output
+                            return
+                        end
+                        local sdkver = _OPTIONS["sdkver"] or sdkmap[_ACTION]
+                        orig_p(indent, msg, first, ...) -- what was originally supposed to be output
+                        orig_p(indent, "<WindowsTargetPlatformVersion>%s</WindowsTargetPlatformVersion>", sdkver)
+                        return
+                    end
+                    if msg == "<PlatformToolset>%s</PlatformToolset>" then
+                        if (_OPTIONS["clang"] ~= nil) and (_ACTION == "vs2017") then
+                            if _OPTIONS["xp"] ~= nil then
+                                print "WARNING: The --clang option takes precedence over --xp, therefore picking v141_clang_c2 toolset."
+                            end
+                            print "WARNING: If you are used to Clang support from VS2019 and newer, be sure to review your choice. It's not the same on older VS versions."
+                            orig_p(indent, msg, "v141_clang_c2")
+                            return
+                        elseif (_OPTIONS["clang"] ~= nil) and (_ACTION >= "vs2019") then
+                            if _OPTIONS["xp"] ~= nil then
+                                print "WARNING: The --clang option takes precedence over --xp, therefore picking ClangCL toolset."
+                            end
+                            orig_p(indent, msg, "ClangCL")
+                            return
+                        elseif _OPTIONS["xp"] ~= nil then
+                            local toolsets = { vs2012 = "v110", vs2013 = "v120", vs2015 = "v140", vs2017 = "v141", vs2019 = "v142", vs2022 = "v143" }
+                            local toolset = toolsets[_ACTION]
+                            if toolset then
+                                if _OPTIONS["xp"] and toolset >= "v141" then
+                                    toolset = "v141" -- everything falls back to the VS2017 XP toolset for more recent VS
+                                end
+                                orig_p(indent,"<PlatformToolset>%s_xp</PlatformToolset>", toolset)
+                                return
+                            end
+                        end
+                    end
+                elseif indent == 3 then
+                    -- This is what vanilla VS would output it as, so let's try to align with that
+                    if msg == "<PrecompiledHeader></PrecompiledHeader>" then
+                        orig_p(indent, "<PrecompiledHeader>")
+                        orig_p(indent, "</PrecompiledHeader>")
+                        return
+                    end
                 end
             end
-            if not besilent then -- should we be silent?
+            if not besilent then -- should we be silent (i.e. suppress default output)?
                 orig_p(indent, msg, first, ...)
             end
         end
@@ -384,7 +441,7 @@ do
     local function wrap_remove_pdb_attribute(origfunc)
         local fct = function(cfg)
             local old_captured = io.captured -- save io.captured state
-            io.capture() -- this sets io.captured = ''
+            io.capture() -- this sets io.captured = ""
             origfunc(cfg)
             local captured = io.endcapture()
             assert(captured ~= nil)
@@ -413,7 +470,7 @@ do
     -- Silently suppress generation of the .user files ...
     local orig_generate = premake.generate
     premake.generate = function(obj, filename, callback)
-        if filename:find('.vcproj.user') or filename:find('.vcxproj.user') then
+        if filename:find(".vcproj.user") or filename:find(".vcxproj.user") then
             return
         end
         orig_generate(obj, filename, callback)
@@ -458,7 +515,8 @@ do
     -- Remove some unwanted/outdated options
     remove_allowed_optionvalues("dotnet")
     remove_allowed_optionvalues("platform", { universal = 0, universal32 = 0, universal64 = 0, ps3 = 0, xbox360 = 0, })
-    remove_allowed_optionvalues("os", { haiku = 0, solaris = 0, })
+    remove_allowed_optionvalues("os") -- ... , { bsd = 0, haiku = 0, linux = 0, macosx = 0, solaris = 0, }
+    remove_allowed_optionvalues("cc")
     -- ... and actions (mainly because they are untested)
     for k,v in pairs({codeblocks = 0, codelite = 0, gmake = 0, xcode3 = 0, xcode4 = 0, vs2002 = 0, vs2003 = 0, vs2005 = 0, vs2008 = 0, vs2010 = 0, vs2012 = 0, vs2013 = 0}) do
         remove_action(k)

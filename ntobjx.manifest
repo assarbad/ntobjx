@@ -16,4 +16,7 @@
       </requestedPrivileges>
     </security>
   </trustInfo>
+<!--
+https://walbourn.github.io/manifest-madness/
+-->
 </assembly>
