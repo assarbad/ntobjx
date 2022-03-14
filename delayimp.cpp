@@ -36,7 +36,7 @@
 #include <tchar.h>
 #define DelayLoadError _tprintf
 #else
-#include "stdafx.h" /* Must alias DelayLoadError to a function that behaves like _tprintf */
+#include "common.h" /* Must alias DelayLoadError to a function that behaves like _tprintf */
 #endif
 #ifndef FACILITY_VISUALCPP
 #define FACILITY_VISUALCPP ((LONG)0x6d)

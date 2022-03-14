@@ -23,34 +23,39 @@
     <RootNamespace>ntobjx</RootNamespace>
     <WindowsTargetPlatformVersion>10.0</WindowsTargetPlatformVersion>
     <Keyword>Win32Proj</Keyword>
+    <ProjectName>ntobjx</ProjectName>
   </PropertyGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.Default.props" />
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'" Label="Configuration">
     <ConfigurationType>Application</ConfigurationType>
     <UseDebugLibraries>true</UseDebugLibraries>
     <CharacterSet>Unicode</CharacterSet>
-    <PlatformToolset>ClangCL</PlatformToolset>
+    <PlatformToolset>v143</PlatformToolset>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'" Label="Configuration">
     <ConfigurationType>Application</ConfigurationType>
     <UseDebugLibraries>true</UseDebugLibraries>
     <CharacterSet>Unicode</CharacterSet>
-    <PlatformToolset>ClangCL</PlatformToolset>
+    <PlatformToolset>v143</PlatformToolset>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'" Label="Configuration">
     <ConfigurationType>Application</ConfigurationType>
     <UseDebugLibraries>false</UseDebugLibraries>
     <CharacterSet>Unicode</CharacterSet>
-    <PlatformToolset>ClangCL</PlatformToolset>
+    <PlatformToolset>v143</PlatformToolset>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'" Label="Configuration">
     <ConfigurationType>Application</ConfigurationType>
     <UseDebugLibraries>false</UseDebugLibraries>
     <CharacterSet>Unicode</CharacterSet>
-    <PlatformToolset>ClangCL</PlatformToolset>
+    <PlatformToolset>v143</PlatformToolset>
   </PropertyGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.props" />
   <ImportGroup Label="ExtensionSettings">
+  </ImportGroup>
+  <ImportGroup Label="PropertySheets">
+    <Import Project="$(SolutionDir)project.props" Condition="exists('$(SolutionDir)project.props')" Label="ProjectSpecific (solution)" />
+    <Import Project="$(ProjectDir)project.props" Condition="exists('$(ProjectDir)project.props') AND '$(SolutionDir)' != '$(ProjectDir)'" Label="Project-specific (local)" />
   </ImportGroup>
   <ImportGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'" Label="PropertySheets">
     <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
@@ -66,48 +71,24 @@
   </ImportGroup>
   <PropertyGroup Label="UserMacros" />
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
-    <OutDir>build.vs2022\</OutDir>
-    <IntDir>intermediate\vs2022_$(Platform)_$(Configuration)\$(ProjectName)\</IntDir>
-    <TargetName>ntobjx32D</TargetName>
-    <TargetExt>.exe</TargetExt>
     <LinkIncremental>true</LinkIncremental>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
-    <OutDir>build.vs2022\</OutDir>
-    <IntDir>intermediate\vs2022_$(Platform)_$(Configuration)\$(ProjectName)\</IntDir>
-    <TargetName>ntobjx64D</TargetName>
-    <TargetExt>.exe</TargetExt>
     <LinkIncremental>true</LinkIncremental>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
-    <OutDir>build.vs2022\</OutDir>
-    <IntDir>intermediate\vs2022_$(Platform)_$(Configuration)\$(ProjectName)\</IntDir>
-    <TargetName>ntobjx32</TargetName>
-    <TargetExt>.exe</TargetExt>
     <LinkIncremental>false</LinkIncremental>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
-    <OutDir>build.vs2022\</OutDir>
-    <IntDir>intermediate\vs2022_$(Platform)_$(Configuration)\$(ProjectName)\</IntDir>
-    <TargetName>ntobjx64</TargetName>
-    <TargetExt>.exe</TargetExt>
     <LinkIncremental>false</LinkIncremental>
   </PropertyGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
     <ClCompile>
       <AdditionalOptions>/GS /Zc:__cplusplus /utf-8 %(AdditionalOptions)</AdditionalOptions>
-      <Optimization>Disabled</Optimization>
       <AdditionalIncludeDirectories>pugixml;wtl10\Include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <PreprocessorDefinitions>WIN32;_WINDOWS;STRICT;_DEBUG;WINVER=0x0501;_ALLOW_RTCc_IN_STL;WTLVER=10;%(PreprocessorDefinitions)</PreprocessorDefinitions>
-      <MinimalRebuild>false</MinimalRebuild>
-      <BasicRuntimeChecks>EnableFastChecks</BasicRuntimeChecks>
-      <RuntimeLibrary>MultiThreadedDebugDLL</RuntimeLibrary>
-      <FunctionLevelLinking>true</FunctionLevelLinking>
-      <PrecompiledHeader>
-      </PrecompiledHeader>
       <WarningLevel>Level3</WarningLevel>
       <TreatWChar_tAsBuiltInType>true</TreatWChar_tAsBuiltInType>
-      <DebugInformationFormat>EditAndContinue</DebugInformationFormat>
     </ClCompile>
     <ResourceCompile>
       <PreprocessorDefinitions>WIN32;_WINDOWS;STRICT;_DEBUG;WINVER=0x0501;_ALLOW_RTCc_IN_STL;WTLVER=10;%(PreprocessorDefinitions)</PreprocessorDefinitions>
@@ -117,10 +98,7 @@
       <SubSystem>Windows</SubSystem>
       <GenerateDebugInformation>true</GenerateDebugInformation>
       <AdditionalDependencies>ntdll-delayed.lib;version.lib;%(AdditionalDependencies)</AdditionalDependencies>
-      <OutputFile>$(OutDir)ntobjx32D.exe</OutputFile>
-      <AdditionalLibraryDirectories>$(IntDir);%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
-      <TargetMachine>MachineX86</TargetMachine>
-      <AdditionalOptions>/map /pdbaltpath:%_PDB% /delay:nobind /delayload:ntdll.dld /delayload:version.dll /dynamicbase /nxcompat %(AdditionalOptions)</AdditionalOptions>
+      <AdditionalOptions>/pdbaltpath:%_PDB% /delay:nobind /delayload:ntdll.dld /delayload:version.dll /dynamicbase /nxcompat %(AdditionalOptions)</AdditionalOptions>
     </Link>
     <PreBuildEvent>
       <Command>call &quot;$(ProjectDir)\hgid.cmd&quot;&#x0D;&#x0A;cl.exe /nologo /c /TC /Ob0 /Gz delayload-stubs\ntdll-delayed-stubs.c &quot;/Fo$(IntDir)\ntdll-delayed-stubs.obj&quot;&#x0D;&#x0A;lib.exe /nologo &quot;/def:delayload-stubs\ntdll-delayed.txt&quot; &quot;/out:$(IntDir)\ntdll-delayed.lib&quot; /machine:x86 &quot;$(IntDir)\ntdll-delayed-stubs.obj&quot;</Command>
@@ -129,18 +107,10 @@
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
     <ClCompile>
       <AdditionalOptions>/GS /Zc:__cplusplus /utf-8 %(AdditionalOptions)</AdditionalOptions>
-      <Optimization>Disabled</Optimization>
       <AdditionalIncludeDirectories>pugixml;wtl10\Include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <PreprocessorDefinitions>WIN32;_WINDOWS;STRICT;_DEBUG;WINVER=0x0501;_ALLOW_RTCc_IN_STL;WTLVER=10;%(PreprocessorDefinitions)</PreprocessorDefinitions>
-      <MinimalRebuild>false</MinimalRebuild>
-      <BasicRuntimeChecks>EnableFastChecks</BasicRuntimeChecks>
-      <RuntimeLibrary>MultiThreadedDebugDLL</RuntimeLibrary>
-      <FunctionLevelLinking>true</FunctionLevelLinking>
-      <PrecompiledHeader>
-      </PrecompiledHeader>
       <WarningLevel>Level3</WarningLevel>
       <TreatWChar_tAsBuiltInType>true</TreatWChar_tAsBuiltInType>
-      <DebugInformationFormat>ProgramDatabase</DebugInformationFormat>
     </ClCompile>
     <ResourceCompile>
       <PreprocessorDefinitions>WIN32;_WINDOWS;STRICT;_DEBUG;WINVER=0x0501;_ALLOW_RTCc_IN_STL;WTLVER=10;%(PreprocessorDefinitions)</PreprocessorDefinitions>
@@ -150,10 +120,7 @@
       <SubSystem>Windows</SubSystem>
       <GenerateDebugInformation>true</GenerateDebugInformation>
       <AdditionalDependencies>ntdll-delayed.lib;version.lib;%(AdditionalDependencies)</AdditionalDependencies>
-      <OutputFile>$(OutDir)ntobjx64D.exe</OutputFile>
-      <AdditionalLibraryDirectories>$(IntDir);%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
-      <TargetMachine>MachineX64</TargetMachine>
-      <AdditionalOptions>/map /pdbaltpath:%_PDB% /delay:nobind /delayload:ntdll.dld /delayload:version.dll /dynamicbase /nxcompat %(AdditionalOptions)</AdditionalOptions>
+      <AdditionalOptions>/pdbaltpath:%_PDB% /delay:nobind /delayload:ntdll.dld /delayload:version.dll /dynamicbase /nxcompat %(AdditionalOptions)</AdditionalOptions>
     </Link>
     <PreBuildEvent>
       <Command>call &quot;$(ProjectDir)\hgid.cmd&quot;&#x0D;&#x0A;lib.exe /nologo /nodefaultlib &quot;/def:delayload-stubs\ntdll-delayed.txt&quot; &quot;/out:$(IntDir)\ntdll-delayed.lib&quot; /machine:x64</Command>
@@ -162,18 +129,10 @@
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
     <ClCompile>
       <AdditionalOptions>/GS /Oi /Os /Gy /Zc:__cplusplus /utf-8 %(AdditionalOptions)</AdditionalOptions>
-      <Optimization>Full</Optimization>
       <AdditionalIncludeDirectories>pugixml;wtl10\Include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <PreprocessorDefinitions>WIN32;_WINDOWS;STRICT;NDEBUG;WINVER=0x0501;_ALLOW_RTCc_IN_STL;WTLVER=10;%(PreprocessorDefinitions)</PreprocessorDefinitions>
-      <MinimalRebuild>false</MinimalRebuild>
-      <StringPooling>true</StringPooling>
-      <RuntimeLibrary>MultiThreadedDLL</RuntimeLibrary>
-      <FunctionLevelLinking>true</FunctionLevelLinking>
-      <PrecompiledHeader>
-      </PrecompiledHeader>
       <WarningLevel>Level3</WarningLevel>
       <TreatWChar_tAsBuiltInType>true</TreatWChar_tAsBuiltInType>
-      <DebugInformationFormat>ProgramDatabase</DebugInformationFormat>
     </ClCompile>
     <ResourceCompile>
       <PreprocessorDefinitions>WIN32;_WINDOWS;STRICT;NDEBUG;WINVER=0x0501;_ALLOW_RTCc_IN_STL;WTLVER=10;%(PreprocessorDefinitions)</PreprocessorDefinitions>
@@ -182,13 +141,8 @@
     <Link>
       <SubSystem>Windows</SubSystem>
       <GenerateDebugInformation>true</GenerateDebugInformation>
-      <EnableCOMDATFolding>true</EnableCOMDATFolding>
-      <OptimizeReferences>true</OptimizeReferences>
       <AdditionalDependencies>ntdll-delayed.lib;version.lib;%(AdditionalDependencies)</AdditionalDependencies>
-      <OutputFile>$(OutDir)ntobjx32.exe</OutputFile>
-      <AdditionalLibraryDirectories>$(IntDir);%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
-      <TargetMachine>MachineX86</TargetMachine>
-      <AdditionalOptions>/map /pdbaltpath:%_PDB% /delay:nobind /delayload:ntdll.dld /delayload:version.dll /dynamicbase /nxcompat /safeseh /release /subsystem:windows,5.01 %(AdditionalOptions)</AdditionalOptions>
+      <AdditionalOptions>/pdbaltpath:%_PDB% /delay:nobind /delayload:ntdll.dld /delayload:version.dll /dynamicbase /nxcompat /safeseh /release /subsystem:windows,5.01 %(AdditionalOptions)</AdditionalOptions>
     </Link>
     <PreBuildEvent>
       <Command>call &quot;$(ProjectDir)\hgid.cmd&quot;&#x0D;&#x0A;cl.exe /nologo /c /TC /Ob0 /Gz delayload-stubs\ntdll-delayed-stubs.c &quot;/Fo$(IntDir)\ntdll-delayed-stubs.obj&quot;&#x0D;&#x0A;lib.exe /nologo &quot;/def:delayload-stubs\ntdll-delayed.txt&quot; &quot;/out:$(IntDir)\ntdll-delayed.lib&quot; /machine:x86 &quot;$(IntDir)\ntdll-delayed-stubs.obj&quot;</Command>
@@ -197,18 +151,10 @@
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
     <ClCompile>
       <AdditionalOptions>/GS /Oi /Os /Gy /Zc:__cplusplus /utf-8 %(AdditionalOptions)</AdditionalOptions>
-      <Optimization>Full</Optimization>
       <AdditionalIncludeDirectories>pugixml;wtl10\Include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <PreprocessorDefinitions>WIN32;_WINDOWS;STRICT;NDEBUG;WINVER=0x0501;_ALLOW_RTCc_IN_STL;WTLVER=10;%(PreprocessorDefinitions)</PreprocessorDefinitions>
-      <MinimalRebuild>false</MinimalRebuild>
-      <StringPooling>true</StringPooling>
-      <RuntimeLibrary>MultiThreadedDLL</RuntimeLibrary>
-      <FunctionLevelLinking>true</FunctionLevelLinking>
-      <PrecompiledHeader>
-      </PrecompiledHeader>
       <WarningLevel>Level3</WarningLevel>
       <TreatWChar_tAsBuiltInType>true</TreatWChar_tAsBuiltInType>
-      <DebugInformationFormat>ProgramDatabase</DebugInformationFormat>
     </ClCompile>
     <ResourceCompile>
       <PreprocessorDefinitions>WIN32;_WINDOWS;STRICT;NDEBUG;WINVER=0x0501;_ALLOW_RTCc_IN_STL;WTLVER=10;%(PreprocessorDefinitions)</PreprocessorDefinitions>
@@ -217,13 +163,8 @@
     <Link>
       <SubSystem>Windows</SubSystem>
       <GenerateDebugInformation>true</GenerateDebugInformation>
-      <EnableCOMDATFolding>true</EnableCOMDATFolding>
-      <OptimizeReferences>true</OptimizeReferences>
       <AdditionalDependencies>ntdll-delayed.lib;version.lib;%(AdditionalDependencies)</AdditionalDependencies>
-      <OutputFile>$(OutDir)ntobjx64.exe</OutputFile>
-      <AdditionalLibraryDirectories>$(IntDir);%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
-      <TargetMachine>MachineX64</TargetMachine>
-      <AdditionalOptions>/map /pdbaltpath:%_PDB% /delay:nobind /delayload:ntdll.dld /delayload:version.dll /dynamicbase /nxcompat /release /subsystem:windows,5.02 %(AdditionalOptions)</AdditionalOptions>
+      <AdditionalOptions>/pdbaltpath:%_PDB% /delay:nobind /delayload:ntdll.dld /delayload:version.dll /dynamicbase /nxcompat /release /subsystem:windows,5.02 %(AdditionalOptions)</AdditionalOptions>
     </Link>
     <PreBuildEvent>
       <Command>call &quot;$(ProjectDir)\hgid.cmd&quot;&#x0D;&#x0A;lib.exe /nologo /nodefaultlib &quot;/def:delayload-stubs\ntdll-delayed.txt&quot; &quot;/out:$(IntDir)\ntdll-delayed.lib&quot; /machine:x64</Command>
@@ -235,13 +176,13 @@
     <ClInclude Include="util\LoadLibrary.h" />
     <ClInclude Include="util\SimpleBuffer.h" />
     <ClInclude Include="util\VersionInfo.h" />
+    <ClInclude Include="common.h" />
     <ClInclude Include="exeversion.h" />
     <ClInclude Include="ntnative.h" />
     <ClInclude Include="ntobjx.h" />
     <ClInclude Include="objtypes.h" />
     <ClInclude Include="reslang.h" />
     <ClInclude Include="resource.h" />
-    <ClInclude Include="stdafx.h" />
     <ClInclude Include="fake_commodule.hpp" />
     <ClInclude Include="objmgr.hpp" />
     <ClInclude Include="wtl10\Include\atlapp.h" />
@@ -272,8 +213,6 @@
     </ClCompile>
     <ClCompile Include="reslang.cpp">
     </ClCompile>
-    <ClCompile Include="stdafx.cpp">
-    </ClCompile>
     <ClCompile Include="delayload-stubs\ntdll-delayed-stubs.c">
       <ExcludedFromBuild>true</ExcludedFromBuild>
       <CompileAs>CompileAsC</CompileAs>
@@ -293,6 +232,8 @@
     <None Include="ntobjx.ruleset" />
     <None Include=".editorconfig" />
     <None Include=".clang-format" />
+    <None Include=".gitignore" />
+    <None Include=".hgignore" />
   </ItemGroup>
   <ItemGroup>
     <ResourceCompile Include="exeversion.rc" />

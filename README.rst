@@ -72,10 +72,7 @@ I noticed that newer versions of the Windows SDK contain a more complete
 ``ntnative.h`` may be duplicates and the compiler may choke. If you find any
 such cases, please file a ticket to point them out to me.
 
-More details on `how to build`_ can be found in the project Wiki. Please also
-note that there is an additional set of solutions in the ``ddkbuild`` subfolder
-which allows you to use one of the supported WDKs to generate a much smaller
-build of ntobjx than is possible with vanilla VS solutions.
+More details on `how to build`_ can be found in the project Wiki.
 
 Creating the solutions
 ~~~~~~~~~~~~~~~~~~~~~~

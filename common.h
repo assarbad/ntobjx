@@ -1,8 +1,3 @@
-// stdafx.h : include file for standard system include files,
-//  or project specific include files that are used frequently, but
-//  are changed infrequently
-//
-
 // clang-format off
 #pragma once
 
@@ -113,15 +108,11 @@ extern CNtObjectsAppModule _Module;
 #   endif
 #endif
 
-#ifndef DDKBUILD
 #include <delayimp.h>
-#endif // DDKBUILD
 #include "ntnative.h"
 
-#ifndef DDKBUILD
-    EXTERN_C int __cdecl DelayLoadError(LPCTSTR lpszFormat, ...);
-    EXTERN_C void force_resolve_all(void);
-#endif // DDKBUILD
+EXTERN_C int __cdecl DelayLoadError(LPCTSTR lpszFormat, ...);
+EXTERN_C void force_resolve_all(void);
 
 typedef struct _objtype_comment_t
 {

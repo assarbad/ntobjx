@@ -109,7 +109,8 @@
 #define OBJTYPESTR_EMPTY_DIRECTORY         "Empty Directory"
 
 #ifndef RC_INVOKED
-#define TBL_ENTRY(x) IDI_##x, _T(OBJTYPESTR_##x)
+#include <tchar.h>
+#define TBL_ENTRY(x) { IDI_##x, _T(OBJTYPESTR_##x) }
 struct
 {
     WORD resId;

@@ -95,13 +95,7 @@
 #endif
 
 #define FEATURE_FIND_OBJECT 1
-#ifdef DDKBUILD
-#ifndef FEATURE_OBJECT_SECURITY /* Let this be overridden from the SOURCES file, for example. */
-#define FEATURE_OBJECT_SECURITY 0
-#endif /* FEATURE_OBJECT_SECURITY */
-#else
 #define FEATURE_OBJECT_SECURITY 1
-#endif // DDKBUILD
 
 using ATL::CAccessToken;
 using ATL::CAtlMap;
@@ -191,7 +185,7 @@ namespace
             if (LPVOID lpMem = ::GlobalLock(hMem))
             {
                 LPTSTR lpStr = static_cast<LPTSTR>(lpMem);
-                _tcscpy_s(lpStr, s.GetLength() + 1, s.GetString());
+                _tcscpy_s(lpStr, s.GetLength() + (size_t)1, s.GetString());
                 ::GlobalUnlock(hMem);
             }
 #if defined(_UNICODE) || defined(UNICODE)
@@ -3727,7 +3721,7 @@ class CNtObjectsMainFrame : public CFrameWindowImpl<CNtObjectsMainFrame>,
             }
             catch (...)
             {
-                ATLTRACE2(_T(__FUNCTION__) _T("\n"));
+                // ATLTRACE2(_T(__FUNCTION__) _T("\n")); FIXME.CLANG
             }
         }
 

@@ -28,7 +28,7 @@
 ///
 ///////////////////////////////////////////////////////////////////////////////
 
-#include "stdafx.h"
+#include "common.h"
 #include <ShellAPI.h>
 
 #pragma warning(push)           /* disable code analyzer warnings */
@@ -61,12 +61,6 @@ using NtObjMgr::SymbolicLink;
 
 CNtObjectsAppModule _Module;
 
-#ifdef DDKBUILD
-#if (_ATL_VER < 0x0700)
-#include <atlimpl.cpp>
-#endif //(_ATL_VER < 0x0700)
-#endif // DDKBUILD
-
 #define EXACTI_ENTRY(match, comment) \
     {                                \
         _T(match), comment, 0x1      \
@@ -95,7 +89,7 @@ const objtype_comment_t comments[] = {
     EXACTI_ENTRY("\\Windows", IDS_OBJTT_WINDOWS),
     EXACTI_ENTRY("\\Windows\\WindowStations", IDS_OBJTT_WINDOWSTATIONS),
     // Non-Directory objects
-    EXACTI_ENTRY("\\\?\?", IDS_OBJTT_DOSDEV),
+    EXACTI_ENTRY("\\??", IDS_OBJTT_DOSDEV),
     EXACTI_ENTRY("\\REGISTRY", IDS_OBJTT_REGISTRY),
     EXACTI_ENTRY("\\SystemRoot", IDS_OBJTT_SYSTEMROOT),
     EXACTI_ENTRY("\\Device\\Mailslot", IDS_OBJTT_MAILSLOT),
@@ -179,7 +173,6 @@ int Run(LPTSTR /*lpstrCmdLine*/ = NULL, int nCmdShow = SW_SHOWDEFAULT)
     return nRet;
 }
 
-#ifndef DDKBUILD
 EXTERN_C int __cdecl DelayLoadError(LPCTSTR lpszFormat, ...)
 {
     ATL::CString msg;
@@ -206,7 +199,6 @@ extern "C" int __cdecl __purecall(void)
 {
     return 0;
 }
-#endif // !DDKBUILD
 
 #pragma warning(suppress : 28251)
 int WINAPI _tWinMain(HINSTANCE hInstance, HINSTANCE /*hPrevInstance*/, LPTSTR lpstrCmdLine, int nCmdShow)
@@ -218,9 +210,7 @@ int WINAPI _tWinMain(HINSTANCE hInstance, HINSTANCE /*hPrevInstance*/, LPTSTR lp
 
     AtlInitCommonControls(ICC_LISTVIEW_CLASSES | ICC_TREEVIEW_CLASSES | ICC_TAB_CLASSES);
 
-#ifndef DDKBUILD
     force_resolve_all();
-#endif // !DDKBUILD
     HRESULT hRes = _Module.Init(NULL, hInstance);
 #ifdef _DEBUG
     ATLASSERT(SUCCEEDED(hRes));
