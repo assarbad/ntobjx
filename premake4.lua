@@ -258,56 +258,61 @@ solution (tgtname .. iif(release, "_release", ""))
                 linkoptions     {"/opt:nowin98"}
     end
 
--- do
-    -- -- Some tags we suppress as we override those from the project.props file
-    -- local suppress_tags2 = {
-        -- ['<OutDir>%s\\</OutDir>'] = 0,
-        -- ['<IntDir>%s\\</IntDir>'] = 0,
-        -- ['<TargetName>%s</TargetName>'] = 0,
-        -- ['<TargetExt>%s</TargetExt>'] = 0,
-        -- ['<PrecompiledHeader></PrecompiledHeader>'] = 0,
-    -- }
-    -- local suppress_tags3 = {
-        -- ['<PrecompiledHeader></PrecompiledHeader>'] = 0,
-        -- ['<MinimalRebuild>false</MinimalRebuild>'] = 0,
-        -- ['<MinimalRebuild>true</MinimalRebuild>'] = 0,
-        -- ['<Optimization>%s</Optimization>'] = 0,
-        -- ['<BasicRuntimeChecks>EnableFastChecks</BasicRuntimeChecks>'] = 0,
-        -- ['<RuntimeLibrary>%s</RuntimeLibrary>'] = 0,
-        -- ['<FunctionLevelLinking>true</FunctionLevelLinking>'] = 0,
-        -- ['<DebugInformationFormat>%s</DebugInformationFormat>'] = 0,
-        -- ['<StringPooling>true</StringPooling>'] = 0,
-        -- ['<OptimizeReferences>true</OptimizeReferences>'] = 0,
-        -- ['<TargetMachine>%s</TargetMachine>'] = 0,
-        -- ['<EnableCOMDATFolding>true</EnableCOMDATFolding>'] = 0,
-        -- ['<OutputFile>$(OutDir)%s</OutputFile>'] = 0,
-        -- ['<AdditionalLibraryDirectories>%s;%%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>'] = 0,
-    -- }
-    -- -- Embed the property sheet
-    -- _G.override_vcxproj = function(prj, orig_p, indent, msg, first, ...)
-        -- if indent == 1 then
-            -- if msg == [[<ImportGroup Label="ExtensionSettings">]] then
-                -- orig_p(indent, msg, first, ...) -- pass through original line
-                -- orig_p(indent, [[</ImportGroup>]])
-                -- orig_p(indent, [[<ImportGroup Label="PropertySheets">]])
-                -- orig_p(indent+1, [[<Import Project="$(SolutionDir)project.props" Condition="exists('$(SolutionDir)project.props')" Label="ProjectSpecific (solution)" />]])
-                -- orig_p(indent+1, [[<Import Project="$(ProjectDir)project.props" Condition="exists('$(ProjectDir)project.props') AND '$(SolutionDir)' != '$(ProjectDir)'" Label="Project-specific (local)" />]])
-                -- return true
-            -- end
-        -- end
-        -- if (indent == 2) and (msg == '<Keyword>Win32Proj</Keyword>') then
-            -- orig_p(indent, msg, first, ...) -- pass through original line
-            -- orig_p(indent, '<ProjectName>%s</ProjectName>', prj.name)
-            -- return true
-        -- end
-        -- if (indent == 2) and (suppress_tags2[msg] ~= nil) then -- Suppress these, our property sheet takes care of those
-            -- return true
-        -- end
-        -- if (indent == 3) and (suppress_tags3[msg] ~= nil) then -- Suppress these, our property sheet takes care of those
-            -- return true
-        -- end
-    -- end
--- end
+do
+    -- Some tags we suppress as we override those from the project.props file
+    local suppress_tags2 = {
+        ['<OutDir>%s\\</OutDir>'] = 0,
+        ['<IntDir>%s\\</IntDir>'] = 0,
+        ['<TargetName>%s</TargetName>'] = 0,
+        ['<TargetExt>%s</TargetExt>'] = 0,
+        ['<PrecompiledHeader></PrecompiledHeader>'] = 0,
+    }
+    local suppress_tags3 = {
+        ['<PrecompiledHeader></PrecompiledHeader>'] = 0,
+        ['<MinimalRebuild>false</MinimalRebuild>'] = 0,
+        ['<MinimalRebuild>true</MinimalRebuild>'] = 0,
+        ['<Optimization>%s</Optimization>'] = 0,
+        ['<BasicRuntimeChecks>EnableFastChecks</BasicRuntimeChecks>'] = 0,
+        ['<RuntimeLibrary>%s</RuntimeLibrary>'] = 0,
+        ['<FunctionLevelLinking>true</FunctionLevelLinking>'] = 0,
+        ['<DebugInformationFormat>%s</DebugInformationFormat>'] = 0,
+        ['<StringPooling>true</StringPooling>'] = 0,
+        ['<OptimizeReferences>true</OptimizeReferences>'] = 0,
+        ['<TargetMachine>%s</TargetMachine>'] = 0,
+        ['<EnableCOMDATFolding>true</EnableCOMDATFolding>'] = 0,
+        ['<OutputFile>$(OutDir)%s</OutputFile>'] = 0,
+        ['<AdditionalLibraryDirectories>%s;%%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>'] = 0,
+    }
+    -- Embed the property sheet
+    _G.override_vcxproj = function(prj, orig_p, indent, msg, first, ...)
+        if indent == 1 then
+            if msg == [[<ImportGroup Label="ExtensionSettings">]] then
+                orig_p(indent, msg, first, ...) -- pass through original line
+                orig_p(indent, [[</ImportGroup>]])
+                orig_p(indent, [[<ImportGroup Label="PropertySheets">]])
+                orig_p(indent+1, [[<Import Project="$(SolutionDir)project.props" Condition="exists('$(SolutionDir)project.props')" Label="ProjectSpecific (solution)" />]])
+                orig_p(indent+1, [[<Import Project="$(ProjectDir)project.props" Condition="exists('$(ProjectDir)project.props') AND '$(SolutionDir)' != '$(ProjectDir)'" Label="Project-specific (local)" />]])
+                return true
+            end
+        end
+        if (indent == 2) and (msg == '<Keyword>Win32Proj</Keyword>') then
+            orig_p(indent, msg, first, ...) -- pass through original line
+            orig_p(indent, '<ProjectName>%s</ProjectName>', prj.name)
+            return true
+        end
+        if (indent == 2) and (msg == '<ClCompile Include=\"%s\">') and (first == "delayload-stubs\\ntdll-delayed-stubs.c") then
+            orig_p(indent, msg, first, ...) -- what was originally supposed to be output
+            orig_p(indent+1, "<ExcludedFromBuild>true</ExcludedFromBuild>")
+            return true
+        end
+        if (indent == 2) and (suppress_tags2[msg] ~= nil) then -- Suppress these, our property sheet takes care of those
+            return true
+        end
+        if (indent == 3) and (suppress_tags3[msg] ~= nil) then -- Suppress these, our property sheet takes care of those
+            return true
+        end
+    end
+end
 
 --[[
     This part of the premake4.lua modifies the core premake4 behavior a little.
@@ -432,21 +437,16 @@ do
         _G._p = function(indent, msg, first, ...)
             -- Look for non-empty messages and narrow it down by the indent values
             if msg ~= nil then
-                if msg:match("<ProgramDataBaseFileName>[^<]+</ProgramDataBaseFileName>") then
-                    return -- we want to suppress these
-                end
                 -- Allow this logic to be hooked and the hook to preempt any action hardcoded below
                 if (_G.override_vcxproj ~= nil) and (type(_G.override_vcxproj) == 'function') then
                     if _G.override_vcxproj(prj, orig_p, indent, msg, first, ...) then
                         return -- suppress further output
                     end
                 end
+                if msg:match("<ProgramDataBaseFileName>[^<]+</ProgramDataBaseFileName>") then
+                    return -- we want to suppress these
+                end
                 if indent == 2 then
-                    if msg == '<ClCompile Include=\"%s\">' and first == "delayload-stubs\\ntdll-delayed-stubs.c" then
-                        orig_p(indent, msg, first, ...) -- what was originally supposed to be output
-                        orig_p(indent+1, "<ExcludedFromBuild>true</ExcludedFromBuild>")
-                        return
-                    end
                     if msg == "<RootNamespace>%s</RootNamespace>" then
                         local sdkmap = {vs2015 = "8.1", vs2017 = "10.0.17763.0", vs2019 = "10.0", vs2022 = "10.0"}
                         if (not _ACTION) or (not sdkmap[_ACTION]) then -- should not happen, but tread carefully anyway

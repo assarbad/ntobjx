@@ -51,6 +51,7 @@
       <Filter>Special Files</Filter>
     </None>
     <None Include="Directory.props" />
+    <None Include="project.props" />
     <None Include="ntobjx.ruleset" />
     <None Include=".editorconfig" />
     <None Include=".clang-format" />
