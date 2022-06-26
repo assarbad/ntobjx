@@ -249,8 +249,8 @@ typedef enum _OBJECT_INFORMATION_CLASS {
     ObjectBasicInformation,
     ObjectNameInformation,
     ObjectTypeInformation,
-    ObjectAllInformation,
-    ObjectDataInformation
+    ObjectTypesInformation,
+    ObjectHandleFlagInformation,
 } OBJECT_INFORMATION_CLASS;
 
 #ifndef RTL_CONSTANT_STRING
@@ -391,7 +391,7 @@ typedef struct _OBJECT_TYPE_INFORMATION
 typedef struct _OBJECT_TYPES_INFORMATION
 {
     ULONG NumberOfTypes;
-    OBJECT_TYPE_INFORMATION TypeInformation[ANYSIZE_ARRAY];
+    // OBJECT_TYPE_INFORMATION TypeInformation[ANYSIZE_ARRAY];
 } OBJECT_TYPES_INFORMATION, *POBJECT_TYPES_INFORMATION;
 
 typedef struct _OBJECT_DIRECTORY_INFORMATION {

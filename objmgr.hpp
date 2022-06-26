@@ -4,7 +4,7 @@
 ///
 ///////////////////////////////////////////////////////////////////////////////
 ///
-/// Copyright (c) 2016, 2017, 2021 Oliver Schneider (assarbad.net)
+/// Copyright (c) 2016, 2017, 2021, 2022 Oliver Schneider (assarbad.net)
 ///
 /// Permission is hereby granted, free of charge, to any person obtaining a
 /// copy of this software and associated documentation files (the "Software"),
@@ -27,10 +27,14 @@
 ///////////////////////////////////////////////////////////////////////////////
 
 #ifndef __OBJMGR_HPP_VER__
-#define __OBJMGR_HPP_VER__ 2017100819
+#define __OBJMGR_HPP_VER__ 2022070221
 #if (defined(_MSC_VER) && (_MSC_VER >= 1020)) || defined(__MCPP)
-#pragma once
+#    pragma once
 #endif // Check for "#pragma once" support
+
+#if (_MSVC_LANG < 201103L) && !defined(nullptr)
+#    define nullptr 0
+#endif
 
 #include "ntnative.h"
 
@@ -38,40 +42,44 @@
 #include <atlstr.h>
 
 #include "objtypes.h"
+#include "util/SimpleBuffer.h"
 #include <WinIoCtl.h>
 #ifdef _DEBUG // for textual NTSTATUS values in trace messages
-#include "util/SimpleBuffer.h"
-#ifndef VTRACE
-#define VTRACE(...) \
-    do              \
-    {               \
-    } while (false)
-#endif
-#define CLL_NO_ENSURE_VERSION_CLASS
-#include "util/LoadLibrary.h"
-#include "util/VersionInfo.h"
-#define TRACE_NTSTATUS(x)                                                                                   \
-    do                                                                                                      \
-    {                                                                                                       \
-        if (HRESULT_FACILITY(x) == FACILITY_WIN32)                                                          \
-        {                                                                                                   \
-            CLoadLibrary kernel32;                                                                          \
-            CSimpleBuf<TCHAR> status(kernel32.formatSystemMessage<TCHAR>(static_cast<DWORD>(x)));           \
-            ATLTRACE2(_T("  Win32 status was '%s'\n"), status.Buffer());                                    \
-        }                                                                                                   \
-        else                                                                                                \
-        {                                                                                                   \
-            CLoadLibrary ntdll(_T("ntdll.dll"));                                                            \
-            CSimpleBuf<TCHAR> status(ntdll.formatMessage<TCHAR>(ntdll.getHandle(), static_cast<DWORD>(x))); \
-            ATLTRACE2(_T("  NTSTATUS was '%s'\n"), status.Buffer());                                        \
-        }                                                                                                   \
-    } while (0)
+#    ifndef VTRACE
+#        define VTRACE(...) \
+            do              \
+            {               \
+            } while (false)
+#    endif
+#    define CLL_NO_ENSURE_VERSION_CLASS
+#    include "util/LoadLibrary.h"
+#    include "util/VersionInfo.h"
+#    define TRACE_NTSTATUS(x)                                                                                   \
+        do                                                                                                      \
+        {                                                                                                       \
+            if (HRESULT_FACILITY(x) == FACILITY_WIN32)                                                          \
+            {                                                                                                   \
+                CLoadLibrary kernel32;                                                                          \
+                CSimpleBuf<TCHAR> status(kernel32.formatSystemMessage<TCHAR>(static_cast<DWORD>(x)));           \
+                ATLTRACE2(_T("  Win32 status was '%s'\n"), status.Buffer());                                    \
+            }                                                                                                   \
+            else                                                                                                \
+            {                                                                                                   \
+                CLoadLibrary ntdll(_T("ntdll.dll"));                                                            \
+                CSimpleBuf<TCHAR> status(ntdll.formatMessage<TCHAR>(ntdll.getHandle(), static_cast<DWORD>(x))); \
+                ATLTRACE2(_T("  NTSTATUS was '%s'\n"), status.Buffer());                                        \
+            }                                                                                                   \
+        } while (0)
 #else
-#define TRACE_NTSTATUS(x) \
-    do                    \
-    {                     \
-    } while (0)
+#    define TRACE_NTSTATUS(x) \
+        do                    \
+        {                     \
+        } while (0)
 #endif // _DEBUG
+
+#define ALIGN_DOWN_BY(length, alignment) ((ULONG_PTR)(length) & ~(alignment - 1))
+#define ALIGN_UP_BY(length, alignment)   (ALIGN_DOWN_BY(((ULONG_PTR)(length) + alignment - 1), alignment))
+#define ALIGN_UP(length, type)           ALIGN_UP_BY(length, sizeof(type))
 
 namespace NtObjMgr
 {
@@ -131,7 +139,7 @@ namespace NtObjMgr
         }
 
       public:
-        GenericObjectT(UNICODE_STRING const& name_, UNICODE_STRING const& tpname, LPCWSTR parent = NULL)
+        GenericObjectT(UNICODE_STRING const& name_, UNICODE_STRING const& tpname, LPCWSTR parent = nullptr)
             : m_name(name_.Buffer, name_.Length / sizeof(WCHAR))
             , m_type(tpname.Buffer, tpname.Length / sizeof(WCHAR))
             , m_parent((parent) ? parent : L"")
@@ -141,7 +149,7 @@ namespace NtObjMgr
             m_fullname = m_parent + L"\\" + m_name;
         }
 
-        GenericObjectT(LPCWSTR name_, LPCWSTR tpname, LPCWSTR parent = NULL)
+        GenericObjectT(LPCWSTR name_, LPCWSTR tpname, LPCWSTR parent = nullptr)
             : m_name(name_)
             , m_type(tpname)
             , m_parent((parent) ? parent : L"")
@@ -194,9 +202,7 @@ namespace NtObjMgr
 
     template <typename T> class SymbolicLinkT : public GenericObjectT<T>, public ISymlinkT<T>
     {
-        /*lint -save -e1516 */
         typedef GenericObjectT<T> Inherited;
-        /*lint -restore */
 
       public:
         SymbolicLinkT(UNICODE_STRING const& name_, UNICODE_STRING const& tpname, LPCWSTR parent = NULL)
@@ -207,7 +213,7 @@ namespace NtObjMgr
         {
         }
 
-        SymbolicLinkT(LPCWSTR name_, LPCWSTR tpname, LPCWSTR parent = NULL)
+        SymbolicLinkT(LPCWSTR name_, LPCWSTR tpname, LPCWSTR parent = nullptr)
             : Inherited(name_, tpname, parent)
             , m_linktgt()
             , m_lastStatus(STATUS_SUCCESS)
@@ -236,11 +242,11 @@ namespace NtObjMgr
 
         bool refresh()
         {
-            HANDLE hLink = NULL;
+            HANDLE hLink = nullptr;
             OBJECT_ATTRIBUTES oa;
             UNICODE_STRING linkname;
-            ::RtlInitUnicodeString(&linkname, LPCWSTR(fullname()));
-            InitializeObjectAttributes(&oa, &linkname, 0, NULL, NULL);
+            ::RtlInitUnicodeString(&linkname, LPCWSTR(Inherited::fullname()));
+            InitializeObjectAttributes(&oa, &linkname, 0, nullptr, nullptr);
             m_lastStatus = ::NtOpenSymbolicLinkObject(&hLink, SYMBOLIC_LINK_QUERY, &oa);
             if (NT_SUCCESS(m_lastStatus))
             {
@@ -285,8 +291,8 @@ namespace NtObjMgr
         typedef int(__cdecl* comparefunc_t)(void* /*context*/, const void* /*elem1*/, const void* /*elem2*/);
         static int __cdecl compareItem_(void* /*context*/, Inherited*& obj1, Inherited*& obj2)
         {
-            ATLASSERT(NULL != obj1);
-            ATLASSERT(NULL != obj2);
+            ATLASSERT(nullptr != obj1);
+            ATLASSERT(nullptr != obj2);
             if (obj1 && obj2)
             {
                 return _tcsicmp(obj1->name().GetString(), obj2->name().GetString());
@@ -303,7 +309,7 @@ namespace NtObjMgr
         {
         }
 
-        DirectoryT(UNICODE_STRING const& name_, UNICODE_STRING const& tpname, LPCWSTR parent = NULL)
+        DirectoryT(UNICODE_STRING const& name_, UNICODE_STRING const& tpname, LPCWSTR parent = nullptr)
             : Inherited(name_, tpname, parent)
             , m_entries()
             , m_lastStatus(STATUS_SUCCESS)
@@ -311,7 +317,7 @@ namespace NtObjMgr
         {
         }
 
-        DirectoryT(LPCWSTR name_, LPCWSTR tpname, LPCWSTR parent = NULL)
+        DirectoryT(LPCWSTR name_, LPCWSTR tpname, LPCWSTR parent = nullptr)
             : Inherited(name_, tpname, parent)
             , m_entries()
             , m_lastStatus(STATUS_SUCCESS)
@@ -348,11 +354,11 @@ namespace NtObjMgr
 
         bool refresh()
         {
-            HANDLE hObjRoot = NULL;
+            HANDLE hObjRoot = nullptr;
             OBJECT_ATTRIBUTES oa;
             UNICODE_STRING objname;
-            ::RtlInitUnicodeString(&objname, LPCWSTR(fullname())); // use m_root.c_str() with STL
-            InitializeObjectAttributes(&oa, &objname, 0, NULL, NULL);
+            ::RtlInitUnicodeString(&objname, LPCWSTR(Inherited::fullname())); // use m_root.c_str() with STL
+            InitializeObjectAttributes(&oa, &objname, 0, nullptr, nullptr);
             m_lastStatus = ::NtOpenDirectoryObject(&hObjRoot, DIRECTORY_QUERY | DIRECTORY_TRAVERSE, &oa);
             if (NT_SUCCESS(m_lastStatus))
             {
@@ -363,29 +369,23 @@ namespace NtObjMgr
                 BOOLEAN restart = TRUE;
                 for (;;)
                 {
-                    m_lastStatus =
-                        ::NtQueryDirectoryObject(hObjRoot, PBYTE(buf), bufSize, FALSE, restart, &idx, &bytes);
+                    m_lastStatus = ::NtQueryDirectoryObject(hObjRoot, PBYTE(buf), bufSize, FALSE, restart, &idx, &bytes);
                     if (NT_SUCCESS(m_lastStatus))
                     {
-                        POBJECT_DIRECTORY_INFORMATION const pdilist =
-                            reinterpret_cast<POBJECT_DIRECTORY_INFORMATION>(PBYTE(buf));
+                        POBJECT_DIRECTORY_INFORMATION const pdilist = reinterpret_cast<POBJECT_DIRECTORY_INFORMATION>(PBYTE(buf));
                         for (ULONG i = 0; i < idx - start; i++)
                         {
-                            if (0 == wcsncmp(pdilist[i].TypeName.Buffer,
-                                             L"Directory",
-                                             pdilist[i].TypeName.Length / sizeof(WCHAR)))
+                            if (0 == wcsncmp(pdilist[i].TypeName.Buffer, L"Directory", pdilist[i].TypeName.Length / sizeof(WCHAR)))
                             {
-                                tmplist.Add(new DirectoryT<T>(pdilist[i].Name, pdilist[i].TypeName, fullname()));
+                                tmplist.Add(new DirectoryT<T>(pdilist[i].Name, pdilist[i].TypeName, Inherited::fullname()));
                             }
-                            else if (0 == wcsncmp(pdilist[i].TypeName.Buffer,
-                                                  L"SymbolicLink",
-                                                  pdilist[i].TypeName.Length / sizeof(WCHAR)))
+                            else if (0 == wcsncmp(pdilist[i].TypeName.Buffer, L"SymbolicLink", pdilist[i].TypeName.Length / sizeof(WCHAR)))
                             {
-                                tmplist.Add(new SymbolicLinkT<T>(pdilist[i].Name, pdilist[i].TypeName, fullname()));
+                                tmplist.Add(new SymbolicLinkT<T>(pdilist[i].Name, pdilist[i].TypeName, Inherited::fullname()));
                             }
                             else
                             {
-                                tmplist.Add(new Inherited(pdilist[i].Name, pdilist[i].TypeName, fullname()));
+                                tmplist.Add(new Inherited(pdilist[i].Name, pdilist[i].TypeName, Inherited::fullname()));
                             }
                         }
                     }
@@ -416,11 +416,7 @@ namespace NtObjMgr
                         deletions.Copy(m_entries); // take copy of old list
                         size_t const todelete = deletions.GetCount();
 #pragma warning(suppress : 6387)
-                        qsort_s(tmplist.GetData(),
-                                tmplist.GetCount(),
-                                sizeof(EntryList::INARGTYPE),
-                                (comparefunc_t)compareItem_,
-                                NULL);
+                        qsort_s(tmplist.GetData(), tmplist.GetCount(), sizeof(EntryList::INARGTYPE), (comparefunc_t)compareItem_, nullptr);
                         m_entries.Copy(tmplist); // overwrite with new list
                         m_cached = true;
                         // Delete objects from old list
@@ -481,8 +477,7 @@ namespace NtObjMgr
             CEventBasicInformation(HANDLE hObject)
             {
                 ULONG uRetLen = 0;
-                m_queryStatus = ::NtQueryEvent(
-                    hObject, EventBasicInformation, static_cast<baseClass*>(this), sizeof(baseClass), &uRetLen);
+                m_queryStatus = ::NtQueryEvent(hObject, EventBasicInformation, static_cast<baseClass*>(this), sizeof(baseClass), &uRetLen);
                 ATLTRACE2(_T("  status = %08X; length = %u; this = %p\n"), m_queryStatus, uRetLen, this);
                 TRACE_NTSTATUS(m_queryStatus);
             }
@@ -511,8 +506,7 @@ namespace NtObjMgr
             CIoCompletionBasicInformation(HANDLE hObject)
             {
                 ULONG uRetLen = 0;
-                m_queryStatus = ::NtQueryIoCompletion(
-                    hObject, IoCompletionBasicInformation, static_cast<baseClass*>(this), sizeof(baseClass), &uRetLen);
+                m_queryStatus = ::NtQueryIoCompletion(hObject, IoCompletionBasicInformation, static_cast<baseClass*>(this), sizeof(baseClass), &uRetLen);
                 ATLTRACE2(_T("  status = %08X; length = %u; this = %p\n"), m_queryStatus, uRetLen, this);
                 TRACE_NTSTATUS(m_queryStatus);
             }
@@ -551,8 +545,7 @@ namespace NtObjMgr
             CKeyBasicInformation(HANDLE hObject)
             {
                 ULONG uRetLen = 0;
-                m_queryStatus = ::NtQueryKey(
-                    hObject, KeyBasicInformation, static_cast<baseClass*>(this), sizeof(baseClass), &uRetLen);
+                m_queryStatus = ::NtQueryKey(hObject, KeyBasicInformation, static_cast<baseClass*>(this), sizeof(baseClass), &uRetLen);
                 ATLTRACE2(_T("  status = %08X; length = %u; this = %p\n"), m_queryStatus, uRetLen, this);
                 TRACE_NTSTATUS(m_queryStatus);
             }
@@ -586,8 +579,7 @@ namespace NtObjMgr
             CMutantBasicInformation(HANDLE hObject)
             {
                 ULONG uRetLen = 0;
-                m_queryStatus = ::NtQueryMutant(
-                    hObject, MutantBasicInformation, static_cast<baseClass*>(this), sizeof(baseClass), &uRetLen);
+                m_queryStatus = ::NtQueryMutant(hObject, MutantBasicInformation, static_cast<baseClass*>(this), sizeof(baseClass), &uRetLen);
                 ATLTRACE2(_T("  status = %08X; length = %u; this = %p\n"), m_queryStatus, uRetLen, this);
                 TRACE_NTSTATUS(m_queryStatus);
             }
@@ -621,8 +613,7 @@ namespace NtObjMgr
             CSectionBasicInformation(HANDLE hObject)
             {
                 ULONG uRetLen = 0;
-                m_queryStatus = ::NtQuerySection(
-                    hObject, SectionBasicInformation, static_cast<baseClass*>(this), sizeof(baseClass), &uRetLen);
+                m_queryStatus = ::NtQuerySection(hObject, SectionBasicInformation, static_cast<baseClass*>(this), sizeof(baseClass), &uRetLen);
                 ATLTRACE2(_T("  status = %08X; length = %u; this = %p\n"), m_queryStatus, uRetLen, this);
                 TRACE_NTSTATUS(m_queryStatus);
             }
@@ -656,8 +647,7 @@ namespace NtObjMgr
             CSemaphoreBasicInformation(HANDLE hObject)
             {
                 ULONG uRetLen = 0;
-                m_queryStatus = ::NtQuerySemaphore(
-                    hObject, SemaphoreBasicInformation, static_cast<baseClass*>(this), sizeof(baseClass), &uRetLen);
+                m_queryStatus = ::NtQuerySemaphore(hObject, SemaphoreBasicInformation, static_cast<baseClass*>(this), sizeof(baseClass), &uRetLen);
                 ATLTRACE2(_T("  status = %08X; length = %u; this = %p\n"), m_queryStatus, uRetLen, this);
                 TRACE_NTSTATUS(m_queryStatus);
             }
@@ -691,8 +681,7 @@ namespace NtObjMgr
             CTimerBasicInformation(HANDLE hObject)
             {
                 ULONG uRetLen = 0;
-                m_queryStatus = ::NtQueryTimer(
-                    hObject, TimerBasicInformation, static_cast<baseClass*>(this), sizeof(baseClass), &uRetLen);
+                m_queryStatus = ::NtQueryTimer(hObject, TimerBasicInformation, static_cast<baseClass*>(this), sizeof(baseClass), &uRetLen);
                 ATLTRACE2(_T("  status = %08X; length = %u; this = %p\n"), m_queryStatus, uRetLen, this);
                 TRACE_NTSTATUS(m_queryStatus);
             }
@@ -739,7 +728,7 @@ namespace NtObjMgr
                 {
                     flags.Format(_T("0x%08X == visible"), uoflags.dwFlags);
                 }
-                if (!::GetUserObjectInformation(hObject, UOI_USER_SID, NULL, 0, &dwLen))
+                if (!::GetUserObjectInformation(hObject, UOI_USER_SID, nullptr, 0, &dwLen))
                 {
                     CSimpleBuf<BYTE> buf(dwLen + 1);
                     if (PSID psid = (PSID)buf.Buffer())
@@ -752,11 +741,11 @@ namespace NtObjMgr
                         }
                         SID_NAME_USE sidnu = SidTypeInvalid;
                         DWORD dwNameLen = 0, dwDomainLen = 0;
-                        if (!::LookupAccountSid(NULL, psid, NULL, &dwNameLen, NULL, &dwDomainLen, &sidnu))
+                        if (!::LookupAccountSid(nullptr, psid, nullptr, &dwNameLen, nullptr, &dwDomainLen, &sidnu))
                         {
                             CSimpleBuf<TCHAR> bufName(dwNameLen + 1);
                             CSimpleBuf<TCHAR> bufDomain(dwDomainLen + 1);
-                            if (::LookupAccountSid(NULL, psid, bufName, &dwNameLen, bufDomain, &dwDomainLen, &sidnu))
+                            if (::LookupAccountSid(nullptr, psid, bufName, &dwNameLen, bufDomain, &dwDomainLen, &sidnu))
                             {
                                 username.Format(_T("%s\\%s"), bufDomain.Buffer(), bufName.Buffer());
                             }
@@ -766,10 +755,10 @@ namespace NtObjMgr
                                 ATLTRACE2(_T("Win32 error: %d [LookupAccountSid]\n"), GetLastError());
                             }
 #endif // _DEBUG
-                            LPTSTR lpszSid = NULL;
+                            LPTSTR lpszSid = nullptr;
                             if (::ConvertSidToStringSid(psid, &lpszSid))
                             {
-                                LPCTSTR sidtype = NULL;
+                                LPCTSTR sidtype = nullptr;
                                 switch (sidnu)
                                 {
                                 case SidTypeUser:
@@ -884,16 +873,9 @@ namespace NtObjMgr
             , m_queryStatus(STATUS_SUCCESS)
             , m_bHasObjectInfo(false)
             , m_obj(obj)
-            , m_openObjectFunction(m_obj ? PickOpenObjectFunction_(m_obj->type().GetString()) : NULL)
-            , m_hObject(OpenByObjectType_(m_obj,
-                                          m_openObjectFunction,
-                                          m_openStatus,
-                                          m_queryStatus,
-                                          m_bHasObjectInfo,
-                                          m_obi,
-                                          DesiredAccess,
-                                          FallbackAccess1,
-                                          FallbackAccess2))
+            , m_openObjectFunction(m_obj ? PickOpenObjectFunction_(m_obj->type().GetString()) : nullptr)
+            , m_hObject(OpenByObjectType_(
+                  m_obj, m_openObjectFunction, m_openStatus, m_queryStatus, m_bHasObjectInfo, m_obi, DesiredAccess, FallbackAccess1, FallbackAccess2))
             , m_eventBasicInfo(0)
             , m_ioCompletionBasicInfo(0)
             , m_keyBasicInfo(0)
@@ -1016,7 +998,7 @@ namespace NtObjMgr
 
         inline bool operator!() const
         {
-            return (m_hObject == INVALID_HANDLE_VALUE) || (m_hObject == NULL);
+            return (m_hObject == INVALID_HANDLE_VALUE) || (m_hObject == nullptr);
         }
 
         // object-specific basic information
@@ -1055,24 +1037,17 @@ namespace NtObjMgr
         };
 
       private:
-        static NTSTATUS NTAPI OpenObjectAsFile_(__out PHANDLE Handle,
-                                                __in ACCESS_MASK DesiredAccess,
-                                                __in POBJECT_ATTRIBUTES ObjectAttributes)
+        static NTSTATUS NTAPI OpenObjectAsFile_(__out PHANDLE Handle, __in ACCESS_MASK DesiredAccess, __in POBJECT_ATTRIBUTES ObjectAttributes)
         {
             IO_STATUS_BLOCK iostat;
-            return ::NtOpenFile(Handle,
-                                DesiredAccess,
-                                ObjectAttributes,
-                                &iostat,
-                                FILE_SHARE_READ | FILE_SHARE_WRITE | FILE_SHARE_DELETE,
-                                0);
+            return ::NtOpenFile(Handle, DesiredAccess, ObjectAttributes, &iostat, FILE_SHARE_READ | FILE_SHARE_WRITE | FILE_SHARE_DELETE, 0);
         }
 
         static openobj_fct_t PickOpenObjectFunction_(LPCTSTR lpszTypeName)
         {
             if (!lpszTypeName)
             {
-                return NULL;
+                return nullptr;
             }
 
             static struct
@@ -1114,8 +1089,7 @@ namespace NtObjMgr
                                         bool& hasObjInfo,
                                         OBJECT_BASIC_INFORMATION& obi,
                                         ACCESS_MASK DesiredAccess = READ_CONTROL | GENERIC_READ,
-                                        ACCESS_MASK FallbackAccess1 = READ_CONTROL | FILE_READ_ATTRIBUTES |
-                                                                      FILE_READ_ACCESS,
+                                        ACCESS_MASK FallbackAccess1 = READ_CONTROL | FILE_READ_ATTRIBUTES | FILE_READ_ACCESS,
                                         ACCESS_MASK FallbackAccess2 = READ_CONTROL)
         {
             memset(&obi, 0, sizeof(obi));
@@ -1135,23 +1109,23 @@ namespace NtObjMgr
             OBJECT_ATTRIBUTES oa;
             UNICODE_STRING objname;
             LPCTSTR lpszFullName = obj->fullname().GetString();
-            ATLASSERT(lpszFullName != NULL);
+            ATLASSERT(lpszFullName != nullptr);
 
             ::RtlInitUnicodeString(&objname, lpszFullName);
-            InitializeObjectAttributes(&oa, &objname, 0, NULL, NULL);
+            InitializeObjectAttributes(&oa, &objname, 0, nullptr, nullptr);
 
             LPCTSTR lpszTypeName = obj->type().GetString();
 #ifndef _DEBUG
             UNREFERENCED_PARAMETER(lpszTypeName);
 #endif // !_DEBUG
 
-            ATLASSERT(lpszTypeName != NULL);
-            ATLASSERT(OpenObjectFunc != NULL);
+            ATLASSERT(lpszTypeName != nullptr);
+            ATLASSERT(OpenObjectFunc != nullptr);
 
             if (0 == _tcsnicmp(lpszTypeName, _T(OBJTYPESTR_WINDOWSTATION), _tcslen(_T(OBJTYPESTR_WINDOWSTATION))))
             {
                 LPCTSTR lpszName = obj->name().GetString();
-                ATLASSERT(lpszName != NULL);
+                ATLASSERT(lpszName != nullptr);
                 HWINSTA hWinSta = ::OpenWindowStation(lpszName, FALSE, GENERIC_READ);
                 if (!hWinSta)
                 {
@@ -1171,14 +1145,12 @@ namespace NtObjMgr
             // Try with a lesser access mask
             if (STATUS_ACCESS_DENIED == openStatus)
             {
-                ATLTRACE2(
-                    _T("Failed open with %08X, trying again with access mask %08X\n"), openStatus, FallbackAccess1);
+                ATLTRACE2(_T("Failed open with %08X, trying again with access mask %08X\n"), openStatus, FallbackAccess1);
                 NTSTATUS privOpenStatus = OpenObjectFunc(&hObject, FallbackAccess1, &oa);
                 // Try with an even lesser access mask
                 if (STATUS_ACCESS_DENIED == privOpenStatus)
                 {
-                    ATLTRACE2(
-                        _T("Failed open with %08X, trying again with access mask %08X\n"), openStatus, FallbackAccess2);
+                    ATLTRACE2(_T("Failed open with %08X, trying again with access mask %08X\n"), openStatus, FallbackAccess2);
                     privOpenStatus = OpenObjectFunc(&hObject, FallbackAccess2, &oa);
                 }
                 openStatus = privOpenStatus;
@@ -1188,8 +1160,7 @@ namespace NtObjMgr
                 ATLTRACE2(_T("Success. Returning handle %p.\n"), hObject);
                 ULONG retLen = 0;
                 // TODO: https://wj32.org/wp/2012/11/30/obquerytypeinfo-and-ntqueryobject-buffer-overrun-in-windows-8/
-                queryStatus =
-                    ::NtQueryObject(hObject, ObjectBasicInformation, &obi, static_cast<ULONG>(sizeof(obi)), &retLen);
+                queryStatus = ::NtQueryObject(hObject, ObjectBasicInformation, &obi, static_cast<ULONG>(sizeof(obi)), &retLen);
                 if (NT_SUCCESS(queryStatus))
                 {
                     hasObjInfo = true;
@@ -1223,39 +1194,62 @@ namespace NtObjMgr
 
     typedef ObjectHandleT<ATL::CString> ObjectHandle;
 
+#if 1
     template <typename T> class ObjectTypeMapT
     {
+#    if _MSVC_LANG >= 201103L
         ObjectTypeMapT(ObjectTypeMapT const&) = delete;
         ObjectTypeMapT& operator=(ObjectTypeMapT const&) = delete;
+#    else
+        ObjectTypeMapT(ObjectTypeMapT const&);
+        ObjectTypeMapT& operator=(ObjectTypeMapT const&);
+#    endif // _MSVC_LANG >= 201103L
+
+#    ifndef _WIN64
+#        define enlarge_WOW64(len) ((len) + 8 * (((len)-4) / 96))
+#        if 0
+        static constexpr ULONG enlarge_WOW64(ULONG len)
+        {
+            constexpr ULONG delta = 8;
+            constexpr size_t sizeof_OBJECT_TYPE_INFORMATION32 = 24 * sizeof(ULONG);
+            return len + delta * ((len - 4) / sizeof_OBJECT_TYPE_INFORMATION32);
+        }
+#        endif
+#    endif
 
       public:
         ObjectTypeMapT()
             : m_buffer(0)
             , m_status(STATUS_SUCCESS)
         {
-            ULONG uSize = 0, uDummy = 0;
-            m_status = ::NtQueryObject(NULL, ObjectAllInformation, &uDummy, sizeof(uDummy), &uSize);
+            ULONG uSize = 0;
+            m_status = ::NtQueryObject(nullptr, ObjectTypesInformation, &uSize, sizeof(uSize), &uSize);
             if (STATUS_INFO_LENGTH_MISMATCH == m_status)
             {
+#    ifndef _WIN64
+                uSize = enlarge_WOW64(uSize); // workaround for a WOW64-related issue I encountered
+#    endif                                    // _WIN64
                 ULONG uSize2 = 0;
                 m_buffer = (BYTE*)::calloc(1, uSize);
-                m_status = ::NtQueryObject(NULL, ObjectAllInformation, m_buffer, uSize, &uSize2);
+                m_status = ::NtQueryObject(nullptr, ObjectTypesInformation, m_buffer, uSize, &uSize2);
+                BYTE const* lpTypesInfo = (BYTE*)m_buffer;
+                ATLASSERT(uSize2 <= uSize);
 
                 if (NT_SUCCESS(m_status) && (uSize2 <= uSize))
                 {
-                    ULONG const uNumTypes = ((OBJECT_TYPES_INFORMATION*)m_buffer)->NumberOfTypes;
-                    OBJECT_TYPE_INFORMATION const* objTypeInfo = ((OBJECT_TYPES_INFORMATION*)m_buffer)->TypeInformation;
+                    ULONG const uNumTypes = ((OBJECT_TYPES_INFORMATION*)lpTypesInfo)->NumberOfTypes;
+                    OBJECT_TYPE_INFORMATION const* objTypeInfo =
+                        (OBJECT_TYPE_INFORMATION*)(lpTypesInfo + ALIGN_UP(sizeof(OBJECT_TYPES_INFORMATION), ULONG_PTR));
                     for (size_t idx = 0; idx < uNumTypes; idx++)
                     {
+                        ATLASSERT(objTypeInfo->TypeName.Length + sizeof(WCHAR) == objTypeInfo->TypeName.MaximumLength);
                         T const sTypeName(objTypeInfo->TypeName.Buffer, objTypeInfo->TypeName.Length / sizeof(WCHAR));
 
                         m_typeMap[sTypeName] = objTypeInfo;
                         m_typeMapByIndex[objTypeInfo->TypeIndex] = objTypeInfo;
 
                         // Round to next "natural" alignment (i.e. depending on process' word size)
-                        USHORT const entryLen =
-                            (objTypeInfo->TypeName.MaximumLength + (sizeof(void*) - 1)) & (~(sizeof(void*) - 1));
-                        objTypeInfo = ((OBJECT_TYPE_INFORMATION*)((BYTE*)objTypeInfo->TypeName.Buffer + entryLen));
+                        objTypeInfo = (OBJECT_TYPE_INFORMATION*)((BYTE*)(objTypeInfo + 1) + ALIGN_UP(objTypeInfo->TypeName.MaximumLength, ULONG_PTR));
                     }
                 }
             }
@@ -1314,6 +1308,7 @@ namespace NtObjMgr
     };
 
     typedef ObjectTypeMapT<ATL::CString> ObjectTypeMap;
+#endif // 0
 } // namespace NtObjMgr
 
 #endif // __OBJMGR_HPP_VER__

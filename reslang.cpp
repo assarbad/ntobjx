@@ -72,81 +72,78 @@ namespace
         ATLASSERT(realLdrFindResource_U != NULL);
         if (hResModule == BaseAddress) // we only filter our own resource module (this .exe)
         {
-            ATLTRACE2(_T("Hooked LdrFindResource_U(%p, %p, %u, %p): "),
-                      BaseAddress,
-                      ResourceIdPath,
-                      ResourceIdPathLength,
-                      ResourceDataEntry);
+            ATLTRACE2(_T("Hooked LdrFindResource_U(%p, %p, %u, %p): "), BaseAddress, ResourceIdPath, ResourceIdPathLength, ResourceDataEntry);
             if (ResourceIdPath && (ResourceIdPathLength >= 2))
             {
 #ifdef _DEBUG
+#    define RESTYPE_CAST(x) ((ULONG_PTR)x)
                 /*lint -save -e30*/
                 if (IS_INTRESOURCE(ResourceIdPath->Type))
                 {
                     LPCTSTR rt = NULL;
                     switch (ResourceIdPath->Type)
                     {
-                    case RT_CURSOR:
+                    case RESTYPE_CAST(RT_CURSOR):
                         rt = _T("RT_CURSOR");
                         break;
-                    case RT_BITMAP:
+                    case RESTYPE_CAST(RT_BITMAP):
                         rt = _T("RT_BITMAP");
                         break;
-                    case RT_ICON:
+                    case RESTYPE_CAST(RT_ICON):
                         rt = _T("RT_ICON");
                         break;
-                    case RT_MENU:
+                    case RESTYPE_CAST(RT_MENU):
                         rt = _T("RT_MENU");
                         break;
-                    case RT_DIALOG:
+                    case RESTYPE_CAST(RT_DIALOG):
                         rt = _T("RT_DIALOG");
                         break;
-                    case RT_STRING:
+                    case RESTYPE_CAST(RT_STRING):
                         rt = _T("RT_STRING");
                         break;
-                    case RT_FONTDIR:
+                    case RESTYPE_CAST(RT_FONTDIR):
                         rt = _T("RT_FONTDIR");
                         break;
-                    case RT_FONT:
+                    case RESTYPE_CAST(RT_FONT):
                         rt = _T("RT_FONT");
                         break;
-                    case RT_ACCELERATOR:
+                    case RESTYPE_CAST(RT_ACCELERATOR):
                         rt = _T("RT_ACCELERATOR");
                         break;
-                    case RT_RCDATA:
+                    case RESTYPE_CAST(RT_RCDATA):
                         rt = _T("RT_RCDATA");
                         break;
-                    case RT_MESSAGETABLE:
+                    case RESTYPE_CAST(RT_MESSAGETABLE):
                         rt = _T("RT_MESSAGETABLE");
                         break;
-                    case RT_GROUP_CURSOR:
+                    case RESTYPE_CAST(RT_GROUP_CURSOR):
                         rt = _T("RT_GROUP_CURSOR");
                         break;
-                    case RT_GROUP_ICON:
+                    case RESTYPE_CAST(RT_GROUP_ICON):
                         rt = _T("RT_GROUP_ICON");
                         break;
-                    case RT_VERSION:
+                    case RESTYPE_CAST(RT_VERSION):
                         rt = _T("RT_VERSION");
                         break;
-                    case RT_DLGINCLUDE:
+                    case RESTYPE_CAST(RT_DLGINCLUDE):
                         rt = _T("RT_DLGINCLUDE");
                         break;
-                    case RT_PLUGPLAY:
+                    case RESTYPE_CAST(RT_PLUGPLAY):
                         rt = _T("RT_PLUGPLAY");
                         break;
-                    case RT_VXD:
+                    case RESTYPE_CAST(RT_VXD):
                         rt = _T("RT_VXD");
                         break;
-                    case RT_ANICURSOR:
+                    case RESTYPE_CAST(RT_ANICURSOR):
                         rt = _T("RT_ANICURSOR");
                         break;
-                    case RT_ANIICON:
+                    case RESTYPE_CAST(RT_ANIICON):
                         rt = _T("RT_ANIICON");
                         break;
-                    case RT_HTML:
+                    case RESTYPE_CAST(RT_HTML):
                         rt = _T("RT_HTML");
                         break;
-                    case RT_MANIFEST:
+                    case RESTYPE_CAST(RT_MANIFEST):
                         rt = _T("RT_MANIFEST");
                         break;
                     default:
@@ -172,9 +169,7 @@ namespace
                 }
                 WCHAR name[MAX_PATH] = {0};
                 if (::GetLocaleInfo((LCID)ResourceIdPath->Language, LOCALE_SENGLANGUAGE, name, _countof(name)))
-                    ATLTRACE2(_T("language: %s (%u)\n"),
-                              (ResourceIdPath->Language) ? name : _T("Neutral"),
-                              ResourceIdPath->Language);
+                    ATLTRACE2(_T("language: %s (%u)\n"), (ResourceIdPath->Language) ? name : _T("Neutral"), ResourceIdPath->Language);
                 else
                     ATLTRACE2(_T("language: %04X (%u)\n"), ResourceIdPath->Language, ResourceIdPath->Language);
                     /*lint -restore*/
@@ -189,13 +184,10 @@ namespace
                         ATLTRACE2(_T("LdrFindResource_U failed with %08X and manipulated ResourceIdPath. Retrying ")
                                   _T("with original values.\n"),
                                   status);
-                        status =
-                            realLdrFindResource_U(BaseAddress, ResourceIdPath, ResourceIdPathLength, ResourceDataEntry);
+                        status = realLdrFindResource_U(BaseAddress, ResourceIdPath, ResourceIdPathLength, ResourceDataEntry);
                         if (NT_ERROR(status))
                         {
-                            ATLTRACE2(
-                                _T("LdrFindResource_U failed (again) with %08X even with original ResourceIdPath.\n"),
-                                status);
+                            ATLTRACE2(_T("LdrFindResource_U failed (again) with %08X even with original ResourceIdPath.\n"), status);
                         }
                     }
                     return status;
@@ -243,8 +235,7 @@ BOOL HookLdrFindResource_U(HINSTANCE resmodule)
         ATLTRACE2(_T("nthdrs[%p]\n"), nthdrs);
         ATLASSERT(nthdrs->OptionalHeader.NumberOfRvaAndSizes >= IMAGE_DIRECTORY_ENTRY_IMPORT);
         ULONG whatever;
-        if (PIMAGE_IMPORT_DESCRIPTOR piid = (PIMAGE_IMPORT_DESCRIPTOR)RtlImageDirectoryEntryToData(
-                lpKrnlBase, TRUE, IMAGE_DIRECTORY_ENTRY_IMPORT, &whatever))
+        if (PIMAGE_IMPORT_DESCRIPTOR piid = (PIMAGE_IMPORT_DESCRIPTOR)RtlImageDirectoryEntryToData(lpKrnlBase, TRUE, IMAGE_DIRECTORY_ENTRY_IMPORT, &whatever))
         {
             while (piid->Name)
             {
@@ -293,16 +284,14 @@ MEMORY_BASIC_INFORMATION mbi == {\n\
                                                   FirstThunk);
                                         DWORD dwOldProtect = 0;
                                         // Un-protect the memory (i.e. make it writable)
-                                        if (::VirtualProtect(
-                                                FirstThunk, sizeof(ULONG_PTR), PAGE_EXECUTE_READWRITE, &dwOldProtect))
+                                        if (::VirtualProtect(FirstThunk, sizeof(ULONG_PTR), PAGE_EXECUTE_READWRITE, &dwOldProtect))
                                         {
                                             __try
                                             {
                                                 // Exchange the pointer with ours, retrieving the old one ...
                                                 /*lint -save -e611*/
                                                 realLdrFindResource_U =
-                                                    (TFNLdrFindResource_U)(InterlockedExchangePointer(
-                                                        (PVOID*)FirstThunk, (PVOID)LocalLdrFindResource_U));
+                                                    (TFNLdrFindResource_U)(InterlockedExchangePointer((PVOID*)FirstThunk, (PVOID)LocalLdrFindResource_U));
                                                 /*lint -restore*/
                                                 ATLTRACE2(_T("Hooked the LdrFindResource_U function\n"));
                                                 hResModule = resmodule;
@@ -312,17 +301,14 @@ MEMORY_BASIC_INFORMATION mbi == {\n\
                                             __finally
                                             {
                                                 // Re-protect the memory (i.e. make it read-only again, typically)
-                                                ::VirtualProtect(
-                                                    FirstThunk, sizeof(ULONG_PTR), dwOldProtect, &dwOldProtect);
+                                                ::VirtualProtect(FirstThunk, sizeof(ULONG_PTR), dwOldProtect, &dwOldProtect);
                                             }
                                         }
                                     }
                                 }
                                 __except (EXCEPTION_EXECUTE_HANDLER)
                                 {
-                                    ATLTRACE2(
-                                        _T("Exception when unprotecting the IAT entry of LdrFindResource_U at %p\n"),
-                                        FirstThunk);
+                                    ATLTRACE2(_T("Exception when unprotecting the IAT entry of LdrFindResource_U at %p\n"), FirstThunk);
                                 }
                                 break;
                             }
@@ -399,9 +385,7 @@ LANGID CLanguageSetter::matchResourceLang_(LANGID localeID) const
 
             if (tomatch == curr)
             {
-                ATLTRACE2(_T("Returning first match based on primary language identifier %04X (primary lang: %04X).\n"),
-                          m_langIDs[i],
-                          tomatch);
+                ATLTRACE2(_T("Returning first match based on primary language identifier %04X (primary lang: %04X).\n"), m_langIDs[i], tomatch);
                 return m_langIDs[i];
             }
         }
@@ -409,8 +393,7 @@ LANGID CLanguageSetter::matchResourceLang_(LANGID localeID) const
     return m_fallback; // our fallback LANGID
 }
 
-BOOL CALLBACK CLanguageSetter::NtObjectsEnumResLangProc_(
-    HMODULE /*hModule*/, LPCWSTR /*lpType*/, LPCWSTR /*lpName*/, WORD wLanguage, LONG_PTR lParam)
+BOOL CALLBACK CLanguageSetter::NtObjectsEnumResLangProc_(HMODULE /*hModule*/, LPCWSTR /*lpType*/, LPCWSTR /*lpName*/, WORD wLanguage, LONG_PTR lParam)
 {
     RESLANGIDLIST* lpResLangIdList = (RESLANGIDLIST*)lParam;
     ATLASSERT(lpResLangIdList != NULL);
@@ -448,8 +431,7 @@ bool CLanguageSetter::EnumAboutBoxLanguages_(HMODULE hInstance, LPCTSTR lpType, 
         memset(list, 0, sizeof(LANGID) * RES_LANGID_LIST_LEN);
 
         // We use the about box resource as our sentinel which languages are available
-        retval = FALSE != ::EnumResourceLanguages(
-                              hInstance, lpType, lpName, NtObjectsEnumResLangProc_, (LONG_PTR)(&resLangIdList));
+        retval = FALSE != ::EnumResourceLanguages(hInstance, lpType, lpName, NtObjectsEnumResLangProc_, (LONG_PTR)(&resLangIdList));
 
         if (retval)
         {
@@ -457,10 +439,7 @@ bool CLanguageSetter::EnumAboutBoxLanguages_(HMODULE hInstance, LPCTSTR lpType, 
             {
                 ATLASSERT(i < resLangIdList.size);
                 m_langIDs.Push(resLangIdList.list[i]);
-                ATLTRACE2(_T("Found resource language #%i %04X (%u)\n"),
-                          (int)i + 1,
-                          resLangIdList.list[i],
-                          resLangIdList.list[i]);
+                ATLTRACE2(_T("Found resource language #%i %04X (%u)\n"), (int)i + 1, resLangIdList.list[i], resLangIdList.list[i]);
             }
         }
     }

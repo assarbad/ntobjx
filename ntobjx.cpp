@@ -126,8 +126,7 @@ WORD findComment(LPCTSTR matchString)
 
 OSVERSIONINFOEXW const& GetOSVersionInfo()
 {
-    static OSVERSIONINFOEXW osvix = {
-        sizeof(OSVERSIONINFOEXW), 0, 0, 0, 0, {0}}; // not an error, this has to be the W variety!
+    static OSVERSIONINFOEXW osvix = {sizeof(OSVERSIONINFOEXW), 0, 0, 0, 0, {0}}; // not an error, this has to be the W variety!
     if (osvix.dwMajorVersion == 0)
     {
         ATLVERIFY(NT_SUCCESS(RtlGetVersion(&osvix)));
@@ -143,14 +142,12 @@ int Run(LPTSTR /*lpstrCmdLine*/ = NULL, int nCmdShow = SW_SHOWDEFAULT)
     // Set the default language
     (void)gLangSetter.set();
 
-    if (osvix.dwMajorVersion <
-        6) /* language handling for resources works starting with Vista (SetThreadUILanguage), but not before that */
+    if (osvix.dwMajorVersion < 6) /* language handling for resources works starting with Vista (SetThreadUILanguage), but not before that */
     {
         if (!HookLdrFindResource_U(_Module.GetModuleInstance()))
         {
             ::Beep(500, 500);
-            ATLTRACE2(
-                _T("Failed to hook LdrFindResource_U, so switching languages is unlikely to work as expected.\n"));
+            ATLTRACE2(_T("Failed to hook LdrFindResource_U, so switching languages is unlikely to work as expected.\n"));
         }
     }
 

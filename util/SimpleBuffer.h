@@ -222,7 +222,7 @@ template <typename T> class CSimpleBuf
     bool ReAlloc(size_t count)
     {
         value_type* tempBuf = 0;
-        register size_t count_ = 0;
+        size_t count_ = 0;
         if (count)
         {
             count_ = roundtopara_(count + 1);
@@ -449,7 +449,7 @@ template <typename T> class CSimpleBuf
         size_t retfromprintf = 0;
         // Loop and increase buffer size if the return value is -1
         // (meaning that the buffer was too small!)
-        while (-1 == (retfromprintf = PrintfHelper::vsnprintf<T>(temp, temp.Length<size_t>(), FormatString, args)))
+        while (-1 == (retfromprintf = PrintfHelper::template vsnprintf<T>(temp, temp.Length<size_t>(), FormatString, args)))
         {
             // Double the buffer size
             if (!temp.ReAlloc(2 * temp.Length<size_t>()))

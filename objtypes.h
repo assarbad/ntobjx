@@ -2,7 +2,7 @@
 #define __OBJTYPES_H_VER__ 2016102911
 // $Id$
 #if (defined(_MSC_VER) && (_MSC_VER >= 1020)) || defined(__MCPP)
-#pragma once
+#    pragma once
 #endif // Check for "#pragma once" support
 
 #define IDI_UNKNOWN_OBJTYPE                5000
@@ -109,8 +109,11 @@
 #define OBJTYPESTR_EMPTY_DIRECTORY         "Empty Directory"
 
 #ifndef RC_INVOKED
-#include <tchar.h>
-#define TBL_ENTRY(x) { IDI_##x, _T(OBJTYPESTR_##x) }
+#    include <tchar.h>
+#    define TBL_ENTRY(x)                \
+        {                               \
+            IDI_##x, _T(OBJTYPESTR_##x) \
+        }
 struct
 {
     WORD resId;
@@ -162,7 +165,7 @@ struct
     TBL_ENTRY(PIPE),
     TBL_ENTRY(EMPTY_DIRECTORY),
 };
-#undef TBL_ENTRY
+#    undef TBL_ENTRY
 size_t const resIconTypeMappingSize = sizeof(resIconTypeMapping) / sizeof(resIconTypeMapping[0]);
 #endif // RC_INVOKED
 

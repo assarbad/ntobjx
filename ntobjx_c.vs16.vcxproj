@@ -71,10 +71,10 @@
   </ImportGroup>
   <PropertyGroup Label="UserMacros" />
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
-    <LinkIncremental>false</LinkIncremental>
+    <LinkIncremental>true</LinkIncremental>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
-    <LinkIncremental>false</LinkIncremental>
+    <LinkIncremental>true</LinkIncremental>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
     <LinkIncremental>false</LinkIncremental>
@@ -84,20 +84,17 @@
   </PropertyGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
     <ClCompile>
-      <AdditionalOptions>/Zc:__cplusplus /utf-8 %(AdditionalOptions)</AdditionalOptions>
-      <PreprocessorDefinitions>WIN32;_WINDOWS;STRICT;_CONSOLE;_ALLOW_RTCc_IN_STL;WINVER=0x0501;%(PreprocessorDefinitions)</PreprocessorDefinitions>
-      <WarningLevel>Level3</WarningLevel>
-      <TreatWChar_tAsBuiltInType>true</TreatWChar_tAsBuiltInType>
+      <PreprocessorDefinitions>WIN32;_WINDOWS;STRICT;_CONSOLE;WINVER=0x0600;_DEBUG;%(PreprocessorDefinitions)</PreprocessorDefinitions>
     </ClCompile>
     <ResourceCompile>
-      <PreprocessorDefinitions>WIN32;_WINDOWS;STRICT;_CONSOLE;_ALLOW_RTCc_IN_STL;WINVER=0x0501;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <PreprocessorDefinitions>WIN32;_WINDOWS;STRICT;_CONSOLE;WINVER=0x0600;_DEBUG;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <AdditionalIncludeDirectories>.;$(IntDir);%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
     </ResourceCompile>
     <Link>
       <SubSystem>Console</SubSystem>
       <GenerateDebugInformation>true</GenerateDebugInformation>
       <AdditionalDependencies>ntdll-delayed.lib;%(AdditionalDependencies)</AdditionalDependencies>
-      <AdditionalOptions>/pdbaltpath:%_PDB% &quot;/libpath:$(IntDir)&quot; /delay:nobind /delayload:ntdll.dld %(AdditionalOptions)</AdditionalOptions>
+      <AdditionalOptions>&quot;/libpath:$(IntDir)&quot; /delay:nobind /delayload:ntdll.dld %(AdditionalOptions)</AdditionalOptions>
     </Link>
     <PreBuildEvent>
       <Command>cl.exe /nologo /c /TC /Ob0 /Gz delayload-stubs\ntdll-delayed-stubs.c &quot;/Fo$(IntDir)\ntdll-delayed-stubs.obj&quot;&#x0D;&#x0A;lib.exe /nologo &quot;/def:delayload-stubs\ntdll-delayed.txt&quot; &quot;/out:$(IntDir)\ntdll-delayed.lib&quot; /machine:x86 &quot;$(IntDir)\ntdll-delayed-stubs.obj&quot;&#x0D;&#x0A;&quot;$(ProjectDir)\hgid.cmd&quot;</Command>
@@ -105,20 +102,17 @@
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
     <ClCompile>
-      <AdditionalOptions>/Zc:__cplusplus /utf-8 %(AdditionalOptions)</AdditionalOptions>
-      <PreprocessorDefinitions>WIN32;_WINDOWS;STRICT;_CONSOLE;_ALLOW_RTCc_IN_STL;WINVER=0x0501;%(PreprocessorDefinitions)</PreprocessorDefinitions>
-      <WarningLevel>Level3</WarningLevel>
-      <TreatWChar_tAsBuiltInType>true</TreatWChar_tAsBuiltInType>
+      <PreprocessorDefinitions>WIN32;_WINDOWS;STRICT;_CONSOLE;WINVER=0x0600;_DEBUG;%(PreprocessorDefinitions)</PreprocessorDefinitions>
     </ClCompile>
     <ResourceCompile>
-      <PreprocessorDefinitions>WIN32;_WINDOWS;STRICT;_CONSOLE;_ALLOW_RTCc_IN_STL;WINVER=0x0501;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <PreprocessorDefinitions>WIN32;_WINDOWS;STRICT;_CONSOLE;WINVER=0x0600;_DEBUG;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <AdditionalIncludeDirectories>.;$(IntDir);%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
     </ResourceCompile>
     <Link>
       <SubSystem>Console</SubSystem>
       <GenerateDebugInformation>true</GenerateDebugInformation>
       <AdditionalDependencies>ntdll-delayed.lib;%(AdditionalDependencies)</AdditionalDependencies>
-      <AdditionalOptions>/pdbaltpath:%_PDB% &quot;/libpath:$(IntDir)&quot; /delay:nobind /delayload:ntdll.dld %(AdditionalOptions)</AdditionalOptions>
+      <AdditionalOptions>&quot;/libpath:$(IntDir)&quot; /delay:nobind /delayload:ntdll.dld %(AdditionalOptions)</AdditionalOptions>
     </Link>
     <PreBuildEvent>
       <Command>lib.exe /nologo /nodefaultlib &quot;/def:delayload-stubs\ntdll-delayed.txt&quot; &quot;/out:$(IntDir)\ntdll-delayed.lib&quot; /machine:x64&#x0D;&#x0A;&quot;$(ProjectDir)\hgid.cmd&quot;</Command>
@@ -126,20 +120,17 @@
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
     <ClCompile>
-      <AdditionalOptions>/Oi /Os /Gy /Zc:__cplusplus /utf-8 %(AdditionalOptions)</AdditionalOptions>
-      <PreprocessorDefinitions>WIN32;_WINDOWS;STRICT;_CONSOLE;_ALLOW_RTCc_IN_STL;NDEBUG;WINVER=0x0501;%(PreprocessorDefinitions)</PreprocessorDefinitions>
-      <WarningLevel>Level3</WarningLevel>
-      <TreatWChar_tAsBuiltInType>true</TreatWChar_tAsBuiltInType>
+      <PreprocessorDefinitions>WIN32;_WINDOWS;STRICT;_CONSOLE;WINVER=0x0600;NDEBUG;%(PreprocessorDefinitions)</PreprocessorDefinitions>
     </ClCompile>
     <ResourceCompile>
-      <PreprocessorDefinitions>WIN32;_WINDOWS;STRICT;_CONSOLE;_ALLOW_RTCc_IN_STL;NDEBUG;WINVER=0x0501;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <PreprocessorDefinitions>WIN32;_WINDOWS;STRICT;_CONSOLE;WINVER=0x0600;NDEBUG;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <AdditionalIncludeDirectories>.;$(IntDir);%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
     </ResourceCompile>
     <Link>
       <SubSystem>Console</SubSystem>
       <GenerateDebugInformation>true</GenerateDebugInformation>
       <AdditionalDependencies>ntdll-delayed.lib;%(AdditionalDependencies)</AdditionalDependencies>
-      <AdditionalOptions>/pdbaltpath:%_PDB% &quot;/libpath:$(IntDir)&quot; /delay:nobind /delayload:ntdll.dld /release /subsystem:windows,5.01 %(AdditionalOptions)</AdditionalOptions>
+      <AdditionalOptions>&quot;/libpath:$(IntDir)&quot; /delay:nobind /delayload:ntdll.dld %(AdditionalOptions)</AdditionalOptions>
     </Link>
     <PreBuildEvent>
       <Command>cl.exe /nologo /c /TC /Ob0 /Gz delayload-stubs\ntdll-delayed-stubs.c &quot;/Fo$(IntDir)\ntdll-delayed-stubs.obj&quot;&#x0D;&#x0A;lib.exe /nologo &quot;/def:delayload-stubs\ntdll-delayed.txt&quot; &quot;/out:$(IntDir)\ntdll-delayed.lib&quot; /machine:x86 &quot;$(IntDir)\ntdll-delayed-stubs.obj&quot;&#x0D;&#x0A;&quot;$(ProjectDir)\hgid.cmd&quot;</Command>
@@ -147,20 +138,17 @@
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
     <ClCompile>
-      <AdditionalOptions>/Oi /Os /Gy /Zc:__cplusplus /utf-8 %(AdditionalOptions)</AdditionalOptions>
-      <PreprocessorDefinitions>WIN32;_WINDOWS;STRICT;_CONSOLE;_ALLOW_RTCc_IN_STL;NDEBUG;WINVER=0x0501;%(PreprocessorDefinitions)</PreprocessorDefinitions>
-      <WarningLevel>Level3</WarningLevel>
-      <TreatWChar_tAsBuiltInType>true</TreatWChar_tAsBuiltInType>
+      <PreprocessorDefinitions>WIN32;_WINDOWS;STRICT;_CONSOLE;WINVER=0x0600;NDEBUG;%(PreprocessorDefinitions)</PreprocessorDefinitions>
     </ClCompile>
     <ResourceCompile>
-      <PreprocessorDefinitions>WIN32;_WINDOWS;STRICT;_CONSOLE;_ALLOW_RTCc_IN_STL;NDEBUG;WINVER=0x0501;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <PreprocessorDefinitions>WIN32;_WINDOWS;STRICT;_CONSOLE;WINVER=0x0600;NDEBUG;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <AdditionalIncludeDirectories>.;$(IntDir);%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
     </ResourceCompile>
     <Link>
       <SubSystem>Console</SubSystem>
       <GenerateDebugInformation>true</GenerateDebugInformation>
       <AdditionalDependencies>ntdll-delayed.lib;%(AdditionalDependencies)</AdditionalDependencies>
-      <AdditionalOptions>/pdbaltpath:%_PDB% &quot;/libpath:$(IntDir)&quot; /delay:nobind /delayload:ntdll.dld /release /subsystem:console,5.02 %(AdditionalOptions)</AdditionalOptions>
+      <AdditionalOptions>&quot;/libpath:$(IntDir)&quot; /delay:nobind /delayload:ntdll.dld %(AdditionalOptions)</AdditionalOptions>
     </Link>
     <PreBuildEvent>
       <Command>lib.exe /nologo /nodefaultlib &quot;/def:delayload-stubs\ntdll-delayed.txt&quot; &quot;/out:$(IntDir)\ntdll-delayed.lib&quot; /machine:x64&#x0D;&#x0A;&quot;$(ProjectDir)\hgid.cmd&quot;</Command>

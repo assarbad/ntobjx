@@ -1,7 +1,9 @@
 .hg/
-build/**
-build.vs*/**
-intermediate/**
+build/
+build.vs*/
+intermediate/
+bin/
+obj/
 Visual Lint/PC-lint/**
 *.suo
 *.lnt

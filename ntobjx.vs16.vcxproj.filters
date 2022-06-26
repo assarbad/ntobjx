@@ -55,10 +55,6 @@
     <None Include="ntobjx.ruleset" />
     <None Include=".editorconfig" />
     <None Include=".clang-format" />
-    <None Include=".gitignore" />
-    <None Include=".hgignore">
-      <Filter>Header Files</Filter>
-    </None>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="pugixml\pugiconfig.hpp">

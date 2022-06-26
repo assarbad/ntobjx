@@ -13,25 +13,25 @@ EXTERN_C int __cdecl DelayLoadError(LPCTSTR lpszFormat, ...)
     return _vtprintf(lpszFormat, args);
 };
 
-using NtObjMgr::GenericObject;
 using NtObjMgr::Directory;
+using NtObjMgr::GenericObject;
 using NtObjMgr::SymbolicLink;
 
 void PrintDirectory(Directory& current, ATL::CString Prefix = _T(""))
 {
-    for(size_t i = 0; i < current.size(); i++)
+    for (size_t i = 0; i < current.size(); i++)
     {
         GenericObject* entry = current[i];
         SymbolicLink const* symlink = dynamic_cast<SymbolicLink const*>(entry);
         Directory* directory = dynamic_cast<Directory*>(entry);
 
-        if(directory)
+        if (directory)
         {
             CString newPrefix(Prefix + _T("  "));
             _tprintf(_T("%s%ws [%ws]\n"), Prefix.GetString(), directory->name().GetString(), directory->type().GetString());
             PrintDirectory(*directory, newPrefix);
         }
-        else if(symlink)
+        else if (symlink)
         {
             _tprintf(_T("%s%ws [%ws] -> %ws\n"), Prefix.GetString(), symlink->name().GetString(), symlink->type().GetString(), symlink->target().GetString());
         }
@@ -43,7 +43,7 @@ void PrintDirectory(Directory& current, ATL::CString Prefix = _T(""))
 }
 
 #if TEST_RES_MAPPING
-#include "objtypes.h"
+#    include "objtypes.h"
 #endif
 
 int _tmain(int /*argc*/, _TCHAR** /*argv*/)
@@ -52,7 +52,7 @@ int _tmain(int /*argc*/, _TCHAR** /*argv*/)
     PrintDirectory(objmgr_root);
 
 #if TEST_RES_MAPPING
-    for(size_t i = 0; i < sizeof(resIconTypeMapping)/sizeof(resIconTypeMapping[0]); i++)
+    for (size_t i = 0; i < sizeof(resIconTypeMapping) / sizeof(resIconTypeMapping[0]); i++)
     {
         _tprintf(_T("%ws [%u]\n"), resIconTypeMapping[i].typeName, resIconTypeMapping[i].resId);
     }

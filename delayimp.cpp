@@ -32,14 +32,14 @@
 
 #define DELAYIMP_INSECURE_WRITABLE_HOOKS
 #if defined(_CONSOLE) || defined(_CONSOLE_APP)
-#include <Windows.h>
-#include <tchar.h>
-#define DelayLoadError _tprintf
+#    include <Windows.h>
+#    include <tchar.h>
+#    define DelayLoadError _tprintf
 #else
-#include "common.h" /* Must alias DelayLoadError to a function that behaves like _tprintf */
+#    include "common.h" /* Must alias DelayLoadError to a function that behaves like _tprintf */
 #endif
 #ifndef FACILITY_VISUALCPP
-#define FACILITY_VISUALCPP ((LONG)0x6d)
+#    define FACILITY_VISUALCPP ((LONG)0x6d)
 #endif // !FACILITY_VISUALCPP
 #include <delayimp.h>
 
@@ -58,6 +58,10 @@ namespace
     redir_entry_t mod_redir[] = {
         {lpszNtDllName, "ntdll.dld"},
     };
+
+    redir_entry_t mod_sys32[] = {
+        {"version.dll", nullptr},
+    };
 } // namespace
 
 static LPCSTR GetRedirectedName_(LPCSTR lpszDllName)
@@ -70,6 +74,18 @@ static LPCSTR GetRedirectedName_(LPCSTR lpszDllName)
         }
     }
     return lpszDllName;
+}
+
+static BOOL IsSystemDllName_(LPCSTR lpszDllName)
+{
+    for (size_t idx = 0; idx < _countof(mod_sys32); idx++)
+    {
+        if (0 == lstrcmpiA(lpszDllName, mod_sys32[idx].lpszSourceName))
+        {
+            return TRUE;
+        }
+    }
+    return FALSE;
 }
 
 static LONG WINAPI DelayLoadFilter(PEXCEPTION_POINTERS pExcPointers)
@@ -132,6 +148,11 @@ static FARPROC WINAPI GetModuleHandleDliHook(unsigned dliNotify, PDelayLoadInfo 
                 return reinterpret_cast<FARPROC>(hModule);
                 /*lint -restore */
             }
+        }
+        // TODO: load DLL from System32 ... LOAD_LIBRARY_SEARCH_SYSTEM32 isn't available on downlevel OS versions,
+        // though
+        if (IsSystemDllName_(pdli->szDll))
+        {
         }
         break;                     /* proceed with default processing  */
     case dliNotePreGetProcAddress: // called just before GetProcAddress, can override w/ new FARPROC return value

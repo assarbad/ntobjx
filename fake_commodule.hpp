@@ -39,7 +39,7 @@
 #ifndef __FAKE_COMMODULE_HPP_VER__
 #define __FAKE_COMMODULE_HPP_VER__ 2016032300
 #if (defined(_MSC_VER) && (_MSC_VER >= 1020)) || defined(__MCPP)
-#pragma once
+#    pragma once
 #endif // Check for "#pragma once" support
 
 namespace ATL

@@ -1,4 +1,5 @@
 ///////////////////////////////////////////////////////////////////////////////
+///////////////////////////////////////////////////////////////////////////////
 ///
 /// Fixups for the messed up implementation of switching languages in Windows
 /// versions prior to Windows Vista.
@@ -31,7 +32,7 @@
 #ifndef __RESLANG_H_VER__
 #define __RESLANG_H_VER__ 2016120400
 #if (defined(_MSC_VER) && (_MSC_VER >= 1020)) || defined(__MCPP)
-#pragma once
+#    pragma once
 #endif // Check for "#pragma once" support
 
 #pragma warning(push)           /* disable code analyzer warnings for ATL & WTL libraries */
@@ -82,8 +83,7 @@ class CLanguageSetter
     } RESLANGIDLIST;
 
     LANGID matchResourceLang_(LANGID localeID) const;
-    static BOOL CALLBACK NtObjectsEnumResLangProc_(
-        HMODULE /*hModule*/, LPCWSTR /*lpType*/, LPCWSTR /*lpName*/, WORD wLanguage, LONG_PTR lParam);
+    static BOOL CALLBACK NtObjectsEnumResLangProc_(HMODULE /*hModule*/, LPCWSTR /*lpType*/, LPCWSTR /*lpName*/, WORD wLanguage, LONG_PTR lParam);
     bool EnumAboutBoxLanguages_(HMODULE hInstance, LPCTSTR lpType, LPCTSTR lpName);
 };
 

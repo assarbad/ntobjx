@@ -25,7 +25,7 @@
 #define __EXEVERSION_H_VER__ 2021072221
 
 #if defined(_MSC_VER) && (_MSC_VER >= 1020)
-#pragma once
+#    pragma once
 #endif
 
 #include "hgid.h"
@@ -69,8 +69,7 @@
 #define WIDESTRING(text)  _WIDESTRING(text)
 
 #define PRESET_UNICODE_STRING(symbol, buffer) \
-    UNICODE_STRING symbol = {                 \
-        sizeof(WIDESTRING(buffer)) - sizeof(WCHAR), sizeof(WIDESTRING(buffer)), WIDESTRING(buffer)};
+    UNICODE_STRING symbol = {sizeof(WIDESTRING(buffer)) - sizeof(WCHAR), sizeof(WIDESTRING(buffer)), WIDESTRING(buffer)};
 
 #define CREATE_XVER(maj, min, patch, build) maj##, ##min##, ##patch##, ##build
 #define CREATE_FVER(maj, min, patch, build) maj##.##min##.##patch##.##build

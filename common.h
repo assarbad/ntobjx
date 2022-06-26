@@ -5,6 +5,10 @@
 #   error This applications must be built with _UNICODE defined.
 #endif
 
+#if (_MSVC_LANG < 201103L) && !defined(nullptr)
+#   define nullptr 0
+#endif
+
 #ifdef NDEBUG
 #   ifdef _WIN64
 #       pragma optimize("gs", on)
