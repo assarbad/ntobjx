@@ -1585,6 +1585,7 @@ typedef ULONG (NTAPI *RtlUniform_t)(PULONG);
 #define ZwCreateKey NtCreateKey
 #define ZwEnumerateKey NtEnumerateKey
 #define ZwEnumerateValueKey NtEnumerateValueKey
+#define ZwQueryKey NtQueryKey
 #define ZwQueryValueKey NtQueryValueKey
 #define ZwSetValueKey NtSetValueKey
 #define ZwDeleteValueKey NtDeleteValueKey

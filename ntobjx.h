@@ -452,7 +452,7 @@ class CObjectImageList
     {
     }
 
-    inline operator CImageList const &() const
+    inline operator CImageList const&() const
     {
         return m_imagelist;
     }
@@ -2045,6 +2045,7 @@ template <typename T> class CNtObjectsListViewT : public CSortListViewCtrlImpl<C
         , m_hFrameWnd(nullptr)
         , m_imagelist(imagelist)
     {
+        this->m_bSortDescending = false;
     }
 
     inline void setFrameWindow(HWND hFrameWnd)
@@ -2060,7 +2061,7 @@ template <typename T> class CNtObjectsListViewT : public CSortListViewCtrlImpl<C
         {
             (void)this->SetImageList(m_imagelist, LVSIL_SMALL);
         }
-        resetAllColumns_();
+        resetAllColumns_(this->m_iSortColumn);
         ATLASSERT(!m_imagelist.IsNull());
         ATLTRACE2(_T("%hs: %s\n"), __func__, current.fullname().GetString());
         // To determine the required width for each column
@@ -2079,17 +2080,12 @@ template <typename T> class CNtObjectsListViewT : public CSortListViewCtrlImpl<C
             this->AddItem(currItem, 1, current[i]->type());
             int const typeWidth = this->GetStringWidth(current[i]->type());
             widths[1] = max(typeWidth, widths[1]);
-            // ATLTRACE2(_T("%s:%i [%s:%i] / %i:%i\n"), current[i]->name().GetString(),
-            // GetStringWidth(current[i]->name()), current[i]->type().GetString(), GetStringWidth(current[i]->type()),
-            // widths[0], widths[1]);
             SymbolicLink* symlink = dynamic_cast<SymbolicLink*>(current[i]);
             if (symlink)
             {
                 this->AddItem(currItem, 2, symlink->target());
                 int const targetWidth = this->GetStringWidth(symlink->target());
                 widths[2] = max(targetWidth, widths[2]);
-                // ATLTRACE2(_T("    %s:%i [%i]\n"), symlink->target().GetString(), GetStringWidth(symlink->target()),
-                // widths[2]);
             }
         }
         CRect rect;
@@ -2104,8 +2100,20 @@ template <typename T> class CNtObjectsListViewT : public CSortListViewCtrlImpl<C
                 ATLVERIFY(this->SetColumnWidth(i, currcol));
             }
         }
-        // Sort according to name column
-        this->SortItems(0);
+
+        // Sort according to sort column
+        ATLVERIFY(SortItems(this->m_iSortColumn, this->m_bSortDescending));
+    }
+
+    bool SortItems(int iCol, bool bDescending)
+    {
+        // Is this still on the default?
+        if (-1 == iCol)
+        {
+            iCol = 0;
+        }
+        ATLTRACE2(_T("SortItems(%i, %u) [%i, %u]\n"), iCol, bDescending, this->m_iSortColumn, this->m_bSortDescending);
+        return baseClass::SortItems(iCol, bDescending);
     }
 
     LRESULT OnContextMenu(UINT /*uMsg*/, WPARAM /*wParam*/, LPARAM /*lParam*/, BOOL& /*bHandled*/)
@@ -2253,7 +2261,7 @@ template <typename T> class CNtObjectsListViewT : public CSortListViewCtrlImpl<C
         {
             int iOld = this->m_iSortColumn;
             bool bDescending = (this->m_iSortColumn == p->iItem) ? !this->m_bSortDescending : false;
-            if (this->DoSortItems(p->iItem, bDescending))
+            if (SortItems(p->iItem, bDescending))
             {
                 this->NotifyParentSortChanged(p->iItem, iOld);
             }
@@ -2411,7 +2419,7 @@ template <typename T> class CNtObjectsListViewT : public CSortListViewCtrlImpl<C
         }
     }
 
-    void resetAllColumns_()
+    void resetAllColumns_(int iSortColumn)
     {
         if (this->GetColumnCount() < static_cast<int>(_countof(lvColumnDefaults)))
         {
@@ -2424,7 +2432,7 @@ template <typename T> class CNtObjectsListViewT : public CSortListViewCtrlImpl<C
                 if (idx > (this->GetColumnCount() - 1))
                 {
                     this->InsertColumn(idx, columnName);
-                    this->SetColumnSortType(idx, LVCOLSORT_CUSTOM);
+                    this->SetColumnSortType(idx, LVCOLSORT_TEXTNOCASE);
                     ATLTRACE2(_T("Inserted column %i with name \"%s\".\n"), idx, columnName.GetString());
                 }
                 else
@@ -2437,6 +2445,7 @@ template <typename T> class CNtObjectsListViewT : public CSortListViewCtrlImpl<C
                     this->SetColumnSortType(idx, LVCOLSORT_TEXTNOCASE);
                 }
             }
+            this->m_iSortColumn = iSortColumn;
         }
     }
 };
@@ -3478,10 +3487,10 @@ class CNtObjectsMainFrame : public CFrameWindowImpl<CNtObjectsMainFrame>, public
     inline void renewMainMenuAndAccelerators_()
     {
         HMENU hOldMenu = GetMenu();
-        ATLASSERT(hOldMenu != NULL);
+        ATLASSERT(hOldMenu != nullptr);
         HMENU hNewMenu = AtlLoadMenu(GetWndClassInfo().m_uCommonResourceID);
-        ATLASSERT(hNewMenu != NULL);
-        if (hNewMenu != NULL)
+        ATLASSERT(hNewMenu != nullptr);
+        if (hNewMenu != nullptr)
         {
             ATLVERIFY(SetMenu(hNewMenu));
             ATLVERIFY(::DestroyMenu(hOldMenu));
@@ -3490,7 +3499,7 @@ class CNtObjectsMainFrame : public CFrameWindowImpl<CNtObjectsMainFrame>, public
         {
             HACCEL hOldAccel = m_hAccel;
             HACCEL hNewAccel = AtlLoadAccelerators(GetWndClassInfo().m_uCommonResourceID);
-            ATLASSERT(hNewAccel != NULL);
+            ATLASSERT(hNewAccel != nullptr);
             if (hNewAccel)
             {
                 ATLTRACE2(_T("Loaded accelerator table: %p\n"), hNewAccel);
@@ -3522,7 +3531,7 @@ class CNtObjectsMainFrame : public CFrameWindowImpl<CNtObjectsMainFrame>, public
 
     void visitDirectory_(Directory* dir)
     {
-        ATLASSERT(dir != NULL);
+        ATLASSERT(dir != nullptr);
         if (!dir)
         {
             return;
@@ -3557,13 +3566,13 @@ class CNtObjectsMainFrame : public CFrameWindowImpl<CNtObjectsMainFrame>, public
 
     inline void setStatusBarItem_(GenericObject* obj)
     {
-        ATLASSERT(obj != NULL);
+        ATLASSERT(obj != nullptr);
         if (!::IsWindow(m_status))
         {
             return;
         }
 
-        LPCWSTR fullName = (obj) ? obj->fullname().GetString() : NULL;
+        LPCWSTR fullName = (obj) ? obj->fullname().GetString() : nullptr;
         if (Directory* pdir = dynamic_cast<Directory*>(obj))
         {
             Directory& dir = *pdir;
@@ -3572,7 +3581,7 @@ class CNtObjectsMainFrame : public CFrameWindowImpl<CNtObjectsMainFrame>, public
             {
                 GenericObject* childobj = dir[i];
 
-                ATLASSERT(childobj != NULL);
+                ATLASSERT(childobj != nullptr);
                 if (!childobj)
                     continue;
 
@@ -3594,7 +3603,7 @@ class CNtObjectsMainFrame : public CFrameWindowImpl<CNtObjectsMainFrame>, public
         }
         else
         {
-            if (NULL != fullName)
+            if (nullptr != fullName)
             {
                 m_status.SetWindowText(fullName);
             }
@@ -3681,7 +3690,7 @@ class CNtObjectsMainFrame : public CFrameWindowImpl<CNtObjectsMainFrame>, public
 
         void enterDirectory(const Directory* obj)
         {
-            ATLASSERT(obj != NULL);
+            ATLASSERT(obj != nullptr);
             m_previousNode = m_currentNode;
             m_currentNode = m_currentNode.append_child(_T(OBJTYPESTR_DIRECTORY));
             ATLVERIFY(m_currentNode.append_attribute(_T("name")).set_value(obj->name().GetString()));
@@ -3700,7 +3709,7 @@ class CNtObjectsMainFrame : public CFrameWindowImpl<CNtObjectsMainFrame>, public
       private:
         pugi::xml_node addStandardObject_(const GenericObject* obj)
         {
-            ATLASSERT(obj != NULL);
+            ATLASSERT(obj != nullptr);
             pugi::xml_node node = m_currentNode.append_child(_T("Object"));
             ATLVERIFY(node.append_attribute(_T("type")).set_value(obj->type().GetString()));
             ATLVERIFY(node.append_attribute(_T("name")).set_value(obj->name().GetString()));
@@ -3720,7 +3729,7 @@ class CNtObjectsMainFrame : public CFrameWindowImpl<CNtObjectsMainFrame>, public
 
       public:
         CTxtObjectDirectoryDumper(LPCTSTR lpszFileName)
-            : m_file(NULL)
+            : m_file(nullptr)
             , m_bOpened(false)
             , m_fileName(lpszFileName)
             , m_currentPrefix(_T("\t"))
@@ -3740,21 +3749,21 @@ class CNtObjectsMainFrame : public CFrameWindowImpl<CNtObjectsMainFrame>, public
 
         void addSymlinkObject(const SymbolicLink* obj)
         {
-            ATLASSERT(obj != NULL);
+            ATLASSERT(obj != nullptr);
             LPCTSTR linePrefix = m_currentPrefix.GetString();
             _ftprintf(m_file, _T("%s%s [%s] -> %s\n"), linePrefix, obj->name().GetString(), obj->type().GetString(), obj->target().GetString());
         }
 
         void addContainedObject(const GenericObject* obj)
         {
-            ATLASSERT(obj != NULL);
+            ATLASSERT(obj != nullptr);
             LPCTSTR linePrefix = m_currentPrefix.GetString();
             _ftprintf(m_file, _T("%s%s [%s]\n"), linePrefix, obj->name().GetString(), obj->type().GetString());
         }
 
         void enterDirectory(const Directory* obj)
         {
-            ATLASSERT(obj != NULL);
+            ATLASSERT(obj != nullptr);
             LPCTSTR linePrefix = m_currentPrefix.GetString();
             _ftprintf(m_file, _T("%s\\%s [%s]\n"), linePrefix, obj->name().GetString(), obj->type().GetString());
             m_previousPrefix = m_currentPrefix;
@@ -3804,7 +3813,7 @@ class CNtObjectsMainFrame : public CFrameWindowImpl<CNtObjectsMainFrame>, public
 
     template <typename T> HWND createSplitter_(T& splitter, HWND hWndParent, bool bFullDrag = true)
     {
-        HWND hWndSplitter = splitter.Create(hWndParent, rcDefault, NULL, WS_CHILD | WS_VISIBLE | WS_CLIPSIBLINGS | WS_CLIPCHILDREN);
+        HWND hWndSplitter = splitter.Create(hWndParent, rcDefault, nullptr, WS_CHILD | WS_VISIBLE | WS_CLIPSIBLINGS | WS_CLIPCHILDREN);
         // Add WS_EX_CONTROLPARENT such that tab stops will work
         splitter.ModifyStyleEx(0, WS_EX_CONTROLPARENT);
         // The splitter should be smaller than the default width

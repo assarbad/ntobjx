@@ -205,7 +205,7 @@ namespace NtObjMgr
         typedef GenericObjectT<T> Inherited;
 
       public:
-        SymbolicLinkT(UNICODE_STRING const& name_, UNICODE_STRING const& tpname, LPCWSTR parent = NULL)
+        SymbolicLinkT(UNICODE_STRING const& name_, UNICODE_STRING const& tpname, LPCWSTR parent = nullptr)
             : Inherited(name_, tpname, parent)
             , m_linktgt()
             , m_lastStatus(STATUS_SUCCESS)
@@ -1194,7 +1194,6 @@ namespace NtObjMgr
 
     typedef ObjectHandleT<ATL::CString> ObjectHandle;
 
-#if 1
     template <typename T> class ObjectTypeMapT
     {
 #    if _MSVC_LANG >= 201103L
@@ -1308,7 +1307,6 @@ namespace NtObjMgr
     };
 
     typedef ObjectTypeMapT<ATL::CString> ObjectTypeMap;
-#endif // 0
 } // namespace NtObjMgr
 
 #endif // __OBJMGR_HPP_VER__
