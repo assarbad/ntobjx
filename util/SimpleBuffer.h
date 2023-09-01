@@ -31,7 +31,7 @@
 ///
 ////////////////////////////////////////////////////////////////////////////////
 #ifndef __SIMPLEBUFFER_H_VER__
-#define __SIMPLEBUFFER_H_VER__ 2016102019
+#define __SIMPLEBUFFER_H_VER__ 2023090122
 #if defined(_MSC_VER) && (_MSC_VER >= 1020)
 #pragma once
 #endif // Check for "#pragma once" support
@@ -236,7 +236,7 @@ template <typename T> class CSimpleBuf
                 return true; // We don't allocate anything new, but the buffer will be fine
             }
             // If the requested size if above zero, attempt to allocate
-            if (0 != (tempBuf = new value_type[count_] /* one as reserve */))
+            if (0 != (tempBuf = new value_type[count_] /* one as reserve */)) //-V668
             {
                 DBGPRINTF("[%p::%s]: new successful -> %d\n", this, __FUNCTION__, count_);
                 // Clear the newly allocated buffer
@@ -458,11 +458,6 @@ template <typename T> class CSimpleBuf
                 return size_t(0);
             }
         }
-        // If we're here but the return value is negative, something went wrong!
-        if (retfromprintf < 0)
-        {
-            return size_t(0); // Some error, return an empty string as well
-        }
         // Return the contents of the buffer
         return temp.Buffer();
     }
@@ -486,7 +481,7 @@ template <typename T> class CSimpleBuf
         }
         else
         {
-            ReAlloc(0);
+            (void)ReAlloc(0);
         }
         return Buffer();
     }

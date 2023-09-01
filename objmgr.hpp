@@ -27,13 +27,13 @@
 ///////////////////////////////////////////////////////////////////////////////
 
 #ifndef __OBJMGR_HPP_VER__
-#define __OBJMGR_HPP_VER__ 2022070221
+#define __OBJMGR_HPP_VER__ 2023090122
 #if (defined(_MSC_VER) && (_MSC_VER >= 1020)) || defined(__MCPP)
 #    pragma once
 #endif // Check for "#pragma once" support
 
 #if (_MSVC_LANG < 201103L) && !defined(nullptr)
-#    define nullptr 0
+#    define nullptr 0 //-V1059
 #endif
 
 #include "ntnative.h"
@@ -77,8 +77,8 @@
         } while (0)
 #endif // _DEBUG
 
-#define ALIGN_DOWN_BY(length, alignment) ((ULONG_PTR)(length) & ~(alignment - 1))
-#define ALIGN_UP_BY(length, alignment)   (ALIGN_DOWN_BY(((ULONG_PTR)(length) + alignment - 1), alignment))
+#define ALIGN_DOWN_BY(length, alignment) ((ULONG_PTR)(length) & ~((alignment) - 1))
+#define ALIGN_UP_BY(length, alignment)   (ALIGN_DOWN_BY(((ULONG_PTR)(length) + (alignment) - 1), (alignment)))
 #define ALIGN_UP(length, type)           ALIGN_UP_BY(length, sizeof(type))
 
 namespace NtObjMgr
@@ -94,7 +94,7 @@ namespace NtObjMgr
     // Base interface from which everything derives
     template <typename T> interface IObjectT
     {
-        virtual ~IObjectT()
+        virtual ~IObjectT() //-V832
         {
         }
         virtual T const& name() const = 0;
@@ -105,7 +105,7 @@ namespace NtObjMgr
 
     template <typename T> interface ISymlinkT
     {
-        virtual ~ISymlinkT()
+        virtual ~ISymlinkT() //-V832
         {
         }
         virtual T const& target() const = 0;
@@ -113,7 +113,7 @@ namespace NtObjMgr
 
     template <typename T> interface IDirectoryT
     {
-        virtual ~IDirectoryT()
+        virtual ~IDirectoryT() //-V832
         {
         }
         virtual size_t size() const = 0;
@@ -139,7 +139,7 @@ namespace NtObjMgr
         }
 
       public:
-        GenericObjectT(UNICODE_STRING const& name_, UNICODE_STRING const& tpname, LPCWSTR parent = nullptr)
+        GenericObjectT(UNICODE_STRING const name_, UNICODE_STRING const tpname, LPCWSTR parent = nullptr)
             : m_name(name_.Buffer, name_.Length / sizeof(WCHAR))
             , m_type(tpname.Buffer, tpname.Length / sizeof(WCHAR))
             , m_parent((parent) ? parent : L"")
@@ -159,7 +159,7 @@ namespace NtObjMgr
             m_fullname = m_parent + L"\\" + m_name;
         }
 
-        virtual ~GenericObjectT()
+        virtual ~GenericObjectT() //-V832
         {
         }
 
@@ -196,6 +196,7 @@ namespace NtObjMgr
         }
         GenericObjectT& operator=(GenericObjectT const&)
         {
+            return *this;
         }
     };
     typedef GenericObjectT<ATL::CString> GenericObject;
@@ -205,7 +206,7 @@ namespace NtObjMgr
         typedef GenericObjectT<T> Inherited;
 
       public:
-        SymbolicLinkT(UNICODE_STRING const& name_, UNICODE_STRING const& tpname, LPCWSTR parent = nullptr)
+        SymbolicLinkT(UNICODE_STRING const name_, UNICODE_STRING const tpname, LPCWSTR parent = nullptr)
             : Inherited(name_, tpname, parent)
             , m_linktgt()
             , m_lastStatus(STATUS_SUCCESS)
@@ -221,7 +222,7 @@ namespace NtObjMgr
         {
         }
 
-        virtual ~SymbolicLinkT()
+        virtual ~SymbolicLinkT() //-V832
         {
         }
 
@@ -273,6 +274,7 @@ namespace NtObjMgr
         }
         SymbolicLinkT& operator=(SymbolicLinkT const&)
         {
+            return *this;
         }
 
         T m_linktgt;
@@ -309,7 +311,7 @@ namespace NtObjMgr
         {
         }
 
-        DirectoryT(UNICODE_STRING const& name_, UNICODE_STRING const& tpname, LPCWSTR parent = nullptr)
+        DirectoryT(UNICODE_STRING const name_, UNICODE_STRING const tpname, LPCWSTR parent = nullptr)
             : Inherited(name_, tpname, parent)
             , m_entries()
             , m_lastStatus(STATUS_SUCCESS)
@@ -452,6 +454,7 @@ namespace NtObjMgr
         }
         DirectoryT& operator=(DirectoryT const&)
         {
+            return *this;
         }
 
         EntryList m_entries; // remember, class members get initialized in order of declaration inside ctor!!!
@@ -470,7 +473,11 @@ namespace NtObjMgr
 
           private:
             CEventBasicInformation();
+#if (_MSVC_LANG < 201103L)
             CEventBasicInformation& operator=(CEventBasicInformation&);
+#else
+            CEventBasicInformation& operator=(CEventBasicInformation&) = delete;
+#endif
             NTSTATUS m_queryStatus;
 
           public:
@@ -499,7 +506,11 @@ namespace NtObjMgr
 
           private:
             CIoCompletionBasicInformation();
+#if (_MSVC_LANG < 201103L)
             CIoCompletionBasicInformation& operator=(CIoCompletionBasicInformation&);
+#else
+            CIoCompletionBasicInformation& operator=(CIoCompletionBasicInformation&) = delete;
+#endif
             NTSTATUS m_queryStatus;
 
           public:
@@ -538,7 +549,11 @@ namespace NtObjMgr
 
           private:
             CKeyBasicInformation();
+#if (_MSVC_LANG < 201103L)
             CKeyBasicInformation& operator=(CKeyBasicInformation&);
+#else
+            CKeyBasicInformation& operator=(CKeyBasicInformation&) = delete;
+#endif
             NTSTATUS m_queryStatus;
 
           public:
@@ -572,7 +587,11 @@ namespace NtObjMgr
 
           private:
             CMutantBasicInformation();
+#if (_MSVC_LANG < 201103L)
             CMutantBasicInformation& operator=(CMutantBasicInformation&);
+#else
+            CMutantBasicInformation& operator=(CMutantBasicInformation&) = delete;
+#endif
             NTSTATUS m_queryStatus;
 
           public:
@@ -606,7 +625,11 @@ namespace NtObjMgr
 
           private:
             CSectionBasicInformation();
+#if (_MSVC_LANG < 201103L)
             CSectionBasicInformation& operator=(CSectionBasicInformation&);
+#else
+            CSectionBasicInformation& operator=(CSectionBasicInformation&) = delete;
+#endif
             NTSTATUS m_queryStatus;
 
           public:
@@ -640,7 +663,11 @@ namespace NtObjMgr
 
           private:
             CSemaphoreBasicInformation();
+#if (_MSVC_LANG < 201103L)
             CSemaphoreBasicInformation& operator=(CSemaphoreBasicInformation&);
+#else
+            CSemaphoreBasicInformation& operator=(CSemaphoreBasicInformation&) = delete;
+#endif
             NTSTATUS m_queryStatus;
 
           public:
@@ -674,7 +701,11 @@ namespace NtObjMgr
 
           private:
             CTimerBasicInformation();
+#if (_MSVC_LANG < 201103L)
             CTimerBasicInformation& operator=(CTimerBasicInformation&);
+#else
+            CTimerBasicInformation& operator=(CTimerBasicInformation&) = delete;
+#endif
             NTSTATUS m_queryStatus;
 
           public:
@@ -710,7 +741,11 @@ namespace NtObjMgr
 
           private:
             CWinStaInformation();
+#if (_MSVC_LANG < 201103L)
             CWinStaInformation& operator=(CWinStaInformation&);
+#else
+            CWinStaInformation& operator=(CWinStaInformation&) = delete;
+#endif
             HRESULT m_queryStatus;
 
           public:
@@ -853,7 +888,11 @@ namespace NtObjMgr
         bool m_bHasObjectInfo;
         GenericObjectT<T>* m_obj;
         openobj_fct_t m_openObjectFunction; // cached for reopen
+#if (_MSVC_LANG < 201103L)
         OBJECT_BASIC_INFORMATION m_obi;
+#else
+        OBJECT_BASIC_INFORMATION m_obi{};
+#endif
         HANDLE m_hObject;
         ATL::CAutoPtr<CEventBasicInformation> m_eventBasicInfo;
         ATL::CAutoPtr<CIoCompletionBasicInformation> m_ioCompletionBasicInfo;
@@ -939,7 +978,7 @@ namespace NtObjMgr
                 ATLTRACE2(_T("Attempting to query object-specific info for %s\n"), m_obj->type().GetString());
                 CWinStaInformation* winfo = new CWinStaInformation(m_hObject);
                 m_winStaInfo.Attach(winfo);
-                if (winfo && *winfo)
+                if (winfo && *winfo) //-V668
                 {
                     m_bHasObjectInfo = true;
                 }
@@ -1222,7 +1261,7 @@ namespace NtObjMgr
             , m_status(STATUS_SUCCESS)
         {
             ULONG uSize = 0;
-            m_status = ::NtQueryObject(nullptr, ObjectTypesInformation, &uSize, sizeof(uSize), &uSize);
+            m_status = ::NtQueryObject(nullptr, ObjectAllInformation, &uSize, sizeof(uSize), &uSize);
             if (STATUS_INFO_LENGTH_MISMATCH == m_status)
             {
 #    ifndef _WIN64
@@ -1230,7 +1269,7 @@ namespace NtObjMgr
 #    endif                                    // _WIN64
                 ULONG uSize2 = 0;
                 m_buffer = (BYTE*)::calloc(1, uSize);
-                m_status = ::NtQueryObject(nullptr, ObjectTypesInformation, m_buffer, uSize, &uSize2);
+                m_status = ::NtQueryObject(nullptr, ObjectAllInformation, m_buffer, uSize, &uSize2);
                 BYTE const* lpTypesInfo = (BYTE*)m_buffer;
                 ATLASSERT(uSize2 <= uSize);
 

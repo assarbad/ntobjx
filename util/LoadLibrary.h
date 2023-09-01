@@ -31,7 +31,7 @@
 ///
 ////////////////////////////////////////////////////////////////////////////////
 #ifndef __LOADLIBRARY_H_VER__
-#define __LOADLIBRARY_H_VER__ 2016102019
+#define __LOADLIBRARY_H_VER__ 2023090122
 #if defined(_MSC_VER) && (_MSC_VER >= 1020)
 #pragma once
 #endif // Check for "#pragma once" support
@@ -241,7 +241,7 @@ class CLoadLibrary
         DWORD dwLoadFlags = (m_AsDataFile) ? LOAD_LIBRARY_AS_DATAFILE : 0;
         CSimpleBuf<TCHAR> dllFilePath(LibName);
         // If the directory was given, we do a little special handling here
-        if (DllDirectory && (0 < lstrlen(DllDirectory)))
+        if (DllDirectory && DllDirectory[0] != L'\0')
         {
             CSimpleBuf<TCHAR> fullDirPath(MAX_PATH);
             DWORD dwNeeded = ::GetFullPathName(DllDirectory, fullDirPath.Length<DWORD>(), fullDirPath, NULL);
@@ -267,7 +267,7 @@ class CLoadLibrary
                 m_requestedDllDirectory = DllDirectory;
                 dwLoadFlags |= LOAD_WITH_ALTERED_SEARCH_PATH;
                 // Now assemble the absolute path to the DLL
-                dllFilePath = fullDirPath;
+                dllFilePath = fullDirPath; //-V820
                 dllFilePath += TEXT("\\");
                 dllFilePath += LibName;
             }
@@ -355,7 +355,7 @@ class CLoadLibrary
         while (0 != (dwLength = Helper::WrapGetModuleFileName_<CharType>(module, temp, temp.Length<DWORD>())) &&
                (ERROR_INSUFFICIENT_BUFFER == ::GetLastError()))
         {
-            temp.ReAlloc(dwLength * 2);
+            (void)temp.ReAlloc(dwLength * 2);
         }
         if (dwLength)
         {
@@ -371,7 +371,7 @@ class CLoadLibrary
             while ((0 != (dwLength = Helper::WrapGetFullPathName_<CharType>(temp, temp2.Length<DWORD>(), temp2, 0))) &&
                    (dwLength > temp2.Length<DWORD>()))
             {
-                temp2.ReAlloc(1 + dwLength);
+                (void)temp2.ReAlloc(1 + dwLength);
             }
             if (dwLength)
             {
@@ -462,7 +462,7 @@ class CLoadLibrary
             {
                 break;
             }
-            buf.ReAlloc(buf.Length<size_t>() * 2);
+            (void)buf.ReAlloc(buf.Length<size_t>() * 2);
         }
         if (len)
         {

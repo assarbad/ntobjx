@@ -6,7 +6,7 @@
 #endif
 
 #if (_MSVC_LANG < 201103L) && !defined(nullptr)
-#   define nullptr 0
+#   define nullptr 0 //-V1059
 #endif
 
 #ifdef NDEBUG

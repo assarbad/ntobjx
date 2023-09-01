@@ -31,7 +31,7 @@
 #pragma once
 
 #if (_MSVC_LANG < 201103L) && !defined(nullptr)
-#    define nullptr 0
+#    define nullptr 0 //-V1059
 #endif
 
 #ifndef __ATLAPP_H__
@@ -75,7 +75,7 @@
 #endif
 
 #ifndef __func__
-#    define __func__ __FUNCTION__
+#    define __func__ __FUNCTION__ //-V1059
 #endif
 
 #include "util/SimpleBuffer.h"
@@ -131,7 +131,7 @@ using WTL::CFileDialog;
 //  LRESULT CommandHandler(WORD /*wNotifyCode*/, WORD /*wID*/, HWND /*hWndCtl*/, BOOL& /*bHandled*/)
 //  LRESULT NotifyHandler(int /*idCtrl*/, LPNMHDR /*pnmh*/, BOOL& /*bHandled*/)
 
-namespace
+namespace //-V1068
 {
     static const struct
     {
@@ -150,7 +150,7 @@ namespace
     int const imgListElemWidth = 16;
     int const imgListElemHeight = 16;
 
-    CString getformatCreationTimeString(LARGE_INTEGER const& li)
+    CString getformatCreationTimeString(LARGE_INTEGER const li)
     {
         CString str;
         if (li.QuadPart > 0)
@@ -232,11 +232,12 @@ namespace
             }
             if (objHdl->hasObjectInfo())
             {
-                sObjDetails.AppendFormat(IDS_OBJPROPERTY_HANDLE_COUNT, objHdl->getObjectInfo().HandleCount);
-                sObjDetails.AppendFormat(IDS_OBJPROPERTY_REFERENCE_COUNT, objHdl->getObjectInfo().ReferenceCount);
-                sObjDetails.AppendFormat(IDS_OBJPROPERTY_PAGEDPOOL, objHdl->getObjectInfo().PagedPoolUsage);
-                sObjDetails.AppendFormat(IDS_OBJPROPERTY_NONPAGEDPOOL, objHdl->getObjectInfo().NonPagedPoolUsage);
-                CString objCreation(getformatCreationTimeString(objHdl->getObjectInfo().CreationTime));
+                OBJECT_BASIC_INFORMATION const& obi = objHdl->getObjectInfo();
+                sObjDetails.AppendFormat(IDS_OBJPROPERTY_HANDLE_COUNT, obi.HandleCount);
+                sObjDetails.AppendFormat(IDS_OBJPROPERTY_REFERENCE_COUNT, obi.ReferenceCount);
+                sObjDetails.AppendFormat(IDS_OBJPROPERTY_PAGEDPOOL, obi.PagedPoolUsage);
+                sObjDetails.AppendFormat(IDS_OBJPROPERTY_NONPAGEDPOOL, obi.NonPagedPoolUsage);
+                CString objCreation(getformatCreationTimeString(obi.CreationTime));
                 sObjDetails.AppendFormat(IDS_OBJPROPERTY_CREATION_TIME, objCreation.GetString());
                 // TODO:
                 // Other object-specific properties
@@ -506,7 +507,7 @@ class CObjectImageList
                 if (IDI_DIRECTORY == resIconTypeMapping[i].resId)
                 {
                     // This program is not multi-threaded, so this works, otherwise we'd need locking here
-                    static int emptydir = -1;
+                    static int emptydir = -1; //-V1096
                     if (Directory* dir = dynamic_cast<Directory*>(obj))
                     {
                         if (!dir->size())
@@ -576,7 +577,7 @@ template <typename T> class CObjectPropertySheetT : public CPropertySheetImpl<CO
         };
 
         BEGIN_MSG_MAP(CObjectSecurityNAPage)
-        MESSAGE_HANDLER(WM_INITDIALOG, OnInitDialog)
+        MESSAGE_HANDLER(WM_INITDIALOG, OnInitDialog) //-V1048
         MESSAGE_HANDLER(WM_CTLCOLORSTATIC, OnCtlColorStatic)
         CHAIN_MSG_MAP(baseClass)
         END_MSG_MAP()
@@ -694,7 +695,7 @@ template <typename T> class CObjectPropertySheetT : public CPropertySheetImpl<CO
         };
 
         BEGIN_MSG_MAP(CObjectDetailsPage)
-        MESSAGE_HANDLER(WM_INITDIALOG, OnInitDialog)
+        MESSAGE_HANDLER(WM_INITDIALOG, OnInitDialog) //-V1048
         MESSAGE_HANDLER(WM_CTLCOLORSTATIC, OnCtlColorStatic)
         COMMAND_ID_HANDLER(ID_COPY_DETAILS, OnCopyObjectDetails)
         CHAIN_MSG_MAP(baseClass)
@@ -743,15 +744,16 @@ template <typename T> class CObjectPropertySheetT : public CPropertySheetImpl<CO
                 CString str;
                 if (m_objHdl.hasObjectInfo())
                 {
-                    str.Format(_T("%u"), m_objHdl.getObjectInfo().HandleCount);
+                    OBJECT_BASIC_INFORMATION const& obi = m_objHdl.getObjectInfo();
+                    str.Format(_T("%u"), obi.HandleCount);
                     m_stcRefByHdl.SetWindowText(str);
-                    str.Format(_T("%u"), m_objHdl.getObjectInfo().ReferenceCount);
+                    str.Format(_T("%u"), obi.ReferenceCount);
                     m_stcRefByPtr.SetWindowText(str);
-                    str.Format(_T("%u"), m_objHdl.getObjectInfo().PagedPoolUsage);
+                    str.Format(_T("%u"), obi.PagedPoolUsage);
                     m_stcQuotaPaged.SetWindowText(str);
-                    str.Format(_T("%u"), m_objHdl.getObjectInfo().NonPagedPoolUsage);
+                    str.Format(_T("%u"), obi.NonPagedPoolUsage);
                     m_stcQuotaNonPaged.SetWindowText(str);
-                    m_stcCreationTime.SetWindowText(getformatCreationTimeString(m_objHdl.getObjectInfo().CreationTime));
+                    m_stcCreationTime.SetWindowText(getformatCreationTimeString(obi.CreationTime));
 
                     showObjectSpecificInfo_();
                 }
@@ -1046,7 +1048,7 @@ template <typename T> class CObjectPropertySheetT : public CPropertySheetImpl<CO
 #pragma warning(suppress : 6031)
                     ATLVERIFY(str.LoadString(IDS_OBJSPEC_NAME1_IOCOMPLETION));
                     m_stcObjSpecName1.SetWindowText(str);
-                    str.Format(_T("%u"), info->Depth);
+                    str.Format(_T("%d"), info->Depth);
                     m_stcObjSpecAttr1.SetWindowText(str);
                 }
                 else
@@ -1238,7 +1240,7 @@ template <typename T> class CObjectPropertySheetT : public CPropertySheetImpl<CO
             ATLVERIFY(setGenericMapping_(m_obj, m_gmask));
         }
 
-        STDMETHOD(QueryInterface)(REFIID riid, void** ppvObj)
+        STDMETHOD(QueryInterface)(REFIID riid, void** ppvObj) //-V835
         {
             if (riid == IID_IUnknown || riid == IID_ISecurityInformation)
             {
@@ -1314,7 +1316,7 @@ template <typename T> class CObjectPropertySheetT : public CPropertySheetImpl<CO
             ATLASSERT(TIMER_QUERY_STATE == MUTANT_QUERY_STATE);
             ATLASSERT(TIMER_MODIFY_STATE == SEMAPHORE_MODIFY_STATE);
             ATLASSERT(TIMER_MODIFY_STATE == IO_COMPLETION_MODIFY_STATE);
-            static SI_ACCESS accessNameMapping[] = {{&GUID_NULL, GENERIC_READ, _T("Read"), SI_ACCESS_GENERAL},
+            static SI_ACCESS accessNameMapping[] = {{&GUID_NULL, GENERIC_READ, _T("Read"), SI_ACCESS_GENERAL}, //-V1096
                                                     {&GUID_NULL, GENERIC_WRITE, _T("Write"), SI_ACCESS_GENERAL},
                                                     {&GUID_NULL, GENERIC_EXECUTE, _T("Execute"), SI_ACCESS_GENERAL},
                                                     {&GUID_NULL, 0x0001, _T("Query State"), SI_ACCESS_GENERAL},
@@ -1372,7 +1374,7 @@ template <typename T> class CObjectPropertySheetT : public CPropertySheetImpl<CO
 
   public:
     BEGIN_MSG_MAP(CObjectPropertySheetT<T>)
-    MESSAGE_HANDLER(WM_INITDIALOG, OnInitDialog)
+    MESSAGE_HANDLER(WM_INITDIALOG, OnInitDialog) //-V1048
     CHAIN_MSG_MAP(baseClass)
     END_MSG_MAP()
 
@@ -1435,7 +1437,7 @@ template <typename T> class CHyperLinkCtxMenuImpl : public CHyperLinkImpl<T>
 
   public:
     BEGIN_MSG_MAP(CHyperLinkCtxMenuImpl<T>)
-    MESSAGE_HANDLER(WM_CONTEXTMENU, OnContextMenu)
+    MESSAGE_HANDLER(WM_CONTEXTMENU, OnContextMenu) //-V1048
     CHAIN_MSG_MAP(CHyperLinkImpl<T>)
     DEFAULT_REFLECTION_HANDLER()
     END_MSG_MAP()
@@ -1491,7 +1493,7 @@ template <typename T> class CHyperLinkCtxMenuImpl : public CHyperLinkImpl<T>
 class CHyperLinkCtxMenu : public CHyperLinkCtxMenuImpl<CHyperLinkCtxMenu>
 {
   public:
-    DECLARE_WND_CLASS(_T("NtObjectsHyperLinkCtxMenu"))
+    DECLARE_WND_CLASS(_T("NtObjectsHyperLinkCtxMenu")) //-V1096
 };
 
 class CAboutDlg : public CDialogImpl<CAboutDlg>, public CMessageFilter
@@ -1512,7 +1514,7 @@ class CAboutDlg : public CDialogImpl<CAboutDlg>, public CMessageFilter
     };
 
     BEGIN_MSG_MAP(CAboutDlg)
-    MESSAGE_HANDLER(WM_INITDIALOG, OnInitDialog)
+    MESSAGE_HANDLER(WM_INITDIALOG, OnInitDialog) //-V1048
     MESSAGE_HANDLER(WM_CTLCOLORSTATIC, OnCtlColorStatic)
     COMMAND_ID_HANDLER(ID_COPY_ABOUT_INFO, OnCopyAboutInfo)
     COMMAND_ID_HANDLER(IDOK, OnCloseCmd)
@@ -1717,7 +1719,7 @@ template <typename T> class CNtObjectsTreeViewT : public CWindowImpl<CNtObjectsT
     /*lint -restore */
 
     BEGIN_MSG_MAP(CNtObjectsTreeViewT<T>)
-    MESSAGE_HANDLER(WM_CONTEXTMENU, OnContextMenu)
+    MESSAGE_HANDLER(WM_CONTEXTMENU, OnContextMenu) //-V1048
     NOTIFY_CODE_HANDLER(TVN_ITEMEXPANDING, OnTVItemExpanding)
     NOTIFY_CODE_HANDLER(TVN_GETINFOTIP, OnGetInfoTip)
     NOTIFY_CODE_HANDLER(TVN_SELCHANGED, OnTVSelChanged)
@@ -2028,7 +2030,7 @@ template <typename T> class CNtObjectsListViewT : public CSortListViewCtrlImpl<C
     /*lint -restore */
 
     BEGIN_MSG_MAP(CNtObjectsListView<T>)
-    MESSAGE_HANDLER(WM_CONTEXTMENU, OnContextMenu)
+    MESSAGE_HANDLER(WM_CONTEXTMENU, OnContextMenu) //-V1048
     MESSAGE_HANDLER(WM_GETDLGCODE, OnGetDlgCode)
     MESSAGE_HANDLER(WM_LBUTTONDBLCLK, OnDoubleClick)
     MESSAGE_HANDLER(WM_CHAR, OnChar)
@@ -2219,10 +2221,7 @@ template <typename T> class CNtObjectsListViewT : public CSortListViewCtrlImpl<C
                 if (idx >= 0)
                 {
                     ATLASSERT(1 == this->GetSelectedCount());
-                    if (-1 != idx)
-                    {
-                        openPropertiesOrDirectory_(idx);
-                    }
+                    openPropertiesOrDirectory_(idx);
                 }
             }
             break;
@@ -2493,12 +2492,12 @@ class CSearchPane : public CPaneContainerImpl<CSearchPane>
     UINT const m_strID;
 
   public:
-    DECLARE_WND_CLASS(_T("SearchPane"))
+    DECLARE_WND_CLASS(_T("SearchPane")) //-V1096
 
     BEGIN_MSG_MAP(CSearchPane)
     DEFAULT_REFLECTION_HANDLER()
     CHAIN_MSG_MAP(baseClass)
-    FORWARD_NOTIFICATIONS()
+    FORWARD_NOTIFICATIONS() //-V1048
     END_MSG_MAP()
 
     CSearchPane()
@@ -2565,9 +2564,9 @@ template <typename T> class CNtObjectsFoundSplitterT : public CSplitterWindowImp
     void initialize(HWND hFrameWnd)
     {
         ATLVERIFY(nullptr != m_searchPane.Create(*this));
-        ATLVERIFY(::IsWindow(m_searchPane));
+        ATLVERIFY(::IsWindow(m_searchPane)); //-V530
         ATLVERIFY(nullptr != m_findresults.Create(m_searchPane, ATL::CWindow::rcDefault));
-        ATLVERIFY(::IsWindow(m_findresults));
+        ATLVERIFY(::IsWindow(m_findresults)); //-V530
         m_searchPane.SetClient(m_findresults);
 
         if (DllGetVersion)
@@ -2636,7 +2635,7 @@ class CNtObjectsStatusBar : public CMultiPaneStatusBarCtrlImpl<CNtObjectsStatusB
 {
   public:
     /*lint -save -e446 */
-    DECLARE_WND_SUPERCLASS(_T("NtObjectsStatusBar"), GetWndClassName())
+    DECLARE_WND_SUPERCLASS(_T("NtObjectsStatusBar"), GetWndClassName()) //-V1096
     /*lint -restore */
 
     void initializePanes(bool bIsAdmin, bool bIsElevated, bool bSetText = true)
@@ -2666,7 +2665,7 @@ class CNtObjectsSplitter : public CSplitterWindowImpl<CNtObjectsSplitter>
     typedef CSplitterWindowImpl<CNtObjectsSplitter> baseClass;
 
   public:
-    DECLARE_WND_CLASS_EX(_T("NtObjectsSplitter"), CS_DBLCLKS, COLOR_INFOBK)
+    DECLARE_WND_CLASS_EX(_T("NtObjectsSplitter"), CS_DBLCLKS, COLOR_INFOBK) //-V1096
 
     CNtObjectsSplitter()
         : baseClass(true)
@@ -2691,7 +2690,7 @@ template <typename T> class CVisitedListT : protected CSimpleArray<T>
     }
 
     /*lint -save -e1509*/
-    ~CVisitedListT()
+    ~CVisitedListT() //-V832
     {
     }
     /*lint -restore*/
@@ -2832,7 +2831,7 @@ class CNtObjectsMainFrame : public CFrameWindowImpl<CNtObjectsMainFrame>, public
     typedef CFrameWindowImpl<CNtObjectsMainFrame> baseClass;
 
   public:
-    DECLARE_FRAME_WND_CLASS(_T("NtObjectsMainFrame"), IDR_MAINFRAME)
+    DECLARE_FRAME_WND_CLASS(_T("NtObjectsMainFrame"), IDR_MAINFRAME) //-V1096
 
     CLanguageSetter& m_langSetter;
     CObjectImageList m_imagelist;
@@ -2888,7 +2887,7 @@ class CNtObjectsMainFrame : public CFrameWindowImpl<CNtObjectsMainFrame>, public
         return FALSE;
     }
 
-    BEGIN_UPDATE_UI_MAP(CNtObjectsMainFrame)
+    BEGIN_UPDATE_UI_MAP(CNtObjectsMainFrame) //-V1096
     UPDATE_ELEMENT(ID_SWITCHLANGUAGE_ENGLISH, UPDUI_MENUPOPUP)
     UPDATE_ELEMENT(ID_SWITCHLANGUAGE_GERMAN, UPDUI_MENUPOPUP)
     END_UPDATE_UI_MAP()
@@ -2896,7 +2895,7 @@ class CNtObjectsMainFrame : public CFrameWindowImpl<CNtObjectsMainFrame>, public
     BEGIN_MSG_MAP(CNtObjectsMainFrame)
     CHAIN_MSG_MAP_MEMBER(m_treeview)
     CHAIN_MSG_MAP_MEMBER(m_listview)
-    MESSAGE_HANDLER(WM_CREATE, OnCreate)
+    MESSAGE_HANDLER(WM_CREATE, OnCreate) //-V1048
     MESSAGE_HANDLER(WM_DESTROY, OnDestroy)
     MESSAGE_HANDLER(WM_GETMINMAXINFO, OnGetMinMaxInfo)
     MESSAGE_HANDLER(WM_SYSCOMMAND, OnSysCommand)
@@ -3504,10 +3503,7 @@ class CNtObjectsMainFrame : public CFrameWindowImpl<CNtObjectsMainFrame>, public
             {
                 ATLTRACE2(_T("Loaded accelerator table: %p\n"), hNewAccel);
                 m_hAccel = hNewAccel;
-                if (hOldAccel)
-                {
-                    ATLVERIFY(::DestroyAcceleratorTable(hOldAccel));
-                }
+                ATLVERIFY(::DestroyAcceleratorTable(hOldAccel));
             }
         }
     }
@@ -3786,7 +3782,7 @@ class CNtObjectsMainFrame : public CFrameWindowImpl<CNtObjectsMainFrame>, public
         if (size_t len = (lpszFileName) ? _tcslen(lpszFileName) : 0)
         {
 #ifndef NTOBJX_NO_XML_EXPORT
-            if (lpszFileName && (len > 4) && (0 == _tcsicmp(_T(".xml"), &lpszFileName[len - 4])))
+            if ((len > 4) && (0 == _tcsicmp(_T(".xml"), &lpszFileName[len - 4])))
             {
                 ATLTRACE2(_T("Assuming the user wants to save an XML, based on extension: %s\n"), lpszFileName);
                 CXmlObjectDirectoryDumper dump(lpszFileName);

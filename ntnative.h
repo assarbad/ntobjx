@@ -30,6 +30,8 @@
 //
 // [Boost Software License - Version 1.0 - August 17th, 2003]
 //
+// SPDX-License-Identifier: BSL-1.0
+//
 ///////////////////////////////////////////////////////////////////////////////
 // http://terminus.rewolf.pl/terminus/
 // http://undocumented.ntinternals.net
@@ -147,9 +149,10 @@
 #   pragma warning(default:4201)
 #   pragma pop_macro("NTSYSCALLAPI")
 #endif // DDKBUILD
+#pragma warning(push)
 #pragma warning(disable:4005)
 #include <ntstatus.h>
-#pragma warning(default:4005)
+#pragma warning(pop)
 
 #if defined(DDKBUILD)
 #   if defined(__cplusplus)
@@ -249,8 +252,8 @@ typedef enum _OBJECT_INFORMATION_CLASS {
     ObjectBasicInformation,
     ObjectNameInformation,
     ObjectTypeInformation,
-    ObjectTypesInformation,
-    ObjectHandleFlagInformation,
+    ObjectAllInformation,
+    ObjectDataInformation
 } OBJECT_INFORMATION_CLASS;
 
 #ifndef RTL_CONSTANT_STRING
@@ -391,7 +394,7 @@ typedef struct _OBJECT_TYPE_INFORMATION
 typedef struct _OBJECT_TYPES_INFORMATION
 {
     ULONG NumberOfTypes;
-    // OBJECT_TYPE_INFORMATION TypeInformation[ANYSIZE_ARRAY];
+    OBJECT_TYPE_INFORMATION TypeInformation[ANYSIZE_ARRAY];
 } OBJECT_TYPES_INFORMATION, *POBJECT_TYPES_INFORMATION;
 
 typedef struct _OBJECT_DIRECTORY_INFORMATION {
@@ -541,6 +544,7 @@ typedef struct _SECTIONBASICINFO {
     LARGE_INTEGER MaximumSize;
 } SECTION_BASIC_INFORMATION, *PSECTION_BASIC_INFORMATION;
 
+#pragma warning(push)
 #pragma warning(disable:4201 4214)
 typedef struct _SECTION_IMAGE_INFORMATION {
     PVOID TransferAddress;
@@ -569,7 +573,7 @@ typedef struct _SECTION_IMAGE_INFORMATION {
     ULONG ImageFileSize;
     ULONG CheckSum;
 } SECTION_IMAGE_INFORMATION, *PSECTION_IMAGE_INFORMATION;
-#pragma warning(default:4201 4214)
+#pragma warning(pop)
 
 typedef struct _SEMAPHORE_BASIC_INFORMATION {
     ULONG CurrentCount;
