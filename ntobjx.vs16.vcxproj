@@ -221,6 +221,8 @@
     <None Include="ntobjx.ruleset" />
     <None Include=".editorconfig" />
     <None Include=".clang-format" />
+    <None Include=".gitignore" />
+    <None Include=".hgignore" />
   </ItemGroup>
   <ItemGroup>
     <ResourceCompile Include="exeversion.rc" />

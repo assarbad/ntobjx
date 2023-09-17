@@ -9,6 +9,8 @@
           https://github.com/windirstat/premake-stable
           https://sourceforge.net/projects/windirstat/files/premake-stable/
           https://osdn.net/projects/windirstat/storage/historical/premake-stable/
+
+// SPDX-License-Identifier: Unlicense
   ]]
 local action = _ACTION or ""
 local release = false
@@ -77,18 +79,19 @@ solution (tgtname .. iif(release, "_release", ""))
             "pugixml/*.hpp",
             "util/*.h", "util/*.hpp",
             "res/*.ico",
-            "*.rc",
             "*.cpp",
             "*.h",
             "*.hpp",
+            "*.rc",
             "*.manifest",
             "*.cmd", "*.txt", "*.md", "*.rst", "premake4.lua",
-            "*.manifest", "*.props", "*.ruleset", ".editorconfig", ".clang-format",
+            "*.manifest", "*.props", "*.targets", "*.ruleset", ".editorconfig", ".clang-format",
+            ".gitignore", ".hgignore",
         }
 
         vpaths
         {
-            ["Special Files/*"] = { "*.cmd", "premake4.lua", "*.manifest", },
+            ["Special Files/*"] = { "*.cmd", "premake4.lua", "*.manifest", ".gitignore", ".hgignore", "*.props", "*.targets", "*.ruleset", ".editorconfig", ".clang-format", },
             ["Special Files/Module Definition Files/*"] = { "delayload-stubs/*.txt", "delayload-stubs/*.c", },
             ["Header Files/WTL/*"] = { "wtl9/Include/*.h", "wtl10/Include/*.h" },
             ["Header Files/pugixml/*"] = { "pugixml/*.hpp" },
@@ -203,7 +206,7 @@ solution (tgtname .. iif(release, "_release", ""))
                 prebuildcommands{"cl.exe /nologo /c /TC /Ob0 /Gz delayload-stubs\\ntdll-delayed-stubs.c \"/Fo$(IntDir)\\ntdll-delayed-stubs.obj\"", "lib.exe /nologo \"/def:delayload-stubs\\ntdll-delayed.txt\" \"/out:$(IntDir)\\ntdll-delayed.lib\" /machine:x86 \"$(IntDir)\\ntdll-delayed-stubs.obj\"", "\"$(ProjectDir)\\hgid.cmd\""}
 
             configuration {"Release"}
-                defines         ("NDEBUG")
+                defines         {"NDEBUG"}
                 flags           {"Optimize", "NoIncrementalLink", "NoEditAndContinue"}
     end
 
@@ -355,6 +358,20 @@ do
             if filterfound then
                 _p(1,"</ItemGroup>")
             end
+        end
+    end
+    do -- there is a glitch in Premake4 which prevents "patterns" in vpaths, which are identical to the file name to be matched, to match ...
+        local orig_getvpath = premake.project.getvpath
+        premake.project.getvpath = function(prj, abspath)
+            for replacement, patterns in pairs(prj.vpaths or {}) do
+                for _, pattern in ipairs(patterns) do
+                    if abspath == pattern then -- only do this when file path and pattern are identical (which precludes wildcard patterns)
+                        local stem, _ = replacement:gsub("%*", "")
+                        return path.join(stem, abspath)
+                    end
+                end
+            end
+            return orig_getvpath(prj, abspath)
         end
     end
     -- Name the project files after their VS version

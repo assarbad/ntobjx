@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
-<Project ToolsVersion="15.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+<Project xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
   <ItemGroup>
     <Filter Include="Special Files">
       <UniqueIdentifier>{1340A817-3DBB-1832-9493-18CD996EA715}</UniqueIdentifier>
@@ -50,10 +50,27 @@
     <None Include="premake4.lua">
       <Filter>Special Files</Filter>
     </None>
-    <None Include="Directory.props" />
-    <None Include="ntobjx.ruleset" />
-    <None Include=".editorconfig" />
-    <None Include=".clang-format" />
+    <None Include="Directory.props">
+      <Filter>Special Files</Filter>
+    </None>
+    <None Include="project.props">
+      <Filter>Special Files</Filter>
+    </None>
+    <None Include="ntobjx.ruleset">
+      <Filter>Special Files</Filter>
+    </None>
+    <None Include=".editorconfig">
+      <Filter>Special Files</Filter>
+    </None>
+    <None Include=".clang-format">
+      <Filter>Special Files</Filter>
+    </None>
+    <None Include=".gitignore">
+      <Filter>Special Files</Filter>
+    </None>
+    <None Include=".hgignore">
+      <Filter>Special Files</Filter>
+    </None>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="pugixml\pugiconfig.hpp">
@@ -71,6 +88,9 @@
     <ClInclude Include="util\VersionInfo.h">
       <Filter>Header Files\Utility classes</Filter>
     </ClInclude>
+    <ClInclude Include="common.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
     <ClInclude Include="exeversion.h">
       <Filter>Header Files</Filter>
     </ClInclude>
@@ -87,9 +107,6 @@
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="resource.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="stdafx.h">
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="fake_commodule.hpp">
@@ -167,9 +184,6 @@
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="reslang.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="stdafx.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="delayload-stubs\ntdll-delayed-stubs.c">

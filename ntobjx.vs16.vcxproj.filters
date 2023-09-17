@@ -50,11 +50,27 @@
     <None Include="premake4.lua">
       <Filter>Special Files</Filter>
     </None>
-    <None Include="Directory.props" />
-    <None Include="project.props" />
-    <None Include="ntobjx.ruleset" />
-    <None Include=".editorconfig" />
-    <None Include=".clang-format" />
+    <None Include="Directory.props">
+      <Filter>Special Files</Filter>
+    </None>
+    <None Include="project.props">
+      <Filter>Special Files</Filter>
+    </None>
+    <None Include="ntobjx.ruleset">
+      <Filter>Special Files</Filter>
+    </None>
+    <None Include=".editorconfig">
+      <Filter>Special Files</Filter>
+    </None>
+    <None Include=".clang-format">
+      <Filter>Special Files</Filter>
+    </None>
+    <None Include=".gitignore">
+      <Filter>Special Files</Filter>
+    </None>
+    <None Include=".hgignore">
+      <Filter>Special Files</Filter>
+    </None>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="pugixml\pugiconfig.hpp">
