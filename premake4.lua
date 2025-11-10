@@ -235,16 +235,51 @@ do
         ['<OutputFile>$(OutDir)%s</OutputFile>'] = 0,
         ['<AdditionalLibraryDirectories>%s;%%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>'] = 0,
         ['<WarningLevel>Level3</WarningLevel>'] = 0,
+        ['<SmallerTypeCheck>true</SmallerTypeCheck>'] = 0,
+        ['<ImportLibrary>%s</ImportLibrary>'] = 0,
     }
     -- Embed the property sheet
+    previousmsg = nil
     _G.override_vcxproj = function(prj, orig_p, indent, msg, first, ...)
+        oldpreviousmsg = previousmsg
+        previousmsg = msg
         if indent == 1 then
+            if msg == [[<Import Project="$(VCTargetsPath)\Microsoft.Cpp.Default.props" />]] then
+                orig_p(indent, msg, first, ...) -- pass through original line
+                orig_p(indent, [[<ImportGroup Label="PropertySheets">]])
+                orig_p(indent+1, [[<Import Project="$(SolutionDir)project.defaults.props" Condition="exists('$(SolutionDir)project.defaults.props')" Label="ProjectSpecific (solution/defaults)" />]])
+                orig_p(indent+1, [[<Import Project="$(ProjectDir)project.defaults.props" Condition="exists('$(ProjectDir)project.defaults.props') AND '$(SolutionDir)' != '$(ProjectDir)'" Label="Project-specific (local/defaults)" />]])
+                orig_p(indent, [[</ImportGroup>]])
+                return true
+            end
             if msg == [[<ImportGroup Label="ExtensionSettings">]] then
                 orig_p(indent, msg, first, ...) -- pass through original line
+                if not table.isempty(premake.vstudio.vc2010.getfilegroup(prj, "MASM")) then
+                    orig_p(indent+1, [[<Import Project="$(VCTargetsPath)\BuildCustomizations\masm.props" />]]) -- ASM
+                end
                 orig_p(indent, [[</ImportGroup>]])
                 orig_p(indent, [[<ImportGroup Label="PropertySheets">]])
-                orig_p(indent+1, [[<Import Project="$(SolutionDir)project.props" Condition="exists('$(SolutionDir)project.props')" Label="ProjectSpecific (solution)" />]])
-                orig_p(indent+1, [[<Import Project="$(ProjectDir)project.props" Condition="exists('$(ProjectDir)project.props') AND '$(SolutionDir)' != '$(ProjectDir)'" Label="Project-specific (local)" />]])
+                orig_p(indent+1, [[<Import Project="$(SolutionDir)project.early.props" Condition="exists('$(SolutionDir)project.early.props')" Label="ProjectSpecific (solution/early)" />]])
+                orig_p(indent+1, [[<Import Project="$(ProjectDir)project.early.props" Condition="exists('$(ProjectDir)project.early.props') AND '$(SolutionDir)' != '$(ProjectDir)'" Label="Project-specific (local/early)" />]])
+                return true
+            end
+            if msg == [[<ItemGroup>]] and oldpreviousmsg == [[</ItemDefinitionGroup>]] then
+                orig_p(indent, [[<ImportGroup Label="PropertySheets">]])
+                orig_p(indent+1, [[<Import Project="$(SolutionDir)project.late.props" Condition="exists('$(SolutionDir)project.late.props')" Label="ProjectSpecific (solution/late)" />]])
+                orig_p(indent+1, [[<Import Project="$(ProjectDir)project.late.props" Condition="exists('$(ProjectDir)project.late.props') AND '$(SolutionDir)' != '$(ProjectDir)'" Label="Project-specific (local/late)" />]])
+                orig_p(indent, [[</ImportGroup>]])
+                orig_p(indent, msg, first, ...) -- pass through original line
+                return true
+            end
+            if msg == [[<ImportGroup Label="ExtensionTargets">]] then
+                orig_p(indent, [[<ImportGroup Label="PropertySheets">]])
+                orig_p(indent+1, [[<Import Project="$(SolutionDir)project.targets" Condition="exists('$(SolutionDir)project.targets')" Label="ProjectSpecific (solution/targets)" />]])
+                orig_p(indent+1, [[<Import Project="$(ProjectDir)project.targets" Condition="exists('$(ProjectDir)project.targets') AND '$(SolutionDir)' != '$(ProjectDir)'" Label="Project-specific (local/targets)" />]])
+                orig_p(indent, [[</ImportGroup>]])
+                orig_p(indent, msg, first, ...) -- pass through original line
+                if not table.isempty(premake.vstudio.vc2010.getfilegroup(prj, "MASM")) then
+                    orig_p(indent+1, [[<Import Project="$(VCTargetsPath)\BuildCustomizations\masm.targets" />]]) -- ASM
+                end
                 return true
             end
         end
@@ -380,7 +415,7 @@ do
         -- The below is used to insert the .vs(8|9|10|11|12|14|15|16|17) into the file names for projects and solutions
         if _ACTION then
             name_map = {vs2005 = "vs8", vs2008 = "vs9", vs2010 = "vs10", vs2012 = "vs11", vs2013 = "vs12", vs2015 = "vs14", vs2017 = "vs15", vs2019 = "vs16", vs2022 = "vs17"}
-            if name_map[_ACTION] then
+            if name_map and name_map[_ACTION] then
                 pattern = pattern:gsub("%%%%", "%%%%." .. name_map[_ACTION])
             else
                 pattern = pattern:gsub("%%%%", "%%%%." .. _ACTION)
@@ -518,6 +553,71 @@ do
         return ret
     end
 
+    -- Little helper to recognize .asm files
+    path.isasmfile = function(fname)
+        local extensions = { ".asm" }
+        local ext = path.getextension(fname):lower()
+        return table.contains(extensions, ext)
+    end
+
+    -- Replace original function to also handle .asm files
+    premake.vstudio.vc2010.getfilegroup = function(prj, group)
+        local sortedfiles = prj.vc2010sortedfiles
+        if not sortedfiles then
+            sortedfiles = {
+                ClCompile = {},
+                ClInclude = {},
+                MASM = {},
+                None = {},
+                ResourceCompile = {},
+            }
+
+            for file in premake.project.eachfile(prj) do
+                if path.iscppfile(file.name) then
+                    table.insert(sortedfiles.ClCompile, file)
+                elseif path.iscppheader(file.name) then
+                    table.insert(sortedfiles.ClInclude, file)
+                elseif path.isresourcefile(file.name) then
+                    table.insert(sortedfiles.ResourceCompile, file)
+                elseif path.isasmfile(file.name) then
+                    table.insert(sortedfiles.MASM, file)
+                else
+                    table.insert(sortedfiles.None, file)
+                end
+            end
+
+            -- Cache the sorted files; they are used several places
+            prj.vc2010sortedfiles = sortedfiles
+        end
+
+        return sortedfiles[group]
+    end
+
+    -- Add support for .asm files in the project file
+    premake.vstudio.vc2010.files = function(prj)
+        local vc2010 = premake.vstudio.vc2010
+        vc2010.simplefilesgroup(prj, "ClInclude")
+        vc2010.compilerfilesgroup(prj)
+        vc2010.simplefilesgroup(prj, "None")
+        vc2010.simplefilesgroup(prj, "MASM")
+        vc2010.simplefilesgroup(prj, "ResourceCompile")
+    end
+
+    -- Add support for .asm files in the filters
+    premake.vstudio.vc2010.generate_filters = function(prj)
+        io.indent = "  "
+        local vc2010 = premake.vstudio.vc2010
+        vc2010.header()
+            vc2010.filteridgroup(prj)
+            vc2010.filefiltergroup(prj, "None")
+            vc2010.filefiltergroup(prj, "ClInclude")
+            vc2010.filefiltergroup(prj, "ClCompile")
+            vc2010.filefiltergroup(prj, "ResourceCompile")
+            vc2010.filefiltergroup(prj, "MASM")
+        _p('</Project>')
+    end
+
+
     -- Remove an option altogether or some otherwise accepted values for that option
     local function remove_allowed_optionvalues(option, values_toremove)
         if premake.option.list[option] ~= nil then
@@ -548,7 +648,7 @@ do
     remove_allowed_optionvalues("os") -- ... , { bsd = 0, haiku = 0, linux = 0, macosx = 0, solaris = 0, }
     remove_allowed_optionvalues("cc")
     -- ... and actions (mainly because they are untested)
-    for k,v in pairs({codeblocks = 0, codelite = 0, gmake = 0, xcode3 = 0, xcode4 = 0, vs2002 = 0, vs2003 = 0, vs2008 = 0, vs2010 = 0, vs2012 = 0, vs2013 = 0}) do
+    for k,v in pairs({codeblocks = 0, codelite = 0, gmake = 0, xcode3 = 0, xcode4 = 0, vs2002 = 0, vs2003 = 0, vs2005 = 0, vs2008 = 0, vs2010 = 0, vs2012 = 0, vs2013 = 0, vs2015 = 0}) do
         remove_action(k)
     end
 end
